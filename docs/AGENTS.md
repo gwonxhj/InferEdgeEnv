@@ -6,7 +6,7 @@ README와 설계/운영 문서가 위치하는 영역이다. EdgeEnv가 무엇�
 ## 2. CONTENTS — 파일/디렉토리와 기술 스택
 - `README.md` 또는 root `README.md` — 사용자용 시작 문서
 - `docs/` — 설계 메모, 향후 roadmap, Obsidian에서 옮겨온 문서
-- `docs/local-runner-design.md` — `target_type: local` runner 구현 전 설계 기준
+- `docs/local-runner-design.md` — `target_type: local` runner와 실패 artifact 설계 기준
 
 기술 스택: Markdown
 

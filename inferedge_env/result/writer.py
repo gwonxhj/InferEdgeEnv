@@ -115,5 +115,60 @@ class ResultArtifactWriter:
         return run_dir
 
 
+class FailedRunArtifactWriter:
+    def __init__(self, root: Path | str = ".edgeenv") -> None:
+        self.root = Path(root)
+
+    def write(
+        self,
+        config: BenchmarkConfig,
+        target: TargetProfile,
+        config_path: Path | str,
+        target_path: Path | str,
+        error_message: str,
+        stdout: str,
+        stderr: str,
+        return_code: int | None = None,
+        run_id: str | None = None,
+        env: dict[str, Any] | None = None,
+    ) -> Path:
+        failure_id = run_id or new_run_id()
+        captured_env = env or collect_system_info()
+        failed_dir = self.root / "failed-runs" / failure_id
+        failed_dir.mkdir(parents=True, exist_ok=False)
+
+        failure = {
+            "schema_version": "edgeenv.failed-run.v1",
+            "run_id": failure_id,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "benchmark_name": config.name,
+            "target_name": target.target_name,
+            "target_type": target.target_type,
+            "command": config.command,
+            "error_type": "LocalRunnerError",
+            "error_message": error_message,
+            "return_code": return_code,
+        }
+        (failed_dir / "failure.json").write_text(
+            json.dumps(failure, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+        (failed_dir / "config.yaml").write_text(
+            Path(config_path).read_text(encoding="utf-8"),
+            encoding="utf-8",
+        )
+        (failed_dir / "target.yaml").write_text(
+            Path(target_path).read_text(encoding="utf-8"),
+            encoding="utf-8",
+        )
+        (failed_dir / "env.json").write_text(
+            json.dumps(captured_env, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+        (failed_dir / "stdout.log").write_text(stdout, encoding="utf-8")
+        (failed_dir / "stderr.log").write_text(stderr, encoding="utf-8")
+        return failed_dir
+
+
 def load_result(path: Path | str) -> RunResult:
     return RunResult.model_validate_json(Path(path).read_text(encoding="utf-8"))

@@ -13,7 +13,12 @@ from inferedge_env.compare.comparability import check_comparability
 from inferedge_env.config.bench_config import load_benchmark_config
 from inferedge_env.config.target_profile import TargetProfile, load_target_profile
 from inferedge_env.registry.db import RunRegistry
-from inferedge_env.result.writer import ResultArtifactWriter, build_run_result, load_result
+from inferedge_env.result.writer import (
+    FailedRunArtifactWriter,
+    ResultArtifactWriter,
+    build_run_result,
+    load_result,
+)
 from inferedge_env.runners.fake import FakeRunner
 from inferedge_env.runners.local import LocalRunner, LocalRunnerError
 
@@ -81,6 +86,17 @@ def run_benchmark(
     try:
         runner_result = runner.run(config, target)
     except LocalRunnerError as exc:
+        failed_dir = FailedRunArtifactWriter(edgeenv_root).write(
+            config=config,
+            target=target,
+            config_path=config_path,
+            target_path=target_path,
+            error_message=str(exc),
+            stdout=exc.stdout,
+            stderr=exc.stderr,
+            return_code=exc.return_code,
+        )
+        console.print(f"[yellow]Failed run artifact:[/yellow] {failed_dir}")
         _fail(str(exc))
     result = build_run_result(config, target, runner_result)
     run_dir = ResultArtifactWriter(edgeenv_root).write(
