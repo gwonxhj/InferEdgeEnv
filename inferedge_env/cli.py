@@ -13,6 +13,7 @@ from inferedge_env.compare.comparability import check_comparability
 from inferedge_env.config.bench_config import load_benchmark_config
 from inferedge_env.config.target_profile import TargetProfile, load_target_profile
 from inferedge_env.registry.db import RunRegistry
+from inferedge_env.registry.models import RegistryRecord
 from inferedge_env.result.writer import (
     FailedRunArtifactWriter,
     ResultArtifactWriter,
@@ -158,7 +159,10 @@ def show_run(
         record = RunRegistry(edgeenv_root / "runs.db").show(run_id)
     except KeyError as exc:
         _fail(str(exc))
-    console.print(json.dumps(record.model_dump(mode="json"), indent=2, sort_keys=True))
+    console.print(
+        json.dumps(_show_payload(record), indent=2, sort_keys=True),
+        soft_wrap=True,
+    )
 
 
 @report_app.command("compare")
@@ -196,6 +200,20 @@ def _runner_for_target(target: TargetProfile) -> FakeRunner | LocalRunner:
     if target.target_type == "local":
         return LocalRunner()
     _fail(f"Unsupported target_type for v1: {target.target_type}")
+
+
+def _show_payload(record: RegistryRecord) -> dict:
+    payload = record.model_dump(mode="json")
+    try:
+        result = load_result(payload["result_path"])
+    except (OSError, ValueError):
+        return payload
+    if result.resource_metrics is not None:
+        payload["resource_metrics"] = result.resource_metrics.model_dump(
+            mode="json",
+            exclude_none=True,
+        )
+    return payload
 
 
 def _fail(message: str) -> None:

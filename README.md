@@ -36,6 +36,7 @@ The fake target uses `FakeRunner`, so it does not execute a real model.
 The local target executes `command` on the current machine and reads an explicit `EDGEENV_METRICS_JSON=` line from stdout.
 Local commands may also emit an optional `EDGEENV_RESOURCE_METRICS_JSON=` line for memory, power, energy, or temperature evidence.
 Local benchmark configs may set `timeout_seconds`, `working_directory`, and uppercase `extra_env` keys for controlled command execution.
+`edgeenv runs show <run_id>` reads the result artifact and includes resource metrics when present.
 The Python package is `inferedge_env`; the user-facing CLI command remains `edgeenv`.
 
 ## Benchmark Config Example

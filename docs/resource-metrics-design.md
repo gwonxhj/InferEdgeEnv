@@ -150,7 +150,7 @@ _(아직 없음)_
 - [x] `RunnerResult.resource_metrics` optional 전달 경로 추가
 - [x] `LocalRunner`에서 `EDGEENV_RESOURCE_METRICS_JSON=` optional parser 추가
 - [x] writer가 optional resource metrics를 `result.json`에 저장
-- [x] `runs show` 출력 방식 결정: v1.1에서는 DB column을 추가하지 않고 result artifact에만 저장한다.
+- [x] `runs show` 출력 방식 결정: DB column을 추가하지 않고 `result_path`의 result artifact를 읽어 표시한다.
 - [x] pytest:
   - missing resource metrics remains valid
   - valid resource metrics is persisted
