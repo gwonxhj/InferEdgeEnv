@@ -62,6 +62,65 @@ print('EDGEENV_METRICS_JSON={"latency_mean_ms":2,"latency_p50_ms":2,"latency_p95
     assert result.throughput_fps == 2.0
 
 
+def test_local_runner_uses_working_directory_and_extra_env(
+    tmp_path: Path,
+    bench_config,
+    target_profile,
+):
+    work_dir = tmp_path / "work"
+    work_dir.mkdir()
+    script = _write_script(
+        tmp_path,
+        """
+import json
+import os
+from pathlib import Path
+Path("cwd-marker.txt").write_text(os.environ["LOCAL_FLAG"], encoding="utf-8")
+print("cwd=" + Path.cwd().name)
+print("flag=" + os.environ["LOCAL_FLAG"])
+print("EDGEENV_METRICS_JSON=" + json.dumps({
+    "latency_mean_ms": 3.0,
+    "latency_p50_ms": 3.0,
+    "latency_p95_ms": 3.0,
+    "latency_p99_ms": 3.0,
+    "throughput_fps": 3.0,
+}))
+""",
+    )
+    config = bench_config.model_copy(
+        update={
+            "command": _python_command(script),
+            "working_directory": str(work_dir),
+            "extra_env": {"LOCAL_FLAG": "enabled"},
+        }
+    )
+    target = target_profile.model_copy(update={"target_type": "local"})
+
+    result = LocalRunner().run(config, target)
+
+    assert "cwd=work" in result.stdout
+    assert "flag=enabled" in result.stdout
+    assert (work_dir / "cwd-marker.txt").read_text(encoding="utf-8") == "enabled"
+
+
+def test_local_runner_timeout_fails(tmp_path: Path, bench_config, target_profile):
+    script = _write_script(
+        tmp_path,
+        """
+import time
+time.sleep(1)
+""",
+    )
+    config = bench_config.model_copy(
+        update={"command": _python_command(script), "timeout_seconds": 0.01}
+    )
+    target = target_profile.model_copy(update={"target_type": "local"})
+
+    with pytest.raises(LocalRunnerError, match="timed out after 0.01 seconds") as exc_info:
+        LocalRunner().run(config, target)
+    assert exc_info.value.return_code is None
+
+
 def test_local_runner_non_zero_command_fails(tmp_path: Path, bench_config, target_profile):
     script = _write_script(
         tmp_path,

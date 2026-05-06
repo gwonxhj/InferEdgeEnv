@@ -67,6 +67,7 @@ EDGEENV_METRICS_JSON={"latency_mean_ms":12.3,"latency_p50_ms":12.0,"latency_p95_
 - `EDGEENV_TARGET_NAME`
 
 이 값들은 command가 내부 benchmark loop를 구성할 때 사용할 수 있다.
+Benchmark config의 `extra_env`는 command-specific 값을 추가로 전달한다. `extra_env` key는 uppercase environment variable name이어야 하며, reserved `EDGEENV_` prefix는 사용할 수 없다.
 
 ### Process model
 
@@ -74,13 +75,15 @@ EDGEENV_METRICS_JSON={"latency_mean_ms":12.3,"latency_p50_ms":12.0,"latency_p95_
 
 - `shlex.split(config.command)`로 argv를 구성한다.
 - `subprocess.run(..., shell=False, capture_output=True, text=True)`를 사용한다.
-- working directory는 사용자가 CLI를 실행한 현재 directory를 따른다.
-- timeout, cwd, extra env schema는 v1.1 이후 검토한다.
+- `working_directory`가 없으면 사용자가 CLI를 실행한 현재 directory를 따른다.
+- `working_directory`가 있으면 subprocess `cwd`로 사용한다.
+- `timeout_seconds`가 있으면 subprocess timeout으로 사용하고, timeout failure artifact를 남긴다.
 
 ## 4. HOW NOT — 피해야 할 함정
 
 - Shell string을 `shell=True`로 실행하지 않는다 — quoting과 shell injection risk가 커진다.
 - stdout 전체에서 숫자를 추측하지 않는다 — benchmark tool마다 로그 형식이 달라 오판된다.
+- `extra_env`로 `EDGEENV_` 예약 변수를 덮어쓰지 않는다 — EdgeEnv가 주입하는 실행 context가 깨진다.
 - EdgeEnv가 process startup time을 latency로 자동 측정하지 않는다 — 모델 inference latency가 아니라 process overhead를 재게 된다.
 - `warmup_runs`와 `repeat_runs`를 LocalRunner가 subprocess 반복 횟수로 해석하지 않는다 — command 내부에서 같은 protocol로 측정해야 p50/p95/p99가 의미 있다.
 - 실패 run을 registry에 성공 run처럼 insert하지 않는다 — local registry의 evidence 신뢰도가 깨진다.
@@ -134,18 +137,20 @@ _(아직 없음)_
 - [x] CLI runner selection에서 `local`을 `LocalRunner`로 연결
 - [x] local runner smoke example 추가
 - [x] failed-run artifact bundle
+- [x] command timeout
+- [x] explicit working directory field
+- [x] extra environment variables allowlist
 - [x] pytest:
   - valid command returns deterministic metrics
   - stdout/stderr capture preserved
   - non-zero command fails
   - missing metrics line fails
   - invalid metrics JSON fails
+  - timeout failure
+  - working directory and extra env propagation
   - CLI `bench run` with local profile succeeds against a tiny Python one-liner or fixture script
 
 ## Deferred Work
 
-- command timeout
-- explicit working directory field
-- extra environment variables allowlist
 - richer metric schema such as memory/power
 - SSH/WSL/Docker targets

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Literal
 
@@ -27,12 +28,29 @@ class BenchmarkConfig(BaseModel):
     repeat_runs: int = Field(gt=0)
     include_preprocess: bool
     include_postprocess: bool
+    timeout_seconds: float | None = Field(default=None, gt=0)
+    working_directory: str | None = Field(default=None, min_length=1)
+    extra_env: dict[str, str] = Field(default_factory=dict)
 
     @field_validator("input_shape")
     @classmethod
     def validate_input_shape(cls, value: list[int]) -> list[int]:
         if any(dim <= 0 for dim in value):
             raise ValueError("input_shape dimensions must be positive integers")
+        return value
+
+    @field_validator("extra_env")
+    @classmethod
+    def validate_extra_env(cls, value: dict[str, str]) -> dict[str, str]:
+        key_pattern = re.compile(r"^[A-Z_][A-Z0-9_]*$")
+        for key in value:
+            if key.startswith("EDGEENV_"):
+                raise ValueError("extra_env keys must not use reserved EDGEENV_ prefix")
+            if not key_pattern.fullmatch(key):
+                raise ValueError(
+                    "extra_env keys must be uppercase environment names "
+                    "matching [A-Z_][A-Z0-9_]*"
+                )
         return value
 
 

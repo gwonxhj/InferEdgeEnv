@@ -19,6 +19,7 @@ runner interface와 v1 FakeRunner를 담당한다. 실제 모델 실행 없이 d
 - FakeRunner latency를 randomness나 host 성능에 의존하게 만들지 말 것 — 테스트와 예시 결과가 매번 달라진다.
 - SSH/WSL/Docker runner를 구현하지 말 것 — local runner와 target boundary가 섞이면 v1 범위를 넘는다.
 - local runner에서 stdout 숫자를 추측하지 말 것 — `EDGEENV_METRICS_JSON=` contract만 metrics source로 사용해야 한다.
+- local runner에서 `shell=True`를 쓰거나 `extra_env`로 `EDGEENV_` 예약 값을 덮어쓰지 말 것 — command execution boundary와 EdgeEnv context가 깨진다.
 - stdout/stderr 필드를 생략하지 말 것 — artifact writer가 run evidence를 완성하지 못한다.
 
 ## 5. WHERE — 다른 모듈과의 의존성

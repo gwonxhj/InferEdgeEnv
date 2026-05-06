@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 
 
 metrics = {
@@ -12,4 +13,5 @@ metrics = {
 }
 
 print("local benchmark smoke")
+print(f"LOCAL_DEMO_FLAG={os.environ.get('LOCAL_DEMO_FLAG', '')}")
 print(f"EDGEENV_METRICS_JSON={json.dumps(metrics, sort_keys=True)}")
