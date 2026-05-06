@@ -167,6 +167,6 @@ _(아직 없음)_
 
 ## Deferred Work
 
-- platform-specific resource samplers such as Jetson `tegrastats`, macOS `powermetrics`, Windows counters, or external power meter adapters
+- platform-specific resource samplers; 기준은 [Platform Sampler Design](platform-sampler-design.md)을 따른다.
 - registry migration for querying resource metrics without opening `result.json`
 - SSH/WSL/Docker targets

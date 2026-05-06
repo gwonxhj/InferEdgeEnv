@@ -159,8 +159,5 @@ _(아직 없음)_
 
 ## Deferred Work
 
-- Jetson `tegrastats` sampler
-- macOS `powermetrics` sampler
-- Windows performance counter sampler
-- External power meter adapter
+- Platform-specific samplers; 기준은 [Platform Sampler Design](platform-sampler-design.md)을 따른다.
 - Registry migration for querying resource metrics; 기준은 [Registry Resource Query Design](registry-resource-query-design.md)을 따른다.
