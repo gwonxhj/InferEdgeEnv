@@ -40,9 +40,12 @@ Then try the local runner examples:
 ```bash
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_echo_metrics.yaml
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_resource_metrics.yaml
+edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_template.yaml
 ```
 
 The local target executes `command` on the current machine and reads an explicit `EDGEENV_METRICS_JSON=` line from stdout. Local commands may also emit an optional `EDGEENV_RESOURCE_METRICS_JSON=` line for memory, power, energy, or temperature evidence. `bench run` reports whether resource metrics were stored or omitted, and `runs show` reads the result artifact when resource metrics are present.
+
+To connect your own benchmark command, start from `examples/scripts/local_benchmark_template.py` and the guide in [Local Command Contract Guide](docs/local-command-contract.md).
 
 Sampler wrapper examples:
 
@@ -225,5 +228,6 @@ Non-goals:
 ## Design Notes
 
 - [Local Runner Design](docs/local-runner-design.md)
+- [Local Command Contract Guide](docs/local-command-contract.md)
 - [Resource Metrics Design](docs/resource-metrics-design.md)
 - [Sampler Failure Policy](docs/sampler-failure-policy.md)

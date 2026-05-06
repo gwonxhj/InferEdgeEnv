@@ -268,6 +268,40 @@ def test_cli_resource_metrics_example_run_and_show(tmp_path):
     assert shown["resource_metrics"]["temperature_peak_c"] == 72.0
 
 
+def test_cli_local_template_example_run_and_show(tmp_path):
+    runner = CliRunner()
+    edgeenv_root = tmp_path / ".edgeenv"
+
+    run_result = runner.invoke(
+        app,
+        [
+            "bench",
+            "run",
+            "--target",
+            "examples/profiles/local.yaml",
+            "--config",
+            "examples/benches/local_template.yaml",
+            "--edgeenv-root",
+            str(edgeenv_root),
+        ],
+    )
+
+    assert run_result.exit_code == 0
+    assert "Latency mean: 21.4 ms" in run_result.output
+    assert "Resource metrics: stored (source=local-template" in run_result.output
+    run_dirs = list((edgeenv_root / "runs").iterdir())
+    run_dir = run_dirs[0]
+    stdout = (run_dir / "stdout.log").read_text(encoding="utf-8")
+    assert "benchmark=local-template" in stdout
+    assert "model=template-model" in stdout
+    assert "target=local-machine" in stdout
+    assert "template_mode=copy-me" in stdout
+    payload = json.loads((run_dir / "result.json").read_text(encoding="utf-8"))
+    assert payload["metrics"]["latency_mean_ms"] == 21.4
+    assert payload["resource_metrics"]["memory_peak_mb"] == 256.0
+    assert payload["resource_metrics"]["source"] == "local-template"
+
+
 def test_cli_sampler_wrapper_example_run_and_show(tmp_path):
     runner = CliRunner()
     edgeenv_root = tmp_path / ".edgeenv"

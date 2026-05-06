@@ -15,8 +15,11 @@
 - `inferedge_env/cli.py` — `target_type: local`일 때 `LocalRunner` 선택
 - `tests/test_local_runner.py` — command contract, failure handling, stdout/stderr capture 검증
 - `examples/benches/local_echo_metrics.yaml` — local runner smoke용 작은 예시
+- `examples/benches/local_template.yaml` — real command 연결을 위한 최소 template config
 - `examples/profiles/local.yaml` — local target profile 예시
 - `examples/scripts/emit_local_metrics.py` — local runner smoke command fixture
+- `examples/scripts/local_benchmark_template.py` — 사용자가 복사해 시작할 수 있는 benchmark command template
+- `docs/local-command-contract.md` — 사용자-facing stdout/config/troubleshooting guide
 
 기술 스택: Python standard library `subprocess`, `shlex`, `json`, `os`, pytest
 
@@ -98,6 +101,7 @@ Benchmark config의 `extra_env`는 command-specific 값을 추가로 전달한�
 - `warmup_runs`와 `repeat_runs`를 LocalRunner가 subprocess 반복 횟수로 해석하지 않는다 — command 내부에서 같은 protocol로 측정해야 p50/p95/p99가 의미 있다.
 - 실패 run을 registry에 성공 run처럼 insert하지 않는다 — local registry의 evidence 신뢰도가 깨진다.
 - local runner를 Docker/WSL/SSH 실행기로 확장하지 않는다 — target boundary가 흐려진다.
+- template script를 실제 성능 주장으로 해석하지 않는다 — 구조를 보여주는 deterministic 시작점일 뿐이다.
 
 ## 5. WHERE — 기존 모듈과의 의존성
 
@@ -178,6 +182,8 @@ _(아직 없음)_
 - [x] resource metrics result artifact persistence
 - [x] `runs show` resource metrics display from `result_path`
 - [x] local resource metrics smoke example
+- [x] local command contract guide
+- [x] copyable local benchmark template script/config
 - [x] CLI output distinguishes stored vs omitted resource metrics
 - [x] CLI output states failed local runs are not inserted into registry
 - [x] pytest:
@@ -191,6 +197,7 @@ _(아직 없음)_
   - optional resource metrics parsing and persistence
   - CLI `bench run` with local profile succeeds against a tiny Python one-liner or fixture script
   - CLI failed-run artifact includes logs, copied config/profile, env, failure schema marker
+  - CLI template example succeeds and captures injected env/context
 
 ## Deferred Work
 
