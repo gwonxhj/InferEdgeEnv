@@ -39,6 +39,22 @@ edgeenv bench run --target examples/profiles/local.yaml --config examples/benche
 edgeenv runs show <run_id>
 ```
 
+`runs show` includes the resource evidence from `result.json` when the local command emits it:
+
+```json
+{
+  "resource_metrics": {
+    "energy_j": 31.7,
+    "memory_mean_mb": 420.5,
+    "memory_peak_mb": 512.0,
+    "power_mean_w": 8.2,
+    "power_peak_w": 11.4,
+    "source": "example-script",
+    "temperature_peak_c": 72.0
+  }
+}
+```
+
 The fake target uses `FakeRunner`, so it does not execute a real model.
 The local target executes `command` on the current machine and reads an explicit `EDGEENV_METRICS_JSON=` line from stdout.
 Local commands may also emit an optional `EDGEENV_RESOURCE_METRICS_JSON=` line for memory, power, energy, or temperature evidence.
