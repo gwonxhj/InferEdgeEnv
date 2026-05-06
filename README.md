@@ -34,6 +34,7 @@ edgeenv report compare <run_id_a> <run_id_b>
 
 The fake target uses `FakeRunner`, so it does not execute a real model.
 The local target executes `command` on the current machine and reads an explicit `EDGEENV_METRICS_JSON=` line from stdout.
+Local benchmark configs may set `timeout_seconds`, `working_directory`, and uppercase `extra_env` keys for controlled command execution.
 The Python package is `inferedge_env`; the user-facing CLI command remains `edgeenv`.
 
 ## Benchmark Config Example
@@ -56,6 +57,10 @@ warmup_runs: 3
 repeat_runs: 10
 include_preprocess: true
 include_postprocess: true
+timeout_seconds: 30
+working_directory: .
+extra_env:
+  LOCAL_DEMO_FLAG: enabled
 ```
 
 ## Target Profile Example

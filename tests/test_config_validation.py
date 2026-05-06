@@ -18,6 +18,73 @@ def test_config_validation_success(config_files):
     assert profile.target_type == "fake"
 
 
+def test_config_validation_local_execution_options(tmp_path):
+    path = tmp_path / "bench.yaml"
+    path.write_text(
+        """
+name: local-options
+command: python bench.py
+model_name: demo
+model_version: "1"
+model_format: onnx
+model_path: model.onnx
+task: classification
+input_shape: [1, 3, 224, 224]
+input_dtype: float32
+runtime: local-python
+execution_provider: cpu
+precision: fp32
+batch_size: 1
+warmup_runs: 1
+repeat_runs: 3
+include_preprocess: true
+include_postprocess: true
+timeout_seconds: 5
+working_directory: examples
+extra_env:
+  LOCAL_FLAG: enabled
+""".strip(),
+        encoding="utf-8",
+    )
+
+    config = load_benchmark_config(path)
+
+    assert config.timeout_seconds == 5
+    assert config.working_directory == "examples"
+    assert config.extra_env == {"LOCAL_FLAG": "enabled"}
+
+
+def test_config_validation_rejects_reserved_extra_env(tmp_path):
+    path = tmp_path / "bench.yaml"
+    path.write_text(
+        """
+name: local-options
+command: python bench.py
+model_name: demo
+model_version: "1"
+model_format: onnx
+model_path: model.onnx
+task: classification
+input_shape: [1, 3, 224, 224]
+input_dtype: float32
+runtime: local-python
+execution_provider: cpu
+precision: fp32
+batch_size: 1
+warmup_runs: 1
+repeat_runs: 3
+include_preprocess: true
+include_postprocess: true
+extra_env:
+  EDGEENV_MODEL_NAME: bad
+""".strip(),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="reserved EDGEENV_ prefix"):
+        load_benchmark_config(path)
+
+
 def test_config_validation_failure(tmp_path):
     path = tmp_path / "bad.yaml"
     path.write_text(

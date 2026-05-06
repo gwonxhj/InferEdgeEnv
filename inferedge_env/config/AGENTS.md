@@ -18,6 +18,7 @@ benchmark config와 target profile의 Pydantic schema를 소유한다. EdgeEnv�
 - 필수 필드를 optional로 느슨하게 만들지 말 것 — 불완전한 run이 registry에 저장되어 compare 판정이 흔들린다.
 - `target_type`에 Docker/WSL/SSH 구현을 추가하지 말 것 — v1은 `fake`, `local`만 허용하고 SSH는 구조만 열어둔다.
 - input shape, precision, protocol 필드명을 임의 변경하지 말 것 — result JSON과 comparability contract가 깨진다.
+- local 실행 옵션(`timeout_seconds`, `working_directory`, `extra_env`)을 comparability protocol 필드처럼 취급하지 말 것 — 실행 제어 옵션과 benchmark 비교 조건은 분리해야 한다.
 
 ## 5. WHERE — 다른 모듈과의 의존성
 - **의존**: YAML parser, Pydantic

@@ -51,7 +51,16 @@ class LocalRunner:
                 text=True,
                 env=env,
                 check=False,
+                cwd=config.working_directory,
+                timeout=config.timeout_seconds,
             )
+        except subprocess.TimeoutExpired as exc:
+            raise LocalRunnerError(
+                f"Local benchmark command timed out after {config.timeout_seconds} seconds",
+                stdout=_decode_timeout_output(exc.stdout),
+                stderr=_decode_timeout_output(exc.stderr),
+                return_code=None,
+            ) from exc
         except OSError as exc:
             raise LocalRunnerError(f"Failed to start local benchmark command: {exc}") from exc
 
@@ -102,17 +111,29 @@ def _extract_metrics(stdout: str) -> dict[str, float]:
 
 
 def _edgeenv_env(config: BenchmarkConfig, target: TargetProfile) -> dict[str, str]:
-    return {
-        "EDGEENV_BENCHMARK_NAME": config.name,
-        "EDGEENV_MODEL_NAME": config.model_name,
-        "EDGEENV_MODEL_PATH": config.model_path,
-        "EDGEENV_RUNTIME": config.runtime,
-        "EDGEENV_EXECUTION_PROVIDER": config.execution_provider,
-        "EDGEENV_PRECISION": config.precision,
-        "EDGEENV_BATCH_SIZE": str(config.batch_size),
-        "EDGEENV_WARMUP_RUNS": str(config.warmup_runs),
-        "EDGEENV_REPEAT_RUNS": str(config.repeat_runs),
-        "EDGEENV_INCLUDE_PREPROCESS": str(config.include_preprocess).lower(),
-        "EDGEENV_INCLUDE_POSTPROCESS": str(config.include_postprocess).lower(),
-        "EDGEENV_TARGET_NAME": target.target_name,
-    }
+    env = dict(config.extra_env)
+    env.update(
+        {
+            "EDGEENV_BENCHMARK_NAME": config.name,
+            "EDGEENV_MODEL_NAME": config.model_name,
+            "EDGEENV_MODEL_PATH": config.model_path,
+            "EDGEENV_RUNTIME": config.runtime,
+            "EDGEENV_EXECUTION_PROVIDER": config.execution_provider,
+            "EDGEENV_PRECISION": config.precision,
+            "EDGEENV_BATCH_SIZE": str(config.batch_size),
+            "EDGEENV_WARMUP_RUNS": str(config.warmup_runs),
+            "EDGEENV_REPEAT_RUNS": str(config.repeat_runs),
+            "EDGEENV_INCLUDE_PREPROCESS": str(config.include_preprocess).lower(),
+            "EDGEENV_INCLUDE_POSTPROCESS": str(config.include_postprocess).lower(),
+            "EDGEENV_TARGET_NAME": target.target_name,
+        }
+    )
+    return env
+
+
+def _decode_timeout_output(value: str | bytes | None) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="replace")
+    return value
