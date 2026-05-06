@@ -10,6 +10,7 @@ EdgeEnv MVP의 pytest 검증을 담당한다. config validation, FakeRunner dete
 - `tests/test_registry.py` — insert/list/show
 - `tests/test_comparability.py` — same/no/conditional
 - `tests/test_cli.py` — Typer CLI smoke
+- `tests/test_entrypoints.py` — pyproject metadata, module entrypoint, console script smoke
 
 기술 스택: pytest, Typer CliRunner
 
@@ -22,6 +23,7 @@ EdgeEnv MVP의 pytest 검증을 담당한다. config validation, FakeRunner dete
 - 테스트가 실제 host 성능이나 시간 랜덤성에 의존하게 하지 말 것 — FakeRunner contract가 흔들린다.
 - 테스트 중 repo 루트 `.edgeenv`를 쓰지 말 것 — 개발자의 실제 run registry를 오염시킨다.
 - 실패한 테스트가 있는데 commit/push/PR을 진행하지 말 것 — 글로벌 AGENTS 규칙 위반이다.
+- entrypoint 테스트는 README의 설치/doctor 경로와 같이 움직여야 한다 — pyproject console script와 package version drift를 놓치지 않는다.
 
 ## 5. WHERE — 다른 모듈과의 의존성
 - **의존**: 모든 `inferedge_env` 하위 모듈, examples

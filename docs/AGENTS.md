@@ -14,6 +14,7 @@ README와 설계/운영 문서가 위치하는 영역이다. EdgeEnv가 무엇�
 - `docs/local-command-contract.md` — 사용자가 자기 local benchmark command를 연결할 때 지켜야 하는 stdout/config/troubleshooting contract
 - `docs/compare-workflow-guide.md` — 두 local run 생성부터 `runs list/show/report compare`까지 이어지는 compare workflow guide
 - `docs/mvp-readiness-checklist.md` — MVP에서 가능한 흐름과 non-goals를 release/readiness 관점으로 정리한 상태판
+- `docs/packaging-entrypoints.md` — editable install, module entrypoint, console script readiness 기준
 
 기술 스택: Markdown
 
@@ -27,6 +28,7 @@ README와 설계/운영 문서가 위치하는 영역이다. EdgeEnv가 무엇�
 - "모든 모델을 한 점수로 줄 세운다"는 표현을 쓰지 말 것 — comparability-first 철학과 충돌한다.
 - README 예시를 실행 불가능한 pseudo-config로 두지 말 것 — quickstart 신뢰도가 떨어진다.
 - readiness 문서에 future work를 현재 지원 기능처럼 쓰지 말 것 — MVP scope와 non-goals가 흐려진다.
+- package name `inferedge-env`, import package `inferedge_env`, console script `edgeenv`를 섞어 쓰지 말 것 — 설치/실행 진입점이 헷갈린다.
 
 ## 5. WHERE — 다른 모듈과의 의존성
 - **의존**: CLI command surface, config schema, examples, comparability rules

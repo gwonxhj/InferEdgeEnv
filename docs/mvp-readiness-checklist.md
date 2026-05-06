@@ -29,6 +29,7 @@ EdgeEnv MVP가 현재 어떤 사용자 흐름을 지원하고, 어떤 범위를 
 
 ```bash
 python -m pip install -e ".[dev]"
+python -m inferedge_env.cli doctor
 edgeenv doctor
 ```
 
@@ -71,6 +72,7 @@ edgeenv report compare <run_id_a> <run_id_b>
 - `runs list`, `runs show`, and `report compare`
 - Same-condition, conditional, and non-comparable judgement
 - Deterministic examples and pytest coverage
+- Editable install and `edgeenv` console script smoke path
 
 ### Not supported in this MVP
 

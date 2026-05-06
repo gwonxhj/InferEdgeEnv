@@ -22,6 +22,7 @@ EdgeEnv is not:
 
 ```bash
 python -m pip install -e ".[dev]"
+python -m inferedge_env.cli doctor
 edgeenv doctor
 ```
 
@@ -106,6 +107,7 @@ The Python package is `inferedge_env`; the user-facing CLI command remains `edge
 Start here:
 
 - [MVP Readiness Checklist](docs/mvp-readiness-checklist.md) — what works in this MVP and what remains out of scope
+- [Packaging And Entrypoint Readiness](docs/packaging-entrypoints.md) — install, module entrypoint, and console script checks
 - [Local Command Contract Guide](docs/local-command-contract.md) — how to connect your own local benchmark command
 - [Compare Workflow Guide](docs/compare-workflow-guide.md) — how to create two runs and judge comparability
 
@@ -259,6 +261,7 @@ Non-goals:
 ## Design Notes
 
 - [MVP Readiness Checklist](docs/mvp-readiness-checklist.md)
+- [Packaging And Entrypoint Readiness](docs/packaging-entrypoints.md)
 - [Local Runner Design](docs/local-runner-design.md)
 - [Local Command Contract Guide](docs/local-command-contract.md)
 - [Compare Workflow Guide](docs/compare-workflow-guide.md)
