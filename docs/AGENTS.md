@@ -15,6 +15,7 @@ README와 설계/운영 문서가 위치하는 영역이다. EdgeEnv가 무엇�
 - `docs/compare-workflow-guide.md` — 두 local run 생성부터 `runs list/show/report compare`까지 이어지는 compare workflow guide
 - `docs/mvp-readiness-checklist.md` — MVP에서 가능한 흐름과 non-goals를 release/readiness 관점으로 정리한 상태판
 - `docs/packaging-entrypoints.md` — editable install, module entrypoint, console script readiness 기준
+- `docs/ci-readiness.md` — GitHub Actions에서 자동 검증하는 MVP readiness workflow 기준
 
 기술 스택: Markdown
 
@@ -29,6 +30,7 @@ README와 설계/운영 문서가 위치하는 영역이다. EdgeEnv가 무엇�
 - README 예시를 실행 불가능한 pseudo-config로 두지 말 것 — quickstart 신뢰도가 떨어진다.
 - readiness 문서에 future work를 현재 지원 기능처럼 쓰지 말 것 — MVP scope와 non-goals가 흐려진다.
 - package name `inferedge-env`, import package `inferedge_env`, console script `edgeenv`를 섞어 쓰지 말 것 — 설치/실행 진입점이 헷갈린다.
+- CI readiness에 무거운 benchmark run이나 구현되지 않은 target을 넣지 말 것 — PR 검증이 느려지고 v1 scope가 흐려진다.
 
 ## 5. WHERE — 다른 모듈과의 의존성
 - **의존**: CLI command surface, config schema, examples, comparability rules

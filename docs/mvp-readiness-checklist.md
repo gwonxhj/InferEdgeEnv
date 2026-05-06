@@ -16,6 +16,7 @@ EdgeEnv MVP가 현재 어떤 사용자 흐름을 지원하고, 어떤 범위를 
 - `docs/local-runner-design.md` — local runner 내부 설계 기준
 - `docs/resource-metrics-design.md` — optional resource metrics 정책
 - `docs/sampler-failure-policy.md` — sampler/resource evidence 실패 정책
+- `docs/ci-readiness.md` — PR/main 자동 검증 기준
 - `examples/` — 실행 가능한 deterministic fixtures
 - `tests/` — CLI, registry, writer, compare regression coverage
 
@@ -73,6 +74,7 @@ edgeenv report compare <run_id_a> <run_id_b>
 - Same-condition, conditional, and non-comparable judgement
 - Deterministic examples and pytest coverage
 - Editable install and `edgeenv` console script smoke path
+- GitHub Actions readiness checks for Python 3.10 and 3.11
 
 ### Not supported in this MVP
 

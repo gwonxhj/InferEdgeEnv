@@ -108,6 +108,7 @@ Start here:
 
 - [MVP Readiness Checklist](docs/mvp-readiness-checklist.md) — what works in this MVP and what remains out of scope
 - [Packaging And Entrypoint Readiness](docs/packaging-entrypoints.md) — install, module entrypoint, and console script checks
+- [CI Readiness Workflow](docs/ci-readiness.md) — automated PR/main checks for MVP contracts
 - [Local Command Contract Guide](docs/local-command-contract.md) — how to connect your own local benchmark command
 - [Compare Workflow Guide](docs/compare-workflow-guide.md) — how to create two runs and judge comparability
 
@@ -262,6 +263,7 @@ Non-goals:
 
 - [MVP Readiness Checklist](docs/mvp-readiness-checklist.md)
 - [Packaging And Entrypoint Readiness](docs/packaging-entrypoints.md)
+- [CI Readiness Workflow](docs/ci-readiness.md)
 - [Local Runner Design](docs/local-runner-design.md)
 - [Local Command Contract Guide](docs/local-command-contract.md)
 - [Compare Workflow Guide](docs/compare-workflow-guide.md)

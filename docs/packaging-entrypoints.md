@@ -21,6 +21,7 @@ edgeenv doctor
 - `inferedge_env/cli.py` — Typer CLI entrypoint
 - `scripts/smoke_entrypoints.sh` — install/module/console entrypoint smoke
 - `tests/test_entrypoints.py` — package metadata and entrypoint regression tests
+- `.github/workflows/readiness.yml` — PR/main automation for entrypoint smoke and pytest
 
 기술 스택: Python packaging, setuptools, PEP 621 metadata, Typer console script, pytest
 
@@ -63,6 +64,17 @@ bash scripts/smoke_entrypoints.sh
 ```
 
 The script intentionally checks install, module entrypoint, console script entrypoint, and the full pytest suite. It should be run from the repository root.
+
+### CI workflow
+
+```bash
+python -m pip install -e ".[dev]"
+python -m inferedge_env.cli doctor
+edgeenv doctor
+python -m pytest -q
+```
+
+The GitHub Actions readiness workflow repeats the same entrypoint contract on Python 3.10 and 3.11.
 
 ## 4. HOW NOT — 피해야 할 함정
 

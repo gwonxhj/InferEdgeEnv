@@ -1,0 +1,51 @@
+name: readiness
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  core:
+    name: python-${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version:
+          - "3.10"
+          - "3.11"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install package
+        run: python -m pip install -e ".[dev]"
+
+      - name: Smoke module entrypoint
+        run: python -m inferedge_env.cli doctor
+
+      - name: Smoke console entrypoint
+        run: edgeenv doctor
+
+      - name: Validate representative examples
+        run: |
+          edgeenv profile validate examples/profiles/local_fake.yaml
+          edgeenv profile validate examples/profiles/local.yaml
+          edgeenv bench validate examples/benches/yolov8n_fire.yaml
+          edgeenv bench validate examples/benches/local_template.yaml
+          edgeenv bench validate examples/benches/local_compare_a.yaml
+
+      - name: Run tests
+        run: python -m pytest -q
