@@ -39,6 +39,7 @@ def test_cli_bench_run_with_fake_profile(tmp_path, config_files):
 
     assert result.exit_code == 0
     assert "Benchmark run stored" in result.output
+    assert "Resource metrics: omitted" in result.output
     assert (edgeenv_root / "runs.db").is_file()
     run_dirs = list((edgeenv_root / "runs").iterdir())
     assert len(run_dirs) == 1
@@ -118,6 +119,7 @@ runtime_tags: [local]
     assert result.exit_code == 0
     assert "Benchmark run stored" in result.output
     assert "Latency mean: 10.0 ms" in result.output
+    assert "Resource metrics: omitted" in result.output
     run_dirs = list((edgeenv_root / "runs").iterdir())
     assert len(run_dirs) == 1
     assert (run_dirs[0] / "stdout.log").read_text(encoding="utf-8").startswith(
@@ -200,6 +202,10 @@ runtime_tags: [local]
     )
 
     assert run_result.exit_code == 0
+    assert (
+        "Resource metrics: stored "
+        "(source=benchmark-command, fields=memory_peak_mb, power_mean_w)"
+    ) in run_result.output
     run_dirs = list((edgeenv_root / "runs").iterdir())
     payload = json.loads((run_dirs[0] / "result.json").read_text(encoding="utf-8"))
     show_result = runner.invoke(
@@ -240,6 +246,7 @@ def test_cli_resource_metrics_example_run_and_show(tmp_path):
 
     assert run_result.exit_code == 0
     assert "Latency mean: 12.8 ms" in run_result.output
+    assert "Resource metrics: stored (source=example-script" in run_result.output
     run_dirs = list((edgeenv_root / "runs").iterdir())
     payload = json.loads((run_dirs[0] / "result.json").read_text(encoding="utf-8"))
     assert payload["resource_metrics"]["memory_peak_mb"] == 512.0
@@ -281,6 +288,10 @@ def test_cli_sampler_wrapper_example_run_and_show(tmp_path):
 
     assert run_result.exit_code == 0
     assert "Latency mean: 12.3 ms" in run_result.output
+    assert (
+        "Resource metrics: stored (source=deterministic-wrapper-demo"
+        in run_result.output
+    )
     run_dirs = list((edgeenv_root / "runs").iterdir())
     run_dir = run_dirs[0]
     stdout = (run_dir / "stdout.log").read_text(encoding="utf-8")
@@ -327,6 +338,7 @@ def test_cli_sampler_unavailable_example_stores_run_without_resource_metrics(tmp
 
     assert run_result.exit_code == 0
     assert "Latency mean: 12.3 ms" in run_result.output
+    assert "Resource metrics: omitted" in run_result.output
     run_dirs = list((edgeenv_root / "runs").iterdir())
     run_dir = run_dirs[0]
     payload = json.loads((run_dir / "result.json").read_text(encoding="utf-8"))
@@ -358,6 +370,7 @@ def test_cli_malformed_sampler_resource_metrics_writes_failed_run_artifact(tmp_p
 
     assert result.exit_code == 1
     assert "Failed run artifact:" in result.output
+    assert "Registry: not updated" in result.output
     assert "Invalid EDGEENV_RESOURCE_METRICS_JSON JSON" in result.output
     assert not (edgeenv_root / "runs.db").exists()
     failed_dirs = list((edgeenv_root / "failed-runs").iterdir())
@@ -367,8 +380,12 @@ def test_cli_malformed_sampler_resource_metrics_writes_failed_run_artifact(tmp_p
     assert "EDGEENV_RESOURCE_METRICS_JSON={bad sampler json" in stdout
     assert "EDGEENV_METRICS_JSON=" in stdout
     failure = json.loads((failed_dir / "failure.json").read_text(encoding="utf-8"))
+    assert failure["schema_version"] == "edgeenv.failed-run.v1"
     assert failure["return_code"] == 0
     assert "Invalid EDGEENV_RESOURCE_METRICS_JSON JSON" in failure["error_message"]
+    assert (failed_dir / "config.yaml").is_file()
+    assert (failed_dir / "target.yaml").is_file()
+    assert (failed_dir / "env.json").is_file()
 
 
 def test_cli_local_failure_writes_failed_run_artifact(tmp_path):
@@ -438,6 +455,7 @@ runtime_tags: [local]
 
     assert result.exit_code == 1
     assert "Failed run artifact:" in result.output
+    assert "Registry: not updated" in result.output
     assert not (edgeenv_root / "runs.db").exists()
     failed_dirs = list((edgeenv_root / "failed-runs").iterdir())
     assert len(failed_dirs) == 1
@@ -448,5 +466,9 @@ runtime_tags: [local]
         "failure details\n"
     )
     failure = json.loads((failed_dirs[0] / "failure.json").read_text(encoding="utf-8"))
+    assert failure["schema_version"] == "edgeenv.failed-run.v1"
     assert failure["return_code"] == 7
     assert failure["error_message"] == "Local benchmark command failed with exit code 7"
+    assert (failed_dirs[0] / "config.yaml").is_file()
+    assert (failed_dirs[0] / "target.yaml").is_file()
+    assert (failed_dirs[0] / "env.json").is_file()

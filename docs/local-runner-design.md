@@ -128,6 +128,30 @@ Benchmark config의 `extra_env`는 command-specific 값을 추가로 전달한�
 
 `failure.json`은 `edgeenv.failed-run.v1` schema marker, command, error message, return code, benchmark name, target name을 담는다.
 
+### CLI UX
+
+성공한 `bench run`은 primary latency와 함께 resource metrics 상태를 한 줄로 표시한다.
+
+```text
+Resource metrics: omitted
+```
+
+또는:
+
+```text
+Resource metrics: stored (source=example-script, fields=energy_j, memory_mean_mb, memory_peak_mb, power_mean_w, power_peak_w, temperature_peak_c)
+```
+
+실패한 local run은 failed-run artifact path를 먼저 보여주고, registry가 업데이트되지 않았음을 명시한다.
+
+```text
+Failed run artifact: .edgeenv/failed-runs/<run_id>
+Registry: not updated
+Error: <reason>
+```
+
+이 출력은 result schema나 registry schema를 바꾸지 않는다. 사람이 CLI에서 run 보존 여부와 resource evidence 상태를 즉시 구분하도록 돕는 UX layer다.
+
 ## 6. WHY — 배경 판단
 
 local runner에서 가장 위험한 선택은 "아무 command나 실행하고 로그를 적당히 읽어 latency를 알아낸다"는 방식이다. 그 방식은 처음에는 편해 보이지만, benchmark마다 로그 형식이 다르고 process startup overhead와 inference latency가 섞여 비교 가능성을 망친다.
@@ -154,6 +178,8 @@ _(아직 없음)_
 - [x] resource metrics result artifact persistence
 - [x] `runs show` resource metrics display from `result_path`
 - [x] local resource metrics smoke example
+- [x] CLI output distinguishes stored vs omitted resource metrics
+- [x] CLI output states failed local runs are not inserted into registry
 - [x] pytest:
   - valid command returns deterministic metrics
   - stdout/stderr capture preserved
@@ -164,6 +190,7 @@ _(아직 없음)_
   - working directory and extra env propagation
   - optional resource metrics parsing and persistence
   - CLI `bench run` with local profile succeeds against a tiny Python one-liner or fixture script
+  - CLI failed-run artifact includes logs, copied config/profile, env, failure schema marker
 
 ## Deferred Work
 

@@ -22,34 +22,38 @@ EdgeEnv is not:
 
 ```bash
 python -m pip install -e ".[dev]"
-python -m inferedge_env.cli doctor
 edgeenv doctor
+```
+
+Run the deterministic fake benchmark first:
+
+```bash
 edgeenv profile validate examples/profiles/local_fake.yaml
 edgeenv bench validate examples/benches/yolov8n_fire.yaml
 edgeenv bench run --target examples/profiles/local_fake.yaml --config examples/benches/yolov8n_fire.yaml
 edgeenv runs list
 edgeenv runs show <run_id>
-edgeenv report compare <run_id_a> <run_id_b>
 ```
 
-Local resource metrics example:
+Then try the local runner examples:
 
 ```bash
+edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_echo_metrics.yaml
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_resource_metrics.yaml
-edgeenv runs show <run_id>
 ```
 
-Sampler wrapper example:
+The local target executes `command` on the current machine and reads an explicit `EDGEENV_METRICS_JSON=` line from stdout. Local commands may also emit an optional `EDGEENV_RESOURCE_METRICS_JSON=` line for memory, power, energy, or temperature evidence. `bench run` reports whether resource metrics were stored or omitted, and `runs show` reads the result artifact when resource metrics are present.
+
+Sampler wrapper examples:
 
 ```bash
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_sampler_wrapper.yaml
-edgeenv runs show <run_id>
+edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_sampler_unavailable.yaml
 ```
 
-Sampler failure policy examples:
+If a sampler is unavailable, the wrapper should omit `EDGEENV_RESOURCE_METRICS_JSON=` and preserve the successful primary benchmark run. If a wrapper emits malformed resource metrics, EdgeEnv writes a failed-run artifact and does not update the registry:
 
 ```bash
-edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_sampler_unavailable.yaml
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_sampler_malformed_resource.yaml
 ```
 
@@ -69,13 +73,14 @@ edgeenv bench run --target examples/profiles/local.yaml --config examples/benche
 }
 ```
 
+Compare two registered runs after you have at least two successful run IDs:
+
+```bash
+edgeenv report compare <run_id_a> <run_id_b>
+```
+
 The fake target uses `FakeRunner`, so it does not execute a real model.
-The local target executes `command` on the current machine and reads an explicit `EDGEENV_METRICS_JSON=` line from stdout.
-Local commands may also emit an optional `EDGEENV_RESOURCE_METRICS_JSON=` line for memory, power, energy, or temperature evidence.
-If a sampler is unavailable, the wrapper should omit `EDGEENV_RESOURCE_METRICS_JSON=` and preserve the successful primary benchmark run.
-If a wrapper emits malformed resource metrics, EdgeEnv writes a failed-run artifact instead of storing polluted evidence in the registry.
 Local benchmark configs may set `timeout_seconds`, `working_directory`, and uppercase `extra_env` keys for controlled command execution.
-`edgeenv runs show <run_id>` reads the result artifact and includes resource metrics when present.
 The Python package is `inferedge_env`; the user-facing CLI command remains `edgeenv`.
 
 ## Benchmark Config Example

@@ -14,6 +14,7 @@ from inferedge_env.config.bench_config import load_benchmark_config
 from inferedge_env.config.target_profile import TargetProfile, load_target_profile
 from inferedge_env.registry.db import RunRegistry
 from inferedge_env.registry.models import RegistryRecord
+from inferedge_env.result.schema import ResourceMetrics
 from inferedge_env.result.writer import (
     FailedRunArtifactWriter,
     ResultArtifactWriter,
@@ -97,7 +98,11 @@ def run_benchmark(
             stderr=exc.stderr,
             return_code=exc.return_code,
         )
-        console.print(f"[yellow]Failed run artifact:[/yellow] {failed_dir}")
+        console.print(
+            f"[yellow]Failed run artifact:[/yellow] {failed_dir}",
+            soft_wrap=True,
+        )
+        console.print("[yellow]Registry:[/yellow] not updated")
         _fail(str(exc))
     result = build_run_result(config, target, runner_result)
     run_dir = ResultArtifactWriter(edgeenv_root).write(
@@ -112,8 +117,9 @@ def run_benchmark(
 
     console.print("[bold green]Benchmark run stored[/bold green]")
     console.print(f"Run ID: {result.run_id}")
-    console.print(f"Result: {result_path}")
+    console.print(f"Result: {result_path}", soft_wrap=True)
     console.print(f"Latency mean: {result.metrics.latency_mean_ms} ms")
+    console.print(_resource_metrics_status(result.resource_metrics), soft_wrap=True)
 
 
 @runs_app.command("list")
@@ -216,8 +222,26 @@ def _show_payload(record: RegistryRecord) -> dict:
     return payload
 
 
+def _resource_metrics_status(resource_metrics: ResourceMetrics | None) -> str:
+    if resource_metrics is None:
+        return "Resource metrics: omitted"
+    payload = resource_metrics.model_dump(mode="json", exclude_none=True)
+    source = payload.get("source")
+    measured_fields = sorted(key for key in payload if key != "source")
+    if source and measured_fields:
+        return (
+            "Resource metrics: stored "
+            f"(source={source}, fields={', '.join(measured_fields)})"
+        )
+    if source:
+        return f"Resource metrics: stored (source={source})"
+    if measured_fields:
+        return f"Resource metrics: stored (fields={', '.join(measured_fields)})"
+    return "Resource metrics: stored"
+
+
 def _fail(message: str) -> None:
-    console.print(f"[red]Error:[/red] {message}")
+    console.print(f"[red]Error:[/red] {message}", soft_wrap=True)
     raise typer.Exit(code=1)
 
 

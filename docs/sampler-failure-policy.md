@@ -45,6 +45,7 @@ Wrapper command나 future sampler adapter에서 resource sampling이 실패했�
 - sampler timeout이 benchmark measurement 자체에는 영향을 주지 않았다.
 
 이 경우 wrapper/adaptor는 `EDGEENV_METRICS_JSON=`를 그대로 출력하고, `EDGEENV_RESOURCE_METRICS_JSON=`를 출력하지 않는다. `result.json`에는 `resource_metrics` field가 생략된다.
+CLI는 이 상태를 `Resource metrics: omitted`으로 표시한다.
 
 ### Failed run caused by invalid resource metrics
 
@@ -56,6 +57,7 @@ Wrapper command나 future sampler adapter에서 resource sampling이 실패했�
 - numeric field에 string이나 non-finite value를 넣는다.
 
 현재 `LocalRunner`는 `EDGEENV_RESOURCE_METRICS_JSON=` line이 있으면 schema validation을 수행한다. 따라서 잘못된 resource metrics line을 출력하는 wrapper는 실패한다. 확신이 없으면 line을 출력하지 않는 것이 맞다.
+CLI는 failed-run artifact path와 `Registry: not updated`를 표시한다.
 
 ### Wrapper command behavior
 

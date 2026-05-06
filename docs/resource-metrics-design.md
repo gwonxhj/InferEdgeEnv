@@ -92,6 +92,15 @@ EDGEENV_RESOURCE_METRICS_JSON={"memory_peak_mb":512.0,"power_mean_w":8.2,"source
 
 `runs show`에서 resource metrics를 보여줄 필요가 생기면 registry row의 `result_path`를 통해 `result.json`을 읽어 출력한다. DB migration은 별도 작업으로 남긴다.
 
+### CLI display policy
+
+`bench run`은 resource metrics를 비교 점수처럼 해석하지 않고 저장 상태만 알려준다.
+
+- `Resource metrics: omitted` — command가 `EDGEENV_RESOURCE_METRICS_JSON=` line을 내보내지 않았다.
+- `Resource metrics: stored (...)` — schema-valid resource metrics가 `result.json`에 저장됐다.
+
+`runs show`는 계속 JSON payload를 출력한다. Resource metrics가 있는 run만 `resource_metrics` object를 포함하고, 없는 run에는 field를 추가하지 않는다. 이 정책은 기존 `edgeenv.result.v1` artifact compatibility를 유지한다.
+
 ### Comparability policy
 
 Resource metrics는 same-condition 필수 비교 필드에 포함하지 않는다.
@@ -151,6 +160,7 @@ _(아직 없음)_
 - [x] `LocalRunner`에서 `EDGEENV_RESOURCE_METRICS_JSON=` optional parser 추가
 - [x] writer가 optional resource metrics를 `result.json`에 저장
 - [x] `runs show` 출력 방식 결정: DB column을 추가하지 않고 `result_path`의 result artifact를 읽어 표시한다.
+- [x] `bench run` UX가 resource metrics 저장/생략 상태를 명시한다.
 - [x] pytest:
   - missing resource metrics remains valid
   - valid resource metrics is persisted
