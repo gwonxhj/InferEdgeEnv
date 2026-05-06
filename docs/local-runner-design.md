@@ -43,11 +43,21 @@ EDGEENV_METRICS_JSON={"latency_mean_ms":12.3,"latency_p50_ms":12.0,"latency_p95_
 
 - `LocalRunner`는 일반 로그를 임의로 추론하지 않는다.
 - 마지막으로 발견한 `EDGEENV_METRICS_JSON=` line만 metrics source로 사용한다.
+- `EDGEENV_RESOURCE_METRICS_JSON=` line은 선택 사항이며, 있으면 resource evidence로 저장한다.
 - JSON에는 기존 `RunnerResult` metrics 필드가 모두 있어야 한다.
 - stdout/stderr 전체는 기존 artifact writer가 그대로 저장한다.
 - command exit code가 non-zero이면 benchmark run은 실패한다.
 - metrics line이 없거나 schema가 틀리면 benchmark run은 실패한다.
+- resource metrics line이 schema에 맞지 않으면 benchmark run은 실패한다.
 - 실패한 local run은 `.edgeenv/failed-runs/<run_id>/`에 diagnostic artifact를 남기고, `.edgeenv/runs.db`에는 insert하지 않는다.
+
+선택적 resource metrics contract:
+
+```text
+EDGEENV_RESOURCE_METRICS_JSON={"memory_peak_mb":512.0,"power_mean_w":8.2,"source":"example-script"}
+```
+
+Resource metrics는 direct comparability gate가 아니라 `result.json`에 저장되는 secondary evidence다. `runs show`는 registry DB column을 추가하지 않고 `result_path`의 `result.json`을 읽어 resource metrics가 있을 때만 표시한다.
 
 ### Environment variables
 
@@ -140,6 +150,10 @@ _(아직 없음)_
 - [x] command timeout
 - [x] explicit working directory field
 - [x] extra environment variables allowlist
+- [x] optional `EDGEENV_RESOURCE_METRICS_JSON=` parser
+- [x] resource metrics result artifact persistence
+- [x] `runs show` resource metrics display from `result_path`
+- [x] local resource metrics smoke example
 - [x] pytest:
   - valid command returns deterministic metrics
   - stdout/stderr capture preserved
@@ -148,9 +162,11 @@ _(아직 없음)_
   - invalid metrics JSON fails
   - timeout failure
   - working directory and extra env propagation
+  - optional resource metrics parsing and persistence
   - CLI `bench run` with local profile succeeds against a tiny Python one-liner or fixture script
 
 ## Deferred Work
 
-- richer metric schema such as memory/power
+- platform-specific resource samplers such as Jetson `tegrastats`, macOS `powermetrics`, Windows counters, or external power meter adapters
+- registry migration for querying resource metrics without opening `result.json`
 - SSH/WSL/Docker targets
