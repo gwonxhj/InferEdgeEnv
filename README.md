@@ -127,9 +127,18 @@ Reason:
       env.json
       stdout.log
       stderr.log
+  failed-runs/
+    <run_id>/
+      failure.json
+      config.yaml
+      target.yaml
+      env.json
+      stdout.log
+      stderr.log
 ```
 
 `runs.db` is a local SQLite index. The run directory remains the evidence bundle.
+Failed local runs are stored under `failed-runs/` for debugging and are not inserted into `runs.db`.
 
 ## Relation To InferEdge And EdgeBench
 

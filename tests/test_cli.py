@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import shlex
 import sys
 
@@ -122,3 +123,84 @@ runtime_tags: [local]
     assert (run_dirs[0] / "stdout.log").read_text(encoding="utf-8").startswith(
         "local cli smoke"
     )
+
+
+def test_cli_local_failure_writes_failed_run_artifact(tmp_path):
+    runner = CliRunner()
+    script = tmp_path / "local_fail.py"
+    script.write_text(
+        """
+import sys
+print("before failure")
+print("failure details", file=sys.stderr)
+sys.exit(7)
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
+    bench_path = tmp_path / "bench.yaml"
+    profile_path = tmp_path / "profile.yaml"
+    bench_path.write_text(
+        f"""
+name: local-cli-fail
+command: {shlex.quote(sys.executable)} {shlex.quote(str(script))}
+model_name: local-model
+model_version: "1.0"
+model_format: onnx
+model_path: models/local.onnx
+task: object-detection
+input_shape: [1, 3, 224, 224]
+input_dtype: float32
+runtime: local-python
+execution_provider: cpu
+precision: fp32
+batch_size: 1
+warmup_runs: 1
+repeat_runs: 3
+include_preprocess: true
+include_postprocess: true
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
+    profile_path.write_text(
+        """
+target_name: local-machine
+target_type: local
+board_name: local-dev-machine
+os: test-os
+runtime_tags: [local]
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
+    edgeenv_root = tmp_path / ".edgeenv"
+
+    result = runner.invoke(
+        app,
+        [
+            "bench",
+            "run",
+            "--target",
+            str(profile_path),
+            "--config",
+            str(bench_path),
+            "--edgeenv-root",
+            str(edgeenv_root),
+        ],
+    )
+
+    assert result.exit_code == 1
+    assert "Failed run artifact:" in result.output
+    assert not (edgeenv_root / "runs.db").exists()
+    failed_dirs = list((edgeenv_root / "failed-runs").iterdir())
+    assert len(failed_dirs) == 1
+    assert (failed_dirs[0] / "stdout.log").read_text(encoding="utf-8") == (
+        "before failure\n"
+    )
+    assert (failed_dirs[0] / "stderr.log").read_text(encoding="utf-8") == (
+        "failure details\n"
+    )
+    failure = json.loads((failed_dirs[0] / "failure.json").read_text(encoding="utf-8"))
+    assert failure["return_code"] == 7
+    assert failure["error_message"] == "Local benchmark command failed with exit code 7"

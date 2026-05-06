@@ -74,8 +74,11 @@ sys.exit(7)
     config = bench_config.model_copy(update={"command": _python_command(script)})
     target = target_profile.model_copy(update={"target_type": "local"})
 
-    with pytest.raises(LocalRunnerError, match="exit code 7"):
+    with pytest.raises(LocalRunnerError, match="exit code 7") as exc_info:
         LocalRunner().run(config, target)
+    assert exc_info.value.stdout == "failed benchmark\n"
+    assert exc_info.value.stderr == ""
+    assert exc_info.value.return_code == 7
 
 
 def test_local_runner_missing_metrics_line_fails(
@@ -87,8 +90,10 @@ def test_local_runner_missing_metrics_line_fails(
     config = bench_config.model_copy(update={"command": _python_command(script)})
     target = target_profile.model_copy(update={"target_type": "local"})
 
-    with pytest.raises(LocalRunnerError, match="Missing EDGEENV_METRICS_JSON"):
+    with pytest.raises(LocalRunnerError, match="Missing EDGEENV_METRICS_JSON") as exc_info:
         LocalRunner().run(config, target)
+    assert exc_info.value.stdout == "no metrics here\n"
+    assert exc_info.value.return_code == 0
 
 
 def test_local_runner_invalid_metrics_json_fails(

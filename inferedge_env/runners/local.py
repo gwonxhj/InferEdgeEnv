@@ -19,6 +19,18 @@ METRICS_NAME = "EDGEENV_METRICS_JSON"
 class LocalRunnerError(RuntimeError):
     """Raised when a local benchmark command cannot produce valid metrics."""
 
+    def __init__(
+        self,
+        message: str,
+        stdout: str = "",
+        stderr: str = "",
+        return_code: int | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.stdout = stdout
+        self.stderr = stderr
+        self.return_code = return_code
+
 
 class LocalRunner:
     """Run a local benchmark command and parse its explicit metrics contract."""
@@ -45,10 +57,21 @@ class LocalRunner:
 
         if completed.returncode != 0:
             raise LocalRunnerError(
-                f"Local benchmark command failed with exit code {completed.returncode}"
+                f"Local benchmark command failed with exit code {completed.returncode}",
+                stdout=completed.stdout,
+                stderr=completed.stderr,
+                return_code=completed.returncode,
             )
 
-        metrics = _extract_metrics(completed.stdout)
+        try:
+            metrics = _extract_metrics(completed.stdout)
+        except LocalRunnerError as exc:
+            raise LocalRunnerError(
+                str(exc),
+                stdout=completed.stdout,
+                stderr=completed.stderr,
+                return_code=completed.returncode,
+            ) from exc
         return RunnerResult(
             stdout=completed.stdout,
             stderr=completed.stderr,

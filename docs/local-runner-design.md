@@ -47,6 +47,7 @@ EDGEENV_METRICS_JSON={"latency_mean_ms":12.3,"latency_p50_ms":12.0,"latency_p95_
 - stdout/stderr 전체는 기존 artifact writer가 그대로 저장한다.
 - command exit code가 non-zero이면 benchmark run은 실패한다.
 - metrics line이 없거나 schema가 틀리면 benchmark run은 실패한다.
+- 실패한 local run은 `.edgeenv/failed-runs/<run_id>/`에 diagnostic artifact를 남기고, `.edgeenv/runs.db`에는 insert하지 않는다.
 
 ### Environment variables
 
@@ -98,6 +99,22 @@ EDGEENV_METRICS_JSON={"latency_mean_ms":12.3,"latency_p50_ms":12.0,"latency_p95_
 - `.edgeenv/runs.db` registry columns 유지
 - comparability required fields 유지
 
+실패 artifact layout:
+
+```text
+.edgeenv/
+  failed-runs/
+    <run_id>/
+      failure.json
+      config.yaml
+      target.yaml
+      env.json
+      stdout.log
+      stderr.log
+```
+
+`failure.json`은 `edgeenv.failed-run.v1` schema marker, command, error message, return code, benchmark name, target name을 담는다.
+
 ## 6. WHY — 배경 판단
 
 local runner에서 가장 위험한 선택은 "아무 command나 실행하고 로그를 적당히 읽어 latency를 알아낸다"는 방식이다. 그 방식은 처음에는 편해 보이지만, benchmark마다 로그 형식이 다르고 process startup overhead와 inference latency가 섞여 비교 가능성을 망친다.
@@ -116,6 +133,7 @@ _(아직 없음)_
 - [x] missing/invalid metrics line error message 추가
 - [x] CLI runner selection에서 `local`을 `LocalRunner`로 연결
 - [x] local runner smoke example 추가
+- [x] failed-run artifact bundle
 - [x] pytest:
   - valid command returns deterministic metrics
   - stdout/stderr capture preserved
@@ -129,6 +147,5 @@ _(아직 없음)_
 - command timeout
 - explicit working directory field
 - extra environment variables allowlist
-- failed-run artifact bundle
 - richer metric schema such as memory/power
 - SSH/WSL/Docker targets
