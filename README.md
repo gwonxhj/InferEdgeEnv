@@ -32,6 +32,13 @@ edgeenv runs show <run_id>
 edgeenv report compare <run_id_a> <run_id_b>
 ```
 
+Local resource metrics example:
+
+```bash
+edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_resource_metrics.yaml
+edgeenv runs show <run_id>
+```
+
 The fake target uses `FakeRunner`, so it does not execute a real model.
 The local target executes `command` on the current machine and reads an explicit `EDGEENV_METRICS_JSON=` line from stdout.
 Local commands may also emit an optional `EDGEENV_RESOURCE_METRICS_JSON=` line for memory, power, energy, or temperature evidence.

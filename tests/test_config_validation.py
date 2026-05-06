@@ -18,6 +18,15 @@ def test_config_validation_success(config_files):
     assert profile.target_type == "fake"
 
 
+def test_example_resource_metrics_config_validation():
+    bench = load_benchmark_config("examples/benches/local_resource_metrics.yaml")
+    profile = load_target_profile("examples/profiles/local.yaml")
+
+    assert bench.command == "python examples/scripts/emit_resource_metrics.py"
+    assert bench.extra_env == {"LOCAL_DEMO_FLAG": "resource-enabled"}
+    assert profile.target_type == "local"
+
+
 def test_config_validation_local_execution_options(tmp_path):
     path = tmp_path / "bench.yaml"
     path.write_text(

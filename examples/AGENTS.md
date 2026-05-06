@@ -7,6 +7,7 @@ README와 CLI smoke에 쓰이는 sample benchmark config와 target profile을 �
 - `examples/benches/` — benchmark YAML examples
 - `examples/profiles/` — target profile YAML examples
 - `examples/scripts/` — local smoke에 쓰는 작은 command fixture
+- `examples/benches/local_resource_metrics.yaml`와 `examples/scripts/emit_resource_metrics.py` — optional resource metrics local smoke 예시
 
 기술 스택: YAML
 

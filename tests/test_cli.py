@@ -220,6 +220,47 @@ runtime_tags: [local]
     assert shown["resource_metrics"]["source"] == "benchmark-command"
 
 
+def test_cli_resource_metrics_example_run_and_show(tmp_path):
+    runner = CliRunner()
+    edgeenv_root = tmp_path / ".edgeenv"
+
+    run_result = runner.invoke(
+        app,
+        [
+            "bench",
+            "run",
+            "--target",
+            "examples/profiles/local.yaml",
+            "--config",
+            "examples/benches/local_resource_metrics.yaml",
+            "--edgeenv-root",
+            str(edgeenv_root),
+        ],
+    )
+
+    assert run_result.exit_code == 0
+    assert "Latency mean: 12.8 ms" in run_result.output
+    run_dirs = list((edgeenv_root / "runs").iterdir())
+    payload = json.loads((run_dirs[0] / "result.json").read_text(encoding="utf-8"))
+    assert payload["resource_metrics"]["memory_peak_mb"] == 512.0
+    assert payload["resource_metrics"]["source"] == "example-script"
+    show_result = runner.invoke(
+        app,
+        [
+            "runs",
+            "show",
+            payload["run_id"],
+            "--edgeenv-root",
+            str(edgeenv_root),
+        ],
+    )
+
+    assert show_result.exit_code == 0
+    shown = json.loads(show_result.output)
+    assert shown["resource_metrics"]["power_peak_w"] == 11.4
+    assert shown["resource_metrics"]["temperature_peak_c"] == 72.0
+
+
 def test_cli_local_failure_writes_failed_run_artifact(tmp_path):
     runner = CliRunner()
     script = tmp_path / "local_fail.py"
