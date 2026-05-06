@@ -1,0 +1,7 @@
+target_name: local-fake
+target_type: fake
+board_name: local-dev-machine
+os: macOS
+runtime_tags:
+  - fake
+  - local
