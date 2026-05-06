@@ -1,0 +1,25 @@
+from __future__ import annotations
+
+from typing import Protocol
+
+from pydantic import BaseModel, ConfigDict
+
+from edgeenv.config.bench_config import BenchmarkConfig
+from edgeenv.config.target_profile import TargetProfile
+
+
+class RunnerResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    latency_mean_ms: float
+    latency_p50_ms: float
+    latency_p95_ms: float
+    latency_p99_ms: float
+    throughput_fps: float
+    stdout: str
+    stderr: str
+
+
+class BenchmarkRunner(Protocol):
+    def run(self, config: BenchmarkConfig, target: TargetProfile) -> RunnerResult:
+        """Run a benchmark and return measured metrics."""

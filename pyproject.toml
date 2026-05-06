@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "edgeenv"
+version = "0.1.0"
+description = "Config-driven Edge AI inference benchmark runner, local registry, and comparability checker."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "pydantic>=2.0",
+  "PyYAML>=6.0",
+  "rich>=13.0",
+  "typer>=0.12",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+]
+
+[project.scripts]
+edgeenv = "edgeenv.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["edgeenv*"]
