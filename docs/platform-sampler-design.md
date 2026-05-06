@@ -14,6 +14,7 @@ Platform sampler는 Jetson `tegrastats`, macOS `powermetrics`, Windows counters,
 - `inferedge_env/result/schema.py` — optional `ResourceMetrics`
 - `docs/resource-metrics-design.md` — resource metrics schema and policy
 - `docs/local-runner-design.md` — local command contract
+- `docs/sampler-failure-policy.md` — sampler failure와 benchmark success/failure policy
 - `examples/scripts/emit_resource_metrics.py` — deterministic resource metrics smoke example
 - `examples/scripts/run_with_sampler.py` — deterministic wrapper command sampler example
 
@@ -113,6 +114,7 @@ Sampler output은 값뿐 아니라 source를 남겨야 한다.
 - **Resource Metrics Design**: sampler output은 optional `resource_metrics` evidence로 저장한다.
 - **Local Runner Design**: local runner는 explicit stdout contract만 읽는다.
 - **Registry Resource Query Design**: sampler 값은 당분간 DB column이 아니라 `result.json` artifact에 남긴다.
+- **Sampler Failure Policy**: sampler 실패만으로 primary benchmark result를 버리지 않는다.
 - **Comparability**: sampler 값은 direct comparability gate가 아니다.
 
 ## 6. WHY — 배경 판단
@@ -133,7 +135,7 @@ _(아직 없음)_
 - [ ] macOS `powermetrics` adapter design
 - [ ] Windows counter adapter design
 - [ ] external meter adapter design
-- [ ] sampler failure artifact policy
+- [x] sampler failure artifact policy
 
 ## Deferred Work
 

@@ -160,4 +160,5 @@ _(아직 없음)_
 ## Deferred Work
 
 - Platform-specific samplers; 기준은 [Platform Sampler Design](platform-sampler-design.md)을 따른다.
+- Sampler failure handling; 기준은 [Sampler Failure Policy](sampler-failure-policy.md)을 따른다.
 - Registry migration for querying resource metrics; 기준은 [Registry Resource Query Design](registry-resource-query-design.md)을 따른다.
