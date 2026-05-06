@@ -79,8 +79,13 @@ edgeenv bench run --target examples/profiles/local.yaml --config examples/benche
 Compare two registered runs after you have at least two successful run IDs:
 
 ```bash
+edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_compare_a.yaml
+edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_compare_b.yaml
+edgeenv runs list
 edgeenv report compare <run_id_a> <run_id_b>
 ```
+
+For the full flow, see [Compare Workflow Guide](docs/compare-workflow-guide.md).
 
 The fake target uses `FakeRunner`, so it does not execute a real model.
 Local benchmark configs may set `timeout_seconds`, `working_directory`, and uppercase `extra_env` keys for controlled command execution.
@@ -229,5 +234,6 @@ Non-goals:
 
 - [Local Runner Design](docs/local-runner-design.md)
 - [Local Command Contract Guide](docs/local-command-contract.md)
+- [Compare Workflow Guide](docs/compare-workflow-guide.md)
 - [Resource Metrics Design](docs/resource-metrics-design.md)
 - [Sampler Failure Policy](docs/sampler-failure-policy.md)

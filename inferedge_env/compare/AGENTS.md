@@ -5,6 +5,8 @@
 
 ## 2. CONTENTS — 파일/디렉토리와 기술 스택
 - `comparability.py` — comparison rules, reason list, output model
+- `docs/compare-workflow-guide.md` — 사용자가 run 생성부터 compare까지 따라가는 guide
+- `examples/benches/local_compare_a.yaml`, `examples/benches/local_compare_b.yaml` — same-condition compare workflow fixtures
 
 기술 스택: Python, Pydantic 또는 dataclasses
 
@@ -17,6 +19,7 @@
 - runtime/target 차이를 곧바로 `Comparable: No`로 처리하지 말 것 — v1 요구사항은 conditional comparison을 구분한다.
 - model hash, input shape, precision, benchmark protocol 차이를 무시하지 말 것 — direct regression comparison이 오판된다.
 - 모든 모델을 단일 점수로 줄 세우는 ranking 기능을 넣지 말 것 — EdgeEnv의 목표와 다르다.
+- compare workflow 예시에서 metrics 차이만으로 결론을 쓰지 말 것 — 먼저 `Comparable`/`Mode`를 확인해야 한다.
 
 ## 5. WHERE — 다른 모듈과의 의존성
 - **의존**: result schema, registry result_path loading

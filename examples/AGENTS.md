@@ -11,6 +11,7 @@ README와 CLI smoke에 쓰이는 sample benchmark config와 target profile을 �
 - `examples/benches/local_sampler_wrapper.yaml`와 `examples/scripts/run_with_sampler.py` — platform tool 없이 wrapper command sampler boundary를 보여주는 예시
 - `examples/benches/local_sampler_unavailable.yaml`, `examples/benches/local_sampler_malformed_resource.yaml`, `examples/scripts/run_with_sampler_failure_modes.py` — sampler failure policy 실행 예시
 - `examples/benches/local_template.yaml`와 `examples/scripts/local_benchmark_template.py` — 실제 benchmark command를 붙일 때 복사해 시작하는 최소 template 예시
+- `examples/benches/local_compare_a.yaml`, `examples/benches/local_compare_b.yaml`, `examples/scripts/emit_compare_metrics.py` — same-condition compare workflow 실행 예시
 
 기술 스택: YAML
 

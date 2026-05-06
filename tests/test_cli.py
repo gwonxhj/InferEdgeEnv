@@ -302,6 +302,89 @@ def test_cli_local_template_example_run_and_show(tmp_path):
     assert payload["resource_metrics"]["source"] == "local-template"
 
 
+def test_cli_compare_workflow_examples_same_condition(tmp_path):
+    runner = CliRunner()
+    edgeenv_root = tmp_path / ".edgeenv"
+
+    first = runner.invoke(
+        app,
+        [
+            "bench",
+            "run",
+            "--target",
+            "examples/profiles/local.yaml",
+            "--config",
+            "examples/benches/local_compare_a.yaml",
+            "--edgeenv-root",
+            str(edgeenv_root),
+        ],
+    )
+    second = runner.invoke(
+        app,
+        [
+            "bench",
+            "run",
+            "--target",
+            "examples/profiles/local.yaml",
+            "--config",
+            "examples/benches/local_compare_b.yaml",
+            "--edgeenv-root",
+            str(edgeenv_root),
+        ],
+    )
+
+    assert first.exit_code == 0
+    assert "Latency mean: 18.0 ms" in first.output
+    assert second.exit_code == 0
+    assert "Latency mean: 16.4 ms" in second.output
+
+    run_dirs = sorted((edgeenv_root / "runs").iterdir())
+    payloads = [
+        json.loads((run_dir / "result.json").read_text(encoding="utf-8"))
+        for run_dir in run_dirs
+    ]
+    run_id_a = next(
+        payload["run_id"]
+        for payload in payloads
+        if payload["benchmark_name"] == "local-compare-a"
+    )
+    run_id_b = next(
+        payload["run_id"]
+        for payload in payloads
+        if payload["benchmark_name"] == "local-compare-b"
+    )
+
+    list_result = runner.invoke(
+        app,
+        ["runs", "list", "--edgeenv-root", str(edgeenv_root)],
+    )
+    show_result = runner.invoke(
+        app,
+        ["runs", "show", run_id_a, "--edgeenv-root", str(edgeenv_root)],
+    )
+    compare_result = runner.invoke(
+        app,
+        [
+            "report",
+            "compare",
+            run_id_a,
+            run_id_b,
+            "--edgeenv-root",
+            str(edgeenv_root),
+        ],
+    )
+
+    assert list_result.exit_code == 0
+    assert "EdgeEnv Runs" in list_result.output
+    assert show_result.exit_code == 0
+    shown = json.loads(show_result.output)
+    assert shown["metrics"]["latency_mean_ms"] == 18.0
+    assert compare_result.exit_code == 0
+    assert "Comparable: Yes" in compare_result.output
+    assert "Mode: same-condition" in compare_result.output
+    assert "- Same benchmark protocol" in compare_result.output
+
+
 def test_cli_sampler_wrapper_example_run_and_show(tmp_path):
     runner = CliRunner()
     edgeenv_root = tmp_path / ".edgeenv"

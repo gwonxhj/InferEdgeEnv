@@ -12,6 +12,7 @@ README와 설계/운영 문서가 위치하는 영역이다. EdgeEnv가 무엇�
 - `docs/platform-sampler-design.md` — platform-specific resource sampler boundary와 future adapter 기준
 - `docs/sampler-failure-policy.md` — sampler/wrapper failure가 benchmark 성공 여부에 미치는 영향 기준
 - `docs/local-command-contract.md` — 사용자가 자기 local benchmark command를 연결할 때 지켜야 하는 stdout/config/troubleshooting contract
+- `docs/compare-workflow-guide.md` — 두 local run 생성부터 `runs list/show/report compare`까지 이어지는 compare workflow guide
 
 기술 스택: Markdown
 
