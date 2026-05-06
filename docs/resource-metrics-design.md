@@ -163,4 +163,4 @@ _(아직 없음)_
 - macOS `powermetrics` sampler
 - Windows performance counter sampler
 - External power meter adapter
-- Registry migration for querying resource metrics
+- Registry migration for querying resource metrics; 기준은 [Registry Resource Query Design](registry-resource-query-design.md)을 따른다.
