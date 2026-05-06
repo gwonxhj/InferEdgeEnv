@@ -179,3 +179,4 @@ Non-goals:
 ## Design Notes
 
 - [Local Runner Design](docs/local-runner-design.md)
+- [Resource Metrics Design](docs/resource-metrics-design.md)
