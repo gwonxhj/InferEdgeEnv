@@ -25,7 +25,9 @@ python -m pip install -e ".[dev]"
 edgeenv doctor
 ```
 
-Run the deterministic fake benchmark first:
+### 1. Record a Fake Run
+
+Run the deterministic fake benchmark first. This checks the CLI, config schema, artifact writer, and registry without executing a real model.
 
 ```bash
 edgeenv profile validate examples/profiles/local_fake.yaml
@@ -35,7 +37,9 @@ edgeenv runs list
 edgeenv runs show <run_id>
 ```
 
-Then try the local runner examples:
+### 2. Record a Local Command Run
+
+Then try the local runner examples. These execute small deterministic Python commands on the current machine.
 
 ```bash
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_echo_metrics.yaml
@@ -43,11 +47,13 @@ edgeenv bench run --target examples/profiles/local.yaml --config examples/benche
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_template.yaml
 ```
 
-The local target executes `command` on the current machine and reads an explicit `EDGEENV_METRICS_JSON=` line from stdout. Local commands may also emit an optional `EDGEENV_RESOURCE_METRICS_JSON=` line for memory, power, energy, or temperature evidence. `bench run` reports whether resource metrics were stored or omitted, and `runs show` reads the result artifact when resource metrics are present.
+The local target executes `command` on the current machine and reads an explicit `EDGEENV_METRICS_JSON=` line from stdout. Local commands may also emit an optional `EDGEENV_RESOURCE_METRICS_JSON=` line for memory, power, energy, or temperature evidence. `bench run` reports whether resource metrics were stored or omitted.
 
 To connect your own benchmark command, start from `examples/scripts/local_benchmark_template.py` and the guide in [Local Command Contract Guide](docs/local-command-contract.md).
 
-Sampler wrapper examples:
+### 3. Try Sampler Wrapper Cases
+
+Sampler wrapper examples show the first integration boundary for optional resource evidence.
 
 ```bash
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_sampler_wrapper.yaml
@@ -60,7 +66,9 @@ If a sampler is unavailable, the wrapper should omit `EDGEENV_RESOURCE_METRICS_J
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_sampler_malformed_resource.yaml
 ```
 
-`runs show` includes the resource evidence from `result.json` when the local command emits it:
+### 4. Inspect Evidence
+
+`runs show` reads the result artifact and includes resource evidence when the local command emits it:
 
 ```json
 {
@@ -76,6 +84,8 @@ edgeenv bench run --target examples/profiles/local.yaml --config examples/benche
 }
 ```
 
+### 5. Compare Runs
+
 Compare two registered runs after you have at least two successful run IDs:
 
 ```bash
@@ -90,6 +100,22 @@ For the full flow, see [Compare Workflow Guide](docs/compare-workflow-guide.md).
 The fake target uses `FakeRunner`, so it does not execute a real model.
 Local benchmark configs may set `timeout_seconds`, `working_directory`, and uppercase `extra_env` keys for controlled command execution.
 The Python package is `inferedge_env`; the user-facing CLI command remains `edgeenv`.
+
+## Guide Map
+
+Start here:
+
+- [MVP Readiness Checklist](docs/mvp-readiness-checklist.md) — what works in this MVP and what remains out of scope
+- [Local Command Contract Guide](docs/local-command-contract.md) — how to connect your own local benchmark command
+- [Compare Workflow Guide](docs/compare-workflow-guide.md) — how to create two runs and judge comparability
+
+Design references:
+
+- [Local Runner Design](docs/local-runner-design.md)
+- [Resource Metrics Design](docs/resource-metrics-design.md)
+- [Sampler Failure Policy](docs/sampler-failure-policy.md)
+- [Platform Sampler Design](docs/platform-sampler-design.md)
+- [Registry Resource Query Design](docs/registry-resource-query-design.md)
 
 ## Benchmark Config Example
 
@@ -232,6 +258,7 @@ Non-goals:
 
 ## Design Notes
 
+- [MVP Readiness Checklist](docs/mvp-readiness-checklist.md)
 - [Local Runner Design](docs/local-runner-design.md)
 - [Local Command Contract Guide](docs/local-command-contract.md)
 - [Compare Workflow Guide](docs/compare-workflow-guide.md)
