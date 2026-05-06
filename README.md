@@ -46,6 +46,13 @@ edgeenv bench run --target examples/profiles/local.yaml --config examples/benche
 edgeenv runs show <run_id>
 ```
 
+Sampler failure policy examples:
+
+```bash
+edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_sampler_unavailable.yaml
+edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_sampler_malformed_resource.yaml
+```
+
 `runs show` includes the resource evidence from `result.json` when the local command emits it:
 
 ```json
@@ -65,6 +72,8 @@ edgeenv runs show <run_id>
 The fake target uses `FakeRunner`, so it does not execute a real model.
 The local target executes `command` on the current machine and reads an explicit `EDGEENV_METRICS_JSON=` line from stdout.
 Local commands may also emit an optional `EDGEENV_RESOURCE_METRICS_JSON=` line for memory, power, energy, or temperature evidence.
+If a sampler is unavailable, the wrapper should omit `EDGEENV_RESOURCE_METRICS_JSON=` and preserve the successful primary benchmark run.
+If a wrapper emits malformed resource metrics, EdgeEnv writes a failed-run artifact instead of storing polluted evidence in the registry.
 Local benchmark configs may set `timeout_seconds`, `working_directory`, and uppercase `extra_env` keys for controlled command execution.
 `edgeenv runs show <run_id>` reads the result artifact and includes resource metrics when present.
 The Python package is `inferedge_env`; the user-facing CLI command remains `edgeenv`.
@@ -212,3 +221,4 @@ Non-goals:
 
 - [Local Runner Design](docs/local-runner-design.md)
 - [Resource Metrics Design](docs/resource-metrics-design.md)
+- [Sampler Failure Policy](docs/sampler-failure-policy.md)

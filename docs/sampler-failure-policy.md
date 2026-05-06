@@ -16,6 +16,7 @@ Wrapper command나 future sampler adapter에서 resource sampling이 실패했�
 - `docs/resource-metrics-design.md` — resource metrics는 optional evidence라는 기준
 - `docs/platform-sampler-design.md` — wrapper command first sampler integration
 - `examples/scripts/run_with_sampler.py` — deterministic wrapper command example
+- `examples/scripts/run_with_sampler_failure_modes.py` — sampler unavailable / malformed resource metrics examples
 
 기술 스택: stdout/stderr contract, JSON artifact, failed-run artifact
 
@@ -100,7 +101,7 @@ _(아직 없음)_
 
 ## Implementation Checklist
 
-- [ ] wrapper example for sampler unavailable but benchmark succeeds
-- [ ] wrapper example for malformed resource metrics failure
-- [ ] failed-run artifact test for invalid resource metrics
+- [x] wrapper example for sampler unavailable but benchmark succeeds
+- [x] wrapper example for malformed resource metrics failure
+- [x] failed-run artifact test for invalid resource metrics
 - [ ] future sampler adapter error taxonomy

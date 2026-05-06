@@ -9,6 +9,7 @@ README와 CLI smoke에 쓰이는 sample benchmark config와 target profile을 �
 - `examples/scripts/` — local smoke에 쓰는 작은 command fixture
 - `examples/benches/local_resource_metrics.yaml`와 `examples/scripts/emit_resource_metrics.py` — optional resource metrics local smoke 예시
 - `examples/benches/local_sampler_wrapper.yaml`와 `examples/scripts/run_with_sampler.py` — platform tool 없이 wrapper command sampler boundary를 보여주는 예시
+- `examples/benches/local_sampler_unavailable.yaml`, `examples/benches/local_sampler_malformed_resource.yaml`, `examples/scripts/run_with_sampler_failure_modes.py` — sampler failure policy 실행 예시
 
 기술 스택: YAML
 
@@ -28,7 +29,7 @@ schema 변경 시 examples를 가장 먼저 갱신한다. 예시는 작고 deter
 - **경계 / 어댑터**: 외부 사용자가 처음 만나는 config contract
 
 ## 6. WHY — 코드에 안 적힌 배경 지식
-예시는 문서가 아니라 실행 가능한 contract fixture다. 사용자가 복사해 첫 run을 만들 수 있어야 한다.
+예시는 문서가 아니라 실행 가능한 contract fixture다. 사용자가 복사해 첫 run을 만들 수 있어야 한다. Sampler failure 예시는 정책 문서의 성공/실패 분기를 CLI로 바로 재현할 수 있어야 한다.
 
 _(이 영역의 비명백한 함정·배경 지식이 더 있다면 자유롭게 추가하세요. `learn` 스킬(`/learn` 또는 Codex의 `$learn`)로도 누적 가능합니다.)_
 
