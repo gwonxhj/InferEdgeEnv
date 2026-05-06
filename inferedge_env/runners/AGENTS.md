@@ -6,6 +6,7 @@ runner interface와 v1 FakeRunner를 담당한다. 실제 모델 실행 없이 d
 ## 2. CONTENTS — 파일/디렉토리와 기술 스택
 - `base.py` — runner protocol/base interface
 - `fake.py` — deterministic fake benchmark runner
+- `local.py` — subprocess 기반 local benchmark command runner
 
 기술 스택: Python, dataclasses 또는 Pydantic model, typing protocol
 
@@ -16,7 +17,8 @@ runner interface와 v1 FakeRunner를 담당한다. 실제 모델 실행 없이 d
 > 아래 항목은 MVP 프롬프트 기반 추정이므로 구현 중 검토가 필요하다.
 
 - FakeRunner latency를 randomness나 host 성능에 의존하게 만들지 말 것 — 테스트와 예시 결과가 매번 달라진다.
-- SSH/WSL/Docker runner를 구현하지 말 것 — v1 범위를 넘고 target contract가 커진다.
+- SSH/WSL/Docker runner를 구현하지 말 것 — local runner와 target boundary가 섞이면 v1 범위를 넘는다.
+- local runner에서 stdout 숫자를 추측하지 말 것 — `EDGEENV_METRICS_JSON=` contract만 metrics source로 사용해야 한다.
 - stdout/stderr 필드를 생략하지 말 것 — artifact writer가 run evidence를 완성하지 못한다.
 
 ## 5. WHERE — 다른 모듈과의 의존성
@@ -25,7 +27,7 @@ runner interface와 v1 FakeRunner를 담당한다. 실제 모델 실행 없이 d
 - **경계 / 어댑터**: runner output은 result schema로 변환되는 raw execution evidence다.
 
 ## 6. WHY — 코드에 안 적힌 배경 지식
-FakeRunner는 "가짜 성능 주장"이 아니라 전체 run lifecycle을 안전하게 개발하기 위한 deterministic harness다. 실제 local/ssh runner는 v1 이후 단계적으로 붙인다.
+FakeRunner는 "가짜 성능 주장"이 아니라 전체 run lifecycle을 안전하게 개발하기 위한 deterministic harness다. LocalRunner는 현재 머신 command 실행과 명시적 metrics JSON capture만 담당하며, SSH/WSL/Docker는 별도 future target으로 둔다.
 
 _(이 영역의 비명백한 함정·배경 지식이 더 있다면 자유롭게 추가하세요. `learn` 스킬(`/learn` 또는 Codex의 `$learn`)로도 누적 가능합니다.)_
 

@@ -61,3 +61,7 @@ docs/
 - Codex: `$learn <메모>`
 
 스킬 위치: `.agents/skills/learn/`
+
+## 7. ⚠️ LEARNED CAUTIONS — 학습된 주의사항
+
+- (2026-05-06) 브랜치명에 `codex/` 같은 에이전트명을 쓰지 말고, 문서 전용 작업은 `docs/`, 구현 작업은 `runners/`, `cli/`, `registry/`, `compare/`처럼 변경 영역이 드러나는 직관적인 prefix를 우선 사용한다.

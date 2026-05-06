@@ -6,6 +6,7 @@ README와 CLI smoke에 쓰이는 sample benchmark config와 target profile을 �
 ## 2. CONTENTS — 파일/디렉토리와 기술 스택
 - `examples/benches/` — benchmark YAML examples
 - `examples/profiles/` — target profile YAML examples
+- `examples/scripts/` — local smoke에 쓰는 작은 command fixture
 
 기술 스택: YAML
 

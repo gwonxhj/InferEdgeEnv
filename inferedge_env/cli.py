@@ -15,6 +15,7 @@ from inferedge_env.config.target_profile import TargetProfile, load_target_profi
 from inferedge_env.registry.db import RunRegistry
 from inferedge_env.result.writer import ResultArtifactWriter, build_run_result, load_result
 from inferedge_env.runners.fake import FakeRunner
+from inferedge_env.runners.local import LocalRunner, LocalRunnerError
 
 
 app = typer.Typer(help="EdgeEnv benchmark runner and local result registry.")
@@ -35,7 +36,7 @@ def doctor() -> None:
     """Check that the EdgeEnv CLI is available."""
     console.print("[bold green]EdgeEnv doctor: OK[/bold green]")
     console.print(f"Version: {__version__}")
-    console.print("Runner support: fake")
+    console.print("Runner support: fake, local")
     console.print("Registry: .edgeenv/runs.db")
 
 
@@ -77,7 +78,10 @@ def run_benchmark(
         _fail(str(exc))
 
     runner = _runner_for_target(target)
-    runner_result = runner.run(config, target)
+    try:
+        runner_result = runner.run(config, target)
+    except LocalRunnerError as exc:
+        _fail(str(exc))
     result = build_run_result(config, target, runner_result)
     run_dir = ResultArtifactWriter(edgeenv_root).write(
         result=result,
@@ -170,9 +174,11 @@ def compare_runs(
         console.print(f"- {reason}")
 
 
-def _runner_for_target(target: TargetProfile) -> FakeRunner:
-    if target.target_type in {"fake", "local"}:
+def _runner_for_target(target: TargetProfile) -> FakeRunner | LocalRunner:
+    if target.target_type == "fake":
         return FakeRunner()
+    if target.target_type == "local":
+        return LocalRunner()
     _fail(f"Unsupported target_type for v1: {target.target_type}")
 
 
