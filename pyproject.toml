@@ -3,7 +3,7 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "edgeenv"
+name = "inferedge-env"
 version = "0.1.0"
 description = "Config-driven Edge AI inference benchmark runner, local registry, and comparability checker."
 readme = "README.md"
@@ -21,7 +21,7 @@ dev = [
 ]
 
 [project.scripts]
-edgeenv = "edgeenv.cli:main"
+edgeenv = "inferedge_env.cli:main"
 
 [tool.setuptools.packages.find]
-include = ["edgeenv*"]
+include = ["inferedge_env*"]

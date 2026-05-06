@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import hashlib
 
-from edgeenv.config.bench_config import BenchmarkConfig
-from edgeenv.config.target_profile import TargetProfile
-from edgeenv.runners.base import RunnerResult
+from inferedge_env.config.bench_config import BenchmarkConfig
+from inferedge_env.config.target_profile import TargetProfile
+from inferedge_env.runners.base import RunnerResult
 
 
 class FakeRunner:

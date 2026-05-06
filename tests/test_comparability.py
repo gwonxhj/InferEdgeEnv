@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from edgeenv.compare.comparability import check_comparability
+from inferedge_env.compare.comparability import check_comparability
 from helpers import make_result
 
 

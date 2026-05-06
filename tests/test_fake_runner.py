@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from edgeenv.runners.fake import FakeRunner
+from inferedge_env.runners.fake import FakeRunner
 
 
 def test_fake_runner_deterministic_output(bench_config, target_profile):

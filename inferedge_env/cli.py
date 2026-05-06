@@ -8,13 +8,13 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from edgeenv import __version__
-from edgeenv.compare.comparability import check_comparability
-from edgeenv.config.bench_config import load_benchmark_config
-from edgeenv.config.target_profile import TargetProfile, load_target_profile
-from edgeenv.registry.db import RunRegistry
-from edgeenv.result.writer import ResultArtifactWriter, build_run_result, load_result
-from edgeenv.runners.fake import FakeRunner
+from inferedge_env import __version__
+from inferedge_env.compare.comparability import check_comparability
+from inferedge_env.config.bench_config import load_benchmark_config
+from inferedge_env.config.target_profile import TargetProfile, load_target_profile
+from inferedge_env.registry.db import RunRegistry
+from inferedge_env.result.writer import ResultArtifactWriter, build_run_result, load_result
+from inferedge_env.runners.fake import FakeRunner
 
 
 app = typer.Typer(help="EdgeEnv benchmark runner and local result registry.")

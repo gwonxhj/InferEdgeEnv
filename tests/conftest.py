@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from edgeenv.config.bench_config import BenchmarkConfig
-from edgeenv.config.target_profile import TargetProfile
+from inferedge_env.config.bench_config import BenchmarkConfig
+from inferedge_env.config.target_profile import TargetProfile
 
 
 @pytest.fixture

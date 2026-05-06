@@ -22,6 +22,7 @@ EdgeEnv is not:
 
 ```bash
 python -m pip install -e ".[dev]"
+python -m inferedge_env.cli doctor
 edgeenv doctor
 edgeenv profile validate examples/profiles/local_fake.yaml
 edgeenv bench validate examples/benches/yolov8n_fire.yaml
@@ -32,6 +33,7 @@ edgeenv report compare <run_id_a> <run_id_b>
 ```
 
 The benchmark command uses `FakeRunner` in MVP v1, so it does not execute a real model.
+The Python package is `inferedge_env`; the user-facing CLI command remains `edgeenv`.
 
 ## Benchmark Config Example
 

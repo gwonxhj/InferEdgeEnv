@@ -6,9 +6,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from edgeenv.config.bench_config import BenchmarkConfig
-from edgeenv.config.target_profile import TargetProfile
-from edgeenv.result.schema import (
+from inferedge_env.config.bench_config import BenchmarkConfig
+from inferedge_env.config.target_profile import TargetProfile
+from inferedge_env.result.schema import (
     BenchmarkMetrics,
     BenchmarkProtocol,
     ModelIdentity,
@@ -16,9 +16,9 @@ from edgeenv.result.schema import (
     RuntimeIdentity,
     TargetIdentity,
 )
-from edgeenv.runners.base import RunnerResult
-from edgeenv.utils.hashing import stable_model_hash
-from edgeenv.utils.system_info import collect_system_info
+from inferedge_env.runners.base import RunnerResult
+from inferedge_env.utils.hashing import stable_model_hash
+from inferedge_env.utils.system_info import collect_system_info
 
 
 def new_run_id(now: datetime | None = None) -> str:

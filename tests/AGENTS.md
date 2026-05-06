@@ -24,7 +24,7 @@ EdgeEnv MVP의 pytest 검증을 담당한다. config validation, FakeRunner dete
 - 실패한 테스트가 있는데 commit/push/PR을 진행하지 말 것 — 글로벌 AGENTS 규칙 위반이다.
 
 ## 5. WHERE — 다른 모듈과의 의존성
-- **의존**: 모든 `edgeenv` 하위 모듈, examples
+- **의존**: 모든 `inferedge_env` 하위 모듈, examples
 - **피의존**: CI/수동 검증, PR validation
 - **경계 / 어댑터**: MVP 완료 여부를 판단하는 executable spec
 

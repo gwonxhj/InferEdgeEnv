@@ -1,7 +1,7 @@
-# edgeenv/result 작업 가이드
+# inferedge_env/result 작업 가이드
 
 ## 1. WHAT — 이 모듈은 무엇을 하는가
-run result schema와 `.edgeenv/runs/<run_id>/` artifact writer를 담당한다. `result.json`, config/profile/env/log 파일을 함께 보존해 run 재현성과 조회 가능성을 만든다.
+run result schema와 `.inferedge_env/runs/<run_id>/` artifact writer를 담당한다. `result.json`, config/profile/env/log 파일을 함께 보존해 run 재현성과 조회 가능성을 만든다.
 
 ## 2. CONTENTS — 파일/디렉토리와 기술 스택
 - `schema.py` — result JSON schema
@@ -16,7 +16,7 @@ result field 변경은 registry insert, runs show, comparability checker, README
 > 아래 항목은 MVP 프롬프트 기반 추정이므로 구현 중 검토가 필요하다.
 
 - `result.json` schema를 임의로 바꾸지 말 것 — registry와 compare가 같은 run을 해석하지 못한다.
-- `.edgeenv/runs/<run_id>/` 외부에 run artifact를 흩뿌리지 말 것 — local registry layout이 깨진다.
+- `.inferedge_env/runs/<run_id>/` 외부에 run artifact를 흩뿌리지 말 것 — local registry layout이 깨진다.
 - config/profile 원본 복사를 생략하지 말 것 — 나중에 같은 조건인지 검증할 evidence가 사라진다.
 
 ## 5. WHERE — 다른 모듈과의 의존성

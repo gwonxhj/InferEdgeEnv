@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from edgeenv.config.bench_config import BenchmarkConfig
-from edgeenv.config.target_profile import TargetProfile
-from edgeenv.result.writer import build_run_result
-from edgeenv.runners.fake import FakeRunner
+from inferedge_env.config.bench_config import BenchmarkConfig
+from inferedge_env.config.target_profile import TargetProfile
+from inferedge_env.result.writer import build_run_result
+from inferedge_env.runners.fake import FakeRunner
 
 
 def make_result(

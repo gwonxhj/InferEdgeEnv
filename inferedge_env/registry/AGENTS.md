@@ -1,7 +1,7 @@
-# edgeenv/registry 작업 가이드
+# inferedge_env/registry 작업 가이드
 
 ## 1. WHAT — 이 모듈은 무엇을 하는가
-`.edgeenv/runs.db` SQLite registry를 담당한다. run_id, created_at, target/model/runtime/protocol/metrics/result_path를 저장하고 `runs list/show` 조회를 지원한다.
+`.inferedge_env/runs.db` SQLite registry를 담당한다. run_id, created_at, target/model/runtime/protocol/metrics/result_path를 저장하고 `runs list/show` 조회를 지원한다.
 
 ## 2. CONTENTS — 파일/디렉토리와 기술 스택
 - `db.py` — SQLite connection, schema migration/init, insert/list/show

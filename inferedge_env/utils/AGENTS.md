@@ -1,4 +1,4 @@
-# edgeenv/utils 작업 가이드
+# inferedge_env/utils 작업 가이드
 
 ## 1. WHAT — 이 모듈은 무엇을 하는가
 hashing과 system info처럼 여러 영역에서 쓰는 작은 helper를 둔다. 핵심 contract를 숨기는 큰 abstraction이 아니라 반복을 줄이는 유틸 영역이다.

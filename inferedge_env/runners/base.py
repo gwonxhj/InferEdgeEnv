@@ -4,8 +4,8 @@ from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict
 
-from edgeenv.config.bench_config import BenchmarkConfig
-from edgeenv.config.target_profile import TargetProfile
+from inferedge_env.config.bench_config import BenchmarkConfig
+from inferedge_env.config.target_profile import TargetProfile
 
 
 class RunnerResult(BaseModel):

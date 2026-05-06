@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from edgeenv.registry.db import RunRegistry
+from inferedge_env.registry.db import RunRegistry
 from helpers import make_result
 
 

@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from edgeenv.config.bench_config import BenchmarkConfig, load_benchmark_config
-from edgeenv.config.target_profile import TargetProfile, load_target_profile
+from inferedge_env.config.bench_config import BenchmarkConfig, load_benchmark_config
+from inferedge_env.config.target_profile import TargetProfile, load_target_profile
 
 
 def test_config_validation_success(config_files):

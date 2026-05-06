@@ -5,9 +5,9 @@ import sqlite3
 from pathlib import Path
 from typing import Iterable
 
-from edgeenv.registry.artifacts import default_registry_path
-from edgeenv.registry.models import RegistryRecord
-from edgeenv.result.schema import RunResult
+from inferedge_env.registry.artifacts import default_registry_path
+from inferedge_env.registry.models import RegistryRecord
+from inferedge_env.result.schema import RunResult
 
 
 class RunRegistry:

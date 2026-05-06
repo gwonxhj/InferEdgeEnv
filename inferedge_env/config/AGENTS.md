@@ -1,4 +1,4 @@
-# edgeenv/config 작업 가이드
+# inferedge_env/config 작업 가이드
 
 ## 1. WHAT — 이 모듈은 무엇을 하는가
 benchmark config와 target profile의 Pydantic schema를 소유한다. EdgeEnv가 어떤 run을 같은 조건으로 볼 수 있는지 판단하는 원천 입력을 검증한다.
@@ -10,7 +10,7 @@ benchmark config와 target profile의 Pydantic schema를 소유한다. EdgeEnv�
 기술 스택: Python, Pydantic, YAML
 
 ## 3. HOW — 일반적인 수정은 어떻게 하는가
-필드 추가/변경은 README 예시, examples, CLI validate, tests를 함께 갱신한다. 비교 가능성에 영향을 주는 필드는 `edgeenv/compare` 테스트까지 확인한다.
+필드 추가/변경은 README 예시, examples, CLI validate, tests를 함께 갱신한다. 비교 가능성에 영향을 주는 필드는 `inferedge_env/compare` 테스트까지 확인한다.
 
 ## 4. ⛔ HOW NOT — 시스템을 깨뜨리는 비명백한 함정 (중요)
 > 아래 항목은 MVP 프롬프트 기반 추정이므로 구현 중 검토가 필요하다.

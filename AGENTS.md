@@ -8,7 +8,7 @@
 ## 프로젝트 구조
 
 ```text
-edgeenv/
+inferedge_env/
   cli.py
   config/
   runners/
@@ -30,13 +30,13 @@ docs/
 
 작업 영역에 해당하는 `AGENTS.md`를 먼저 읽고 진행한다.
 
-- **edgeenv/cli.py** — Typer/Rich CLI 진입점과 명령 라우팅 -> [`edgeenv/AGENTS.md`](edgeenv/AGENTS.md)
-- **edgeenv/config** — benchmark config와 target profile schema -> [`edgeenv/config/AGENTS.md`](edgeenv/config/AGENTS.md)
-- **edgeenv/runners** — runner interface와 FakeRunner -> [`edgeenv/runners/AGENTS.md`](edgeenv/runners/AGENTS.md)
-- **edgeenv/result** — result JSON schema와 artifact writer -> [`edgeenv/result/AGENTS.md`](edgeenv/result/AGENTS.md)
-- **edgeenv/registry** — local SQLite registry와 run 조회 -> [`edgeenv/registry/AGENTS.md`](edgeenv/registry/AGENTS.md)
-- **edgeenv/compare** — comparability checker와 compare 출력 -> [`edgeenv/compare/AGENTS.md`](edgeenv/compare/AGENTS.md)
-- **edgeenv/utils** — hashing, system info 같은 작은 공통 유틸 -> [`edgeenv/utils/AGENTS.md`](edgeenv/utils/AGENTS.md)
+- **inferedge_env/cli.py** — Typer/Rich CLI 진입점과 명령 라우팅 -> [`inferedge_env/AGENTS.md`](inferedge_env/AGENTS.md)
+- **inferedge_env/config** — benchmark config와 target profile schema -> [`inferedge_env/config/AGENTS.md`](inferedge_env/config/AGENTS.md)
+- **inferedge_env/runners** — runner interface와 FakeRunner -> [`inferedge_env/runners/AGENTS.md`](inferedge_env/runners/AGENTS.md)
+- **inferedge_env/result** — result JSON schema와 artifact writer -> [`inferedge_env/result/AGENTS.md`](inferedge_env/result/AGENTS.md)
+- **inferedge_env/registry** — local SQLite registry와 run 조회 -> [`inferedge_env/registry/AGENTS.md`](inferedge_env/registry/AGENTS.md)
+- **inferedge_env/compare** — comparability checker와 compare 출력 -> [`inferedge_env/compare/AGENTS.md`](inferedge_env/compare/AGENTS.md)
+- **inferedge_env/utils** — hashing, system info 같은 작은 공통 유틸 -> [`inferedge_env/utils/AGENTS.md`](inferedge_env/utils/AGENTS.md)
 - **examples** — sample benchmark/profile YAML -> [`examples/AGENTS.md`](examples/AGENTS.md)
 - **tests** — pytest 기반 MVP 검증 -> [`tests/AGENTS.md`](tests/AGENTS.md)
 - **docs** — README와 설계/운영 문서 -> [`docs/AGENTS.md`](docs/AGENTS.md)

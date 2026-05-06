@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from edgeenv.result.schema import RunResult
+from inferedge_env.result.schema import RunResult
 
 
 REQUIRED_FIELDS = [

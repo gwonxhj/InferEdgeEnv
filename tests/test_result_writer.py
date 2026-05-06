@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import json
 
-from edgeenv.result.writer import ResultArtifactWriter
-from edgeenv.runners.fake import FakeRunner
+from inferedge_env.result.writer import ResultArtifactWriter
+from inferedge_env.runners.fake import FakeRunner
 from helpers import make_result
 
 
