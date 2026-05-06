@@ -39,6 +39,13 @@ edgeenv bench run --target examples/profiles/local.yaml --config examples/benche
 edgeenv runs show <run_id>
 ```
 
+Sampler wrapper example:
+
+```bash
+edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_sampler_wrapper.yaml
+edgeenv runs show <run_id>
+```
+
 `runs show` includes the resource evidence from `result.json` when the local command emits it:
 
 ```json

@@ -27,6 +27,18 @@ def test_example_resource_metrics_config_validation():
     assert profile.target_type == "local"
 
 
+def test_example_sampler_wrapper_config_validation():
+    bench = load_benchmark_config("examples/benches/local_sampler_wrapper.yaml")
+    profile = load_target_profile("examples/profiles/local.yaml")
+
+    assert bench.command == (
+        "python examples/scripts/run_with_sampler.py -- "
+        "python examples/scripts/emit_local_metrics.py"
+    )
+    assert bench.extra_env == {"LOCAL_DEMO_FLAG": "sampler-wrapper"}
+    assert profile.target_type == "local"
+
+
 def test_config_validation_local_execution_options(tmp_path):
     path = tmp_path / "bench.yaml"
     path.write_text(

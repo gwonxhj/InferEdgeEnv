@@ -261,6 +261,52 @@ def test_cli_resource_metrics_example_run_and_show(tmp_path):
     assert shown["resource_metrics"]["temperature_peak_c"] == 72.0
 
 
+def test_cli_sampler_wrapper_example_run_and_show(tmp_path):
+    runner = CliRunner()
+    edgeenv_root = tmp_path / ".edgeenv"
+
+    run_result = runner.invoke(
+        app,
+        [
+            "bench",
+            "run",
+            "--target",
+            "examples/profiles/local.yaml",
+            "--config",
+            "examples/benches/local_sampler_wrapper.yaml",
+            "--edgeenv-root",
+            str(edgeenv_root),
+        ],
+    )
+
+    assert run_result.exit_code == 0
+    assert "Latency mean: 12.3 ms" in run_result.output
+    run_dirs = list((edgeenv_root / "runs").iterdir())
+    run_dir = run_dirs[0]
+    stdout = (run_dir / "stdout.log").read_text(encoding="utf-8")
+    assert "local benchmark smoke" in stdout
+    assert "sampler-wrapper command=" in stdout
+    payload = json.loads((run_dir / "result.json").read_text(encoding="utf-8"))
+    assert payload["metrics"]["latency_mean_ms"] == 12.3
+    assert payload["resource_metrics"]["memory_peak_mb"] == 384.0
+    assert payload["resource_metrics"]["source"] == "deterministic-wrapper-demo"
+    show_result = runner.invoke(
+        app,
+        [
+            "runs",
+            "show",
+            payload["run_id"],
+            "--edgeenv-root",
+            str(edgeenv_root),
+        ],
+    )
+
+    assert show_result.exit_code == 0
+    shown = json.loads(show_result.output)
+    assert shown["resource_metrics"]["power_peak_w"] == 9.0
+    assert shown["resource_metrics"]["temperature_peak_c"] == 68.0
+
+
 def test_cli_local_failure_writes_failed_run_artifact(tmp_path):
     runner = CliRunner()
     script = tmp_path / "local_fail.py"

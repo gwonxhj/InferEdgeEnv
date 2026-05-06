@@ -15,6 +15,7 @@ Platform sampler는 Jetson `tegrastats`, macOS `powermetrics`, Windows counters,
 - `docs/resource-metrics-design.md` — resource metrics schema and policy
 - `docs/local-runner-design.md` — local command contract
 - `examples/scripts/emit_resource_metrics.py` — deterministic resource metrics smoke example
+- `examples/scripts/run_with_sampler.py` — deterministic wrapper command sampler example
 
 미래 구현 후보:
 
@@ -51,7 +52,7 @@ v1.1의 가장 안전한 sampler 연결 방식은 wrapper command다.
 ```text
 edgeenv bench run --config bench.yaml --target local.yaml
   -> BenchmarkConfig.command
-       python examples/scripts/run_with_sampler.py -- python real_bench.py
+       python examples/scripts/run_with_sampler.py -- python examples/scripts/emit_local_metrics.py
   -> wrapper starts sampler
   -> wrapper runs benchmark command
   -> wrapper summarizes sampler output
@@ -126,7 +127,7 @@ _(아직 없음)_
 
 ## Implementation Checklist
 
-- [ ] wrapper command example design
+- [x] wrapper command example design
 - [ ] sampler metadata schema decision
 - [ ] Jetson `tegrastats` adapter design
 - [ ] macOS `powermetrics` adapter design
