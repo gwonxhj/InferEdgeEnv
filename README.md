@@ -159,3 +159,7 @@ Non-goals:
 - Cloud DB, auth, web dashboard, public leaderboard
 - Model or dataset upload service
 - Single-score model ranking
+
+## Design Notes
+
+- [Local Runner Design](docs/local-runner-design.md)
