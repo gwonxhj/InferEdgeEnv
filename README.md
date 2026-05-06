@@ -32,7 +32,8 @@ edgeenv runs show <run_id>
 edgeenv report compare <run_id_a> <run_id_b>
 ```
 
-The benchmark command uses `FakeRunner` in MVP v1, so it does not execute a real model.
+The fake target uses `FakeRunner`, so it does not execute a real model.
+The local target executes `command` on the current machine and reads an explicit `EDGEENV_METRICS_JSON=` line from stdout.
 The Python package is `inferedge_env`; the user-facing CLI command remains `edgeenv`.
 
 ## Benchmark Config Example
@@ -147,6 +148,7 @@ Included in MVP v1:
 - Rich output
 - Pydantic benchmark config and target profile schemas
 - FakeRunner deterministic benchmark result
+- LocalRunner command execution with explicit metrics JSON capture
 - Result JSON and artifact directory creation
 - SQLite local registry
 - `runs list` and `runs show`

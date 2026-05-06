@@ -8,13 +8,15 @@
 
 ## 2. CONTENTS — 대상 파일과 기술 스택
 
-예상 구현 파일:
+구현 파일:
 
 - `inferedge_env/runners/local.py` — subprocess 기반 local command runner
 - `inferedge_env/runners/base.py` — runner result contract 유지
 - `inferedge_env/cli.py` — `target_type: local`일 때 `LocalRunner` 선택
 - `tests/test_local_runner.py` — command contract, failure handling, stdout/stderr capture 검증
 - `examples/benches/local_echo_metrics.yaml` — local runner smoke용 작은 예시
+- `examples/profiles/local.yaml` — local target profile 예시
+- `examples/scripts/emit_local_metrics.py` — local runner smoke command fixture
 
 기술 스택: Python standard library `subprocess`, `shlex`, `json`, `os`, pytest
 
@@ -108,13 +110,13 @@ _(아직 없음)_
 
 ## Implementation Checklist
 
-- `LocalRunner` class 추가
-- `EDGEENV_METRICS_JSON=` parser 추가
-- non-zero exit code error message 추가
-- missing/invalid metrics line error message 추가
-- CLI runner selection에서 `local`을 `LocalRunner`로 연결
-- local runner smoke example 추가
-- pytest:
+- [x] `LocalRunner` class 추가
+- [x] `EDGEENV_METRICS_JSON=` parser 추가
+- [x] non-zero exit code error message 추가
+- [x] missing/invalid metrics line error message 추가
+- [x] CLI runner selection에서 `local`을 `LocalRunner`로 연결
+- [x] local runner smoke example 추가
+- [x] pytest:
   - valid command returns deterministic metrics
   - stdout/stderr capture preserved
   - non-zero command fails

@@ -1,0 +1,6 @@
+target_name: local-machine
+target_type: local
+board_name: local-dev-machine
+os: local
+runtime_tags:
+  - local
