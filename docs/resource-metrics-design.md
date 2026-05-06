@@ -145,13 +145,13 @@ _(아직 없음)_
 
 ## Implementation Checklist
 
-- [ ] `ResourceMetrics` Pydantic model 추가
-- [ ] `RunResult.resource_metrics` optional field 추가
-- [ ] `RunnerResult.resource_metrics` optional 전달 경로 추가
-- [ ] `LocalRunner`에서 `EDGEENV_RESOURCE_METRICS_JSON=` optional parser 추가
-- [ ] writer가 optional resource metrics를 `result.json`에 저장
-- [ ] `runs show` 출력 방식 결정
-- [ ] pytest:
+- [x] `ResourceMetrics` Pydantic model 추가
+- [x] `RunResult.resource_metrics` optional field 추가
+- [x] `RunnerResult.resource_metrics` optional 전달 경로 추가
+- [x] `LocalRunner`에서 `EDGEENV_RESOURCE_METRICS_JSON=` optional parser 추가
+- [x] writer가 optional resource metrics를 `result.json`에 저장
+- [x] `runs show` 출력 방식 결정: v1.1에서는 DB column을 추가하지 않고 result artifact에만 저장한다.
+- [x] pytest:
   - missing resource metrics remains valid
   - valid resource metrics is persisted
   - invalid resource metrics fails local run

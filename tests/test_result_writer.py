@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import json
 
-from inferedge_env.result.writer import FailedRunArtifactWriter, ResultArtifactWriter
+from inferedge_env.result.schema import ResourceMetrics
+from inferedge_env.result.writer import FailedRunArtifactWriter, ResultArtifactWriter, load_result
 from inferedge_env.runners.fake import FakeRunner
 from helpers import make_result
 
@@ -29,6 +30,46 @@ def test_result_json_files_created(tmp_path, bench_config, target_profile, confi
     payload = json.loads((run_dir / "result.json").read_text(encoding="utf-8"))
     assert payload["run_id"] == "run-artifact"
     assert payload["schema_version"] == "edgeenv.result.v1"
+    assert "resource_metrics" not in payload
+    loaded = load_result(run_dir / "result.json")
+    assert loaded.resource_metrics is None
+
+
+def test_result_json_persists_resource_metrics(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    bench_path, profile_path = config_files
+    runner_result = FakeRunner().run(bench_config, target_profile).model_copy(
+        update={
+            "resource_metrics": ResourceMetrics(
+                memory_peak_mb=512.0,
+                power_mean_w=8.2,
+                source="benchmark-command",
+            )
+        }
+    )
+    result = make_result(
+        bench_config,
+        target_profile,
+        run_id="run-resource",
+        runner_result=runner_result,
+    )
+
+    run_dir = ResultArtifactWriter(tmp_path / ".edgeenv").write(
+        result,
+        bench_path,
+        profile_path,
+        runner_result.stdout,
+        runner_result.stderr,
+    )
+
+    payload = json.loads((run_dir / "result.json").read_text(encoding="utf-8"))
+    assert payload["resource_metrics"]["memory_peak_mb"] == 512.0
+    assert payload["resource_metrics"]["power_mean_w"] == 8.2
+    assert payload["resource_metrics"]["source"] == "benchmark-command"
 
 
 def test_failed_run_artifact_files_created(

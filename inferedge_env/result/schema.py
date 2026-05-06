@@ -57,6 +57,18 @@ class BenchmarkMetrics(BaseModel):
     throughput_fps: float
 
 
+class ResourceMetrics(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    memory_peak_mb: float | None = None
+    memory_mean_mb: float | None = None
+    power_mean_w: float | None = None
+    power_peak_w: float | None = None
+    energy_j: float | None = None
+    temperature_peak_c: float | None = None
+    source: str | None = None
+
+
 class RunResult(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -70,6 +82,7 @@ class RunResult(BaseModel):
     target: TargetIdentity
     protocol: BenchmarkProtocol
     metrics: BenchmarkMetrics
+    resource_metrics: ResourceMetrics | None = None
     env: dict[str, Any] = Field(default_factory=dict)
 
     @property

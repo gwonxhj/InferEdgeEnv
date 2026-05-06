@@ -4,14 +4,16 @@ from inferedge_env.config.bench_config import BenchmarkConfig
 from inferedge_env.config.target_profile import TargetProfile
 from inferedge_env.result.writer import build_run_result
 from inferedge_env.runners.fake import FakeRunner
+from inferedge_env.runners.base import RunnerResult
 
 
 def make_result(
     bench_config: BenchmarkConfig,
     target_profile: TargetProfile,
     run_id: str = "run-test",
+    runner_result: RunnerResult | None = None,
 ):
-    runner_result = FakeRunner().run(bench_config, target_profile)
+    runner_result = runner_result or FakeRunner().run(bench_config, target_profile)
     return build_run_result(
         bench_config,
         target_profile,

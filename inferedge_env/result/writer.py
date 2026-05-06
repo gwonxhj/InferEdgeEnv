@@ -75,6 +75,7 @@ def build_run_result(
             latency_p99_ms=runner_result.latency_p99_ms,
             throughput_fps=runner_result.throughput_fps,
         ),
+        resource_metrics=runner_result.resource_metrics,
         env=captured_env,
     )
 
@@ -94,8 +95,17 @@ class ResultArtifactWriter:
         run_dir = self.root / "runs" / result.run_id
         run_dir.mkdir(parents=True, exist_ok=False)
 
+        payload = result.model_dump(mode="json")
+        if payload["resource_metrics"] is None:
+            del payload["resource_metrics"]
+        else:
+            payload["resource_metrics"] = {
+                key: value
+                for key, value in payload["resource_metrics"].items()
+                if value is not None
+            }
         (run_dir / "result.json").write_text(
-            result.model_dump_json(indent=2),
+            json.dumps(payload, indent=2),
             encoding="utf-8",
         )
         (run_dir / "config.yaml").write_text(

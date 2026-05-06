@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict
 
 from inferedge_env.config.bench_config import BenchmarkConfig
 from inferedge_env.config.target_profile import TargetProfile
+from inferedge_env.result.schema import ResourceMetrics
 
 
 class RunnerResult(BaseModel):
@@ -16,6 +17,7 @@ class RunnerResult(BaseModel):
     latency_p95_ms: float
     latency_p99_ms: float
     throughput_fps: float
+    resource_metrics: ResourceMetrics | None = None
     stdout: str
     stderr: str
 

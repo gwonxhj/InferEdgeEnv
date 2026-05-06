@@ -9,11 +9,14 @@ from pydantic import ValidationError
 
 from inferedge_env.config.bench_config import BenchmarkConfig
 from inferedge_env.config.target_profile import TargetProfile
+from inferedge_env.result.schema import ResourceMetrics
 from inferedge_env.runners.base import RunnerResult
 
 
 METRICS_PREFIX = "EDGEENV_METRICS_JSON="
 METRICS_NAME = "EDGEENV_METRICS_JSON"
+RESOURCE_METRICS_PREFIX = "EDGEENV_RESOURCE_METRICS_JSON="
+RESOURCE_METRICS_NAME = "EDGEENV_RESOURCE_METRICS_JSON"
 
 
 class LocalRunnerError(RuntimeError):
@@ -74,6 +77,7 @@ class LocalRunner:
 
         try:
             metrics = _extract_metrics(completed.stdout)
+            resource_metrics = _extract_resource_metrics(completed.stdout)
         except LocalRunnerError as exc:
             raise LocalRunnerError(
                 str(exc),
@@ -84,6 +88,7 @@ class LocalRunner:
         return RunnerResult(
             stdout=completed.stdout,
             stderr=completed.stderr,
+            resource_metrics=resource_metrics,
             **metrics,
         )
 
@@ -107,7 +112,27 @@ def _extract_metrics(stdout: str) -> dict[str, float]:
     except ValidationError as exc:
         raise LocalRunnerError(f"Invalid local metrics schema: {exc}") from exc
 
-    return result.model_dump(exclude={"stdout", "stderr"})
+    return result.model_dump(exclude={"stdout", "stderr", "resource_metrics"})
+
+
+def _extract_resource_metrics(stdout: str) -> ResourceMetrics | None:
+    metrics_line: str | None = None
+    for line in stdout.splitlines():
+        if line.startswith(RESOURCE_METRICS_PREFIX):
+            metrics_line = line[len(RESOURCE_METRICS_PREFIX) :]
+
+    if metrics_line is None:
+        return None
+
+    try:
+        payload = json.loads(metrics_line)
+    except json.JSONDecodeError as exc:
+        raise LocalRunnerError(f"Invalid {RESOURCE_METRICS_NAME} JSON: {exc}") from exc
+
+    try:
+        return ResourceMetrics.model_validate(payload)
+    except ValidationError as exc:
+        raise LocalRunnerError(f"Invalid local resource metrics schema: {exc}") from exc
 
 
 def _edgeenv_env(config: BenchmarkConfig, target: TargetProfile) -> dict[str, str]:
