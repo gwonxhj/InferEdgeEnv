@@ -1,0 +1,15 @@
+target_name: jetson-nano-sampled-local
+target_type: local
+board_name: Jetson Orin Nano
+os: Ubuntu 22.04 LTS for Tegra
+runtime_tags:
+  - local
+  - jetson
+  - tegrastats
+  - sampled
+sampler:
+  name: jetson-tegrastats
+  required: false
+  interval_ms: 500
+  startup_wait_ms: 600
+  raw_log: true

@@ -68,6 +68,14 @@ On Jetson, use the `tegrastats` wrapper path from the repo root:
 edgeenv bench run --target examples/profiles/jetson_nano_local.yaml --config examples/benches/jetson_tegrastats_local.yaml
 ```
 
+For the sampler adapter lifecycle path on Jetson, use the sampled local profile
+and inspect sampler metadata without opening artifact files manually:
+
+```bash
+edgeenv bench run --target examples/profiles/jetson_nano_sampled_local.yaml --config examples/benches/jetson_sampled_local.yaml
+edgeenv runs sampler show <run_id>
+```
+
 If a sampler is unavailable, the wrapper should omit `EDGEENV_RESOURCE_METRICS_JSON=` and preserve the successful primary benchmark run. If a wrapper emits malformed resource metrics, EdgeEnv writes a failed-run artifact and does not update the registry:
 
 ```bash
@@ -125,6 +133,7 @@ Start here:
 - [Local Command Contract Guide](docs/local-command-contract.md) — how to connect your own local benchmark command
 - [Local Real Benchmark Example Guide](docs/local-real-benchmark-example.md) — how to wrap a user-owned runtime command
 - [Jetson Tegrastats Wrapper Guide](docs/jetson-tegrastats-wrapper.md) — how to collect Jetson `tegrastats` as optional resource evidence
+- [Jetson Sampled Run Rehearsal](docs/jetson-sampled-run-rehearsal.md) — real Jetson sampler adapter run, inspection UX, and export/import validation
 - [Sampler Adapter API Design](docs/sampler-adapter-api-design.md) — future sampler adapter lifecycle and metadata schema
 - [LocalRunner Sampler Wiring Design](docs/local-runner-sampler-wiring-design.md) — how LocalRunner should enable sampler lifecycle without breaking stdout metrics
 - [Sampler Metadata Artifact Policy](docs/sampler-metadata-artifact-policy.md) — where sampler metadata/raw artifacts belong

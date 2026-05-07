@@ -1,0 +1,22 @@
+name: jetson-sampled-local
+command: python examples/scripts/emit_delayed_local_metrics.py
+model_name: jetson-sampled-demo-model
+model_version: "1.0"
+model_format: onnx
+model_path: models/jetson-sampled-demo.onnx
+task: object-detection
+input_shape: [1, 3, 224, 224]
+input_dtype: float32
+runtime: local-python
+execution_provider: jetson-cpu-demo
+precision: fp32
+batch_size: 1
+warmup_runs: 1
+repeat_runs: 3
+include_preprocess: true
+include_postprocess: true
+timeout_seconds: 30
+working_directory: .
+extra_env:
+  LOCAL_DEMO_FLAG: jetson-sampled
+  LOCAL_DEMO_SLEEP_SECONDS: "1.2"
