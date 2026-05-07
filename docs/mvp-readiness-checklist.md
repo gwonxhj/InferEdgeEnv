@@ -18,6 +18,7 @@ EdgeEnv MVP가 현재 어떤 사용자 흐름을 지원하고, 어떤 범위를 
 - `docs/sampler-failure-policy.md` — sampler/resource evidence 실패 정책
 - `docs/ci-readiness.md` — PR/main 자동 검증 기준
 - `docs/v1-handoff-status.md` — handoff snapshot과 next work candidates
+- `docs/v1-release-rehearsal.md` — main 기준 user-flow rehearsal과 release/tag gate
 - `examples/` — 실행 가능한 deterministic fixtures
 - `tests/` — CLI, registry, writer, compare regression coverage
 
@@ -105,7 +106,8 @@ edgeenv report compare <run_id_a> <run_id_b>
 - **Local Command Contract Guide**: 사용자가 자기 command를 붙일 때의 실행 기준이다.
 - **Compare Workflow Guide**: MVP의 핵심 가치인 comparability judgement를 end-to-end로 보여준다.
 - **Resource Metrics / Sampler Failure docs**: optional evidence와 실패 보존 정책을 설명한다.
-- **Export/Import Design**: future portable evidence bundle contract를 구현 전에 고정한다.
+- **Export/Import Design**: portable successful/failed evidence bundle contract를 설명한다.
+- **V1 Release Rehearsal**: README quickstart가 실제 CLI 흐름으로 닫히는지와 tag gate를 기록한다.
 
 ## 6. WHY — 배경 판단
 
