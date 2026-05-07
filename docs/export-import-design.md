@@ -2,9 +2,9 @@
 
 ## 1. WHAT — 이 문서가 정하는 것
 
-성공 run evidence bundle인 `.edgeenv/runs/<run_id>/`를 zip으로 내보내고, 다른 workspace에서 검증 가능한 evidence로 다시 들여오기 위한 v1.1 설계 기준을 정한다.
+성공 run evidence bundle인 `.edgeenv/runs/<run_id>/`와 실패 run diagnostic evidence bundle인 `.edgeenv/failed-runs/<run_id>/`를 zip으로 내보내고, 다른 workspace에서 검증 가능한 evidence로 다시 들여오기 위한 v1.1 설계 기준을 정한다.
 
-현재 구현은 successful run export/import를 제공한다. Failed-run export/import, replace/alias import policy, detached signatures는 future work다.
+현재 구현은 successful run export/import와 failed-run export/import를 제공한다. Replace/alias import policy와 detached signatures는 future work다.
 
 ## 2. CONTENTS — 관련 파일과 기술 스택
 
@@ -16,9 +16,10 @@
 - `.edgeenv/runs/<run_id>/env.json` — captured environment evidence
 - `.edgeenv/runs/<run_id>/stdout.log` — captured benchmark stdout
 - `.edgeenv/runs/<run_id>/stderr.log` — captured benchmark stderr
+- `.edgeenv/failed-runs/<run_id>/failure.json` — canonical failed-run diagnostic metadata
 - `.edgeenv/runs.db` — local successful-run index, not canonical export evidence
 - `inferedge_env/result/schema.py` — `edgeenv.result.v1` validation target
-- `inferedge_env/result/exporter.py` — successful run zip export/import, manifest/checksum generation, safe import validation
+- `inferedge_env/result/exporter.py` — successful/failed run zip export/import, manifest/checksum generation, safe import validation
 - `inferedge_env/registry/db.py` — import registry insertion/rebuild path
 
 기술 스택: zip archive, JSON manifest, SHA-256 checksums, existing Pydantic result schema, local filesystem
@@ -144,9 +145,25 @@ Use SHA-256 for every exported file. The checksum covers exact bytes in the arch
 
 The manifest itself is not self-checksummed in v1.1. If tamper-evidence beyond accidental corruption is needed later, use a detached signature design rather than overloading this manifest.
 
-### Failed-run exports
+### Failed-run export/import
 
-Failed-run export is out of scope for the first export/import implementation. Failed-run artifacts use a different schema marker, are diagnostic rather than successful benchmark evidence, and should have a separate `bundle_type` such as `failed-run` if implemented later.
+Failed-run artifacts use a different schema marker and stay diagnostic rather than successful benchmark evidence. Export/import uses `bundle_type: failed-run` and requires:
+
+- `failure.json`
+- `config.yaml`
+- `target.yaml`
+- `env.json`
+- `stdout.log`
+- `stderr.log`
+
+Commands:
+
+```bash
+edgeenv failed-runs export <run_id> --output edgeenv-failed-run-<run_id>.zip
+edgeenv failed-runs import edgeenv-failed-run-<run_id>.zip
+```
+
+Import validates the manifest, checksums, byte sizes, top-level run id, and `failure.json` schema marker before copying files into `.edgeenv/failed-runs/<run_id>/`. It does not insert or rebuild any `runs.db` row.
 
 ## 4. HOW NOT — 피해야 할 함정
 
@@ -157,13 +174,14 @@ Failed-run export is out of scope for the first export/import implementation. Fa
 - Do not include model or dataset blobs by default. `model_path` and `model_hash` are identity evidence, not artifact upload semantics.
 - Do not turn export/import into cloud sync, auth, public leaderboard, or model upload behavior.
 - Do not export failed-run artifacts through the successful-run bundle contract.
+- Do not import failed-run artifacts into `runs.db` or allow `report compare` to compare them.
 
 ## 5. WHERE — 다른 설계와의 관계
 
 - **Result schema**: `result.json` remains the canonical successful-run data.
 - **Registry**: `runs.db` remains a rebuildable local index.
 - **Compare Workflow**: imported runs can be compared only after normal comparability judgement.
-- **Failed Run Inspection**: failed-run artifacts stay diagnostic and out of this successful-run export scope.
+- **Failed Run Inspection**: failed-run artifacts stay diagnostic and portable, but out of the successful-run registry/compare path.
 - **Local Command Contract**: stdout/stderr/config/target/env files preserve evidence for later review.
 
 ## 6. WHY — 배경 판단

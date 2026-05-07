@@ -75,7 +75,7 @@ edgeenv report compare <run_id_a> <run_id_b>
 - Success artifacts under `.edgeenv/runs/<run_id>/`
 - Failed local run artifacts under `.edgeenv/failed-runs/<run_id>/`
 - SQLite local registry for successful runs
-- `runs list`, `runs show`, `runs export`, `runs import`, `failed-runs list`, `failed-runs show`, and `report compare`
+- `runs list`, `runs show`, `runs export`, `runs import`, `failed-runs list`, `failed-runs show`, `failed-runs export`, `failed-runs import`, and `report compare`
 - Same-condition, conditional, and non-comparable judgement
 - Deterministic examples and pytest coverage
 - Editable install and `edgeenv` console script smoke path
@@ -90,7 +90,6 @@ edgeenv report compare <run_id_a> <run_id_b>
 - Single-score ranking across models
 - Registry indexing/querying for resource metrics columns
 - Platform-native sampler adapters beyond wrapper command examples
-- Failed-run export/import for diagnostic bundles
 
 ## 4. HOW NOT — 피해야 할 함정
 

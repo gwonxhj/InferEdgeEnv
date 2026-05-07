@@ -14,8 +14,8 @@ README와 설계/운영 문서가 위치하는 영역이다. EdgeEnv가 무엇�
 - `docs/local-command-contract.md` — 사용자가 자기 local benchmark command를 연결할 때 지켜야 하는 stdout/config/troubleshooting contract
 - `docs/local-real-benchmark-example.md` — 실제 runtime command adapter pattern을 deterministic local example로 설명하는 guide
 - `docs/compare-workflow-guide.md` — 두 local run 생성부터 `runs list/show/report compare`까지 이어지는 compare workflow guide
-- `docs/failed-run-inspection.md` — failed-run artifact를 `failed-runs list/show`로 안전하게 확인하는 guide
-- `docs/export-import-design.md` — successful run evidence bundle zip export/import contract
+- `docs/failed-run-inspection.md` — failed-run artifact를 `failed-runs list/show/export/import`로 안전하게 확인/이동하는 guide
+- `docs/export-import-design.md` — successful run evidence와 failed-run diagnostic bundle zip export/import contract
 - `docs/mvp-readiness-checklist.md` — MVP에서 가능한 흐름과 non-goals를 release/readiness 관점으로 정리한 상태판
 - `docs/packaging-entrypoints.md` — editable install, module entrypoint, console script readiness 기준
 - `docs/ci-readiness.md` — GitHub Actions에서 자동 검증하는 MVP readiness workflow 기준
