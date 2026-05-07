@@ -303,6 +303,58 @@ def test_cli_local_template_example_run_and_show(tmp_path):
     assert payload["resource_metrics"]["source"] == "local-template"
 
 
+def test_cli_local_runtime_adapter_example_run_and_show(tmp_path):
+    runner = CliRunner()
+    edgeenv_root = tmp_path / ".edgeenv"
+
+    run_result = runner.invoke(
+        app,
+        [
+            "bench",
+            "run",
+            "--target",
+            "examples/profiles/local.yaml",
+            "--config",
+            "examples/benches/local_runtime_adapter.yaml",
+            "--edgeenv-root",
+            str(edgeenv_root),
+        ],
+    )
+
+    assert run_result.exit_code == 0
+    assert "Latency mean: 18.5 ms" in run_result.output
+    assert "Resource metrics: stored (source=local-runtime-adapter-demo" in (
+        run_result.output
+    )
+    run_dirs = list((edgeenv_root / "runs").iterdir())
+    run_dir = run_dirs[0]
+    stdout = (run_dir / "stdout.log").read_text(encoding="utf-8")
+    assert "adapter=local-runtime-adapter-demo" in stdout
+    assert "runtime_command_exit=0" in stdout
+    assert "runtime_stdout=runtime-demo-inference" in stdout
+    payload = json.loads((run_dir / "result.json").read_text(encoding="utf-8"))
+    assert payload["benchmark_name"] == "local-runtime-adapter-demo"
+    assert payload["metrics"]["latency_mean_ms"] == 18.5
+    assert payload["metrics"]["throughput_fps"] == 54.1
+    assert payload["resource_metrics"]["memory_peak_mb"] == 216.0
+    assert payload["resource_metrics"]["source"] == "local-runtime-adapter-demo"
+    show_result = runner.invoke(
+        app,
+        [
+            "runs",
+            "show",
+            payload["run_id"],
+            "--edgeenv-root",
+            str(edgeenv_root),
+        ],
+    )
+
+    assert show_result.exit_code == 0
+    shown = json.loads(show_result.output)
+    assert shown["runtime"]["runtime"] == "python-subprocess"
+    assert shown["resource_metrics"]["memory_mean_mb"] == 204.0
+
+
 def test_cli_compare_workflow_examples_same_condition(tmp_path):
     runner = CliRunner()
     edgeenv_root = tmp_path / ".edgeenv"

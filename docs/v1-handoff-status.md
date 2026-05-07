@@ -52,6 +52,7 @@ Use this path when checking config/result/registry lifecycle without executing a
 
 ```bash
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_template.yaml
+edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_runtime_adapter.yaml
 ```
 
 Use this path when wiring a user-owned local benchmark command to EdgeEnv's explicit stdout contract.
@@ -59,6 +60,7 @@ Use this path when wiring a user-owned local benchmark command to EdgeEnv's expl
 Related docs:
 
 - [Local Command Contract Guide](local-command-contract.md)
+- [Local Real Benchmark Example Guide](local-real-benchmark-example.md)
 - [Local Runner Design](local-runner-design.md)
 
 ### Resource metrics and sampler wrappers
@@ -166,6 +168,7 @@ python -m inferedge_env.cli profile validate examples/profiles/local_fake.yaml
 python -m inferedge_env.cli profile validate examples/profiles/local.yaml
 python -m inferedge_env.cli bench validate examples/benches/yolov8n_fire.yaml
 python -m inferedge_env.cli bench validate examples/benches/local_template.yaml
+python -m inferedge_env.cli bench validate examples/benches/local_runtime_adapter.yaml
 python -m inferedge_env.cli bench validate examples/benches/local_compare_a.yaml
 git diff --check
 ```
@@ -188,7 +191,6 @@ Recommended next work should stay in coherent bundles rather than tiny one-off P
 
 Good next bundles:
 
-- **Local real benchmark examples**: add one realistic but still lightweight local benchmark adapter template around a common runtime command, without shipping model or dataset artifacts.
 - **Export/import design**: design zip export/import for evidence bundles before implementing it.
 - **Sampler adapter design**: write platform-specific adapter designs for Jetson/macOS/Windows before adding any adapter code.
 - **Registry resource query migration**: implement only after query/index use cases are clear, following [Registry Resource Query Design](registry-resource-query-design.md).

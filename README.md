@@ -46,11 +46,12 @@ Then try the local runner examples. These execute small deterministic Python com
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_echo_metrics.yaml
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_resource_metrics.yaml
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_template.yaml
+edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_runtime_adapter.yaml
 ```
 
 The local target executes `command` on the current machine and reads an explicit `EDGEENV_METRICS_JSON=` line from stdout. Local commands may also emit an optional `EDGEENV_RESOURCE_METRICS_JSON=` line for memory, power, energy, or temperature evidence. `bench run` reports whether resource metrics were stored or omitted.
 
-To connect your own benchmark command, start from `examples/scripts/local_benchmark_template.py` and the guide in [Local Command Contract Guide](docs/local-command-contract.md).
+To connect your own benchmark command, start from `examples/scripts/local_benchmark_template.py`, then review the adapter pattern in [Local Real Benchmark Example Guide](docs/local-real-benchmark-example.md).
 
 ### 3. Try Sampler Wrapper Cases
 
@@ -113,6 +114,7 @@ Start here:
 - [Packaging And Entrypoint Readiness](docs/packaging-entrypoints.md) — install, module entrypoint, and console script checks
 - [CI Readiness Workflow](docs/ci-readiness.md) — automated PR/main checks for MVP contracts
 - [Local Command Contract Guide](docs/local-command-contract.md) — how to connect your own local benchmark command
+- [Local Real Benchmark Example Guide](docs/local-real-benchmark-example.md) — how to wrap a user-owned runtime command
 - [Compare Workflow Guide](docs/compare-workflow-guide.md) — how to create two runs and judge comparability
 
 Design references:
@@ -251,6 +253,7 @@ Included in MVP v1:
 - Pydantic benchmark config and target profile schemas
 - FakeRunner deterministic benchmark result
 - LocalRunner command execution with explicit metrics JSON capture
+- Local runtime adapter example for user-owned command integration
 - Result JSON and artifact directory creation
 - SQLite local registry
 - `runs list` and `runs show`
