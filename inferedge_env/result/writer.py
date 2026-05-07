@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import uuid
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 from inferedge_env.config.bench_config import BenchmarkConfig
@@ -17,8 +17,25 @@ from inferedge_env.result.schema import (
     TargetIdentity,
 )
 from inferedge_env.runners.base import RunnerResult
+from inferedge_env.samplers.base import SamplerSummary
 from inferedge_env.utils.hashing import stable_model_hash
 from inferedge_env.utils.system_info import collect_system_info
+
+SAMPLER_METADATA_REQUIRED_KEYS = {
+    "schema_version",
+    "sampler_name",
+    "platform_tool",
+    "sampling_scope",
+    "benchmark_window",
+    "sample_count",
+    "raw_artifacts",
+    "fields",
+    "warnings",
+}
+
+
+class SamplerArtifactError(ValueError):
+    """Raised when sampler evidence cannot be persisted safely."""
 
 
 def new_run_id(now: datetime | None = None) -> str:
@@ -125,6 +142,31 @@ class ResultArtifactWriter:
         return run_dir
 
 
+def write_sampler_artifacts(
+    run_dir: Path | str,
+    sampler_summary: SamplerSummary,
+) -> Path | None:
+    """Persist optional sampler metadata under a successful run artifact directory."""
+
+    if not sampler_summary.metadata:
+        return None
+
+    artifact_dir = Path(run_dir)
+    if not artifact_dir.is_dir():
+        raise SamplerArtifactError(f"Run artifact directory is missing: {artifact_dir}")
+    sampler_dir = artifact_dir / "sampler"
+    _validate_sampler_metadata(sampler_summary.metadata, artifact_dir)
+    _validate_sampler_raw_artifacts(sampler_summary.raw_artifacts, artifact_dir)
+
+    sampler_dir.mkdir(parents=True, exist_ok=True)
+    metadata_path = sampler_dir / "metadata.json"
+    metadata_path.write_text(
+        json.dumps(sampler_summary.metadata, indent=2, sort_keys=True),
+        encoding="utf-8",
+    )
+    return metadata_path
+
+
 class FailedRunArtifactWriter:
     def __init__(self, root: Path | str = ".edgeenv") -> None:
         self.root = Path(root)
@@ -182,3 +224,54 @@ class FailedRunArtifactWriter:
 
 def load_result(path: Path | str) -> RunResult:
     return RunResult.model_validate_json(Path(path).read_text(encoding="utf-8"))
+
+
+def _validate_sampler_metadata(metadata: dict[str, Any], run_dir: Path) -> None:
+    missing = sorted(SAMPLER_METADATA_REQUIRED_KEYS - metadata.keys())
+    if missing:
+        raise SamplerArtifactError(
+            "Sampler metadata missing required keys: " + ", ".join(missing)
+        )
+    raw_artifacts = metadata["raw_artifacts"]
+    if not isinstance(raw_artifacts, list):
+        raise SamplerArtifactError("Sampler metadata raw_artifacts must be a list")
+    for raw_artifact in raw_artifacts:
+        if not isinstance(raw_artifact, str):
+            raise SamplerArtifactError(
+                "Sampler metadata raw_artifacts entries must be strings"
+            )
+        raw_path = _validate_sampler_relative_path(raw_artifact)
+        expected_path = run_dir / Path(*raw_path.parts)
+        if not expected_path.is_file():
+            raise SamplerArtifactError(
+                f"Sampler raw artifact listed in metadata is missing: {raw_artifact}"
+            )
+
+
+def _validate_sampler_relative_path(raw_artifact: str) -> PurePosixPath:
+    raw_path = PurePosixPath(raw_artifact)
+    if raw_path.is_absolute() or ".." in raw_path.parts:
+        raise SamplerArtifactError(f"Unsafe sampler raw artifact path: {raw_artifact}")
+    if not raw_path.parts or raw_path.parts[0] != "sampler":
+        raise SamplerArtifactError(
+            f"Sampler raw artifact must be under sampler/: {raw_artifact}"
+        )
+    if raw_path.name == "metadata.json":
+        raise SamplerArtifactError(
+            "Sampler metadata cannot list metadata.json as a raw artifact"
+        )
+    return raw_path
+
+
+def _validate_sampler_raw_artifacts(raw_artifacts: list[Path], run_dir: Path) -> None:
+    sampler_dir = run_dir / "sampler"
+    for raw_artifact in raw_artifacts:
+        path = Path(raw_artifact)
+        if not path.is_file():
+            raise SamplerArtifactError(f"Sampler raw artifact is missing: {path}")
+        try:
+            path.resolve().relative_to(sampler_dir.resolve())
+        except ValueError as exc:
+            raise SamplerArtifactError(
+                f"Sampler raw artifact must be under {sampler_dir}: {path}"
+            ) from exc
