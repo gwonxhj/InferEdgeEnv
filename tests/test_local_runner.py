@@ -6,7 +6,10 @@ from pathlib import Path
 
 import pytest
 
+from inferedge_env.config.target_profile import SamplerProfile
+from inferedge_env.result.schema import ResourceMetrics
 from inferedge_env.runners.local import LocalRunner, LocalRunnerError
+from inferedge_env.samplers.base import SamplerSummary
 
 
 def test_local_runner_valid_command_returns_metrics(
@@ -72,6 +75,155 @@ print("EDGEENV_METRICS_JSON=" + json.dumps({
     assert result.resource_metrics is None
     assert "EDGEENV_METRICS_JSON=" in result.stdout
     assert result.stderr == ""
+
+
+def test_local_runner_recoverable_sampler_failure_preserves_primary_run(
+    tmp_path: Path,
+    bench_config,
+    target_profile,
+):
+    script = _write_metrics_script(tmp_path)
+    config = bench_config.model_copy(update={"command": _python_command(script)})
+    target = target_profile.model_copy(
+        update={
+            "target_type": "local",
+            "sampler": SamplerProfile(
+                name="jetson-tegrastats",
+                tegrastats_path="missing-tegrastats-for-test",
+                required=False,
+            ),
+        }
+    )
+
+    result = LocalRunner().run(
+        config,
+        target,
+        run_id="run-sampler-recoverable",
+        artifact_dir=tmp_path / "run-sampler-recoverable",
+    )
+
+    assert result.latency_mean_ms == 10.0
+    assert result.resource_metrics is None
+    assert result.sampler_summary is not None
+    assert result.sampler_summary.metadata["sample_count"] == 0
+    assert "tegrastats unavailable" in result.sampler_summary.warnings[0]
+
+
+def test_local_runner_required_sampler_failure_fails_before_command(
+    tmp_path: Path,
+    bench_config,
+    target_profile,
+):
+    script = _write_metrics_script(tmp_path)
+    config = bench_config.model_copy(update={"command": _python_command(script)})
+    target = target_profile.model_copy(
+        update={
+            "target_type": "local",
+            "sampler": SamplerProfile(
+                name="jetson-tegrastats",
+                tegrastats_path="missing-tegrastats-for-test",
+                required=True,
+            ),
+        }
+    )
+
+    with pytest.raises(LocalRunnerError, match="Required sampler failed") as exc_info:
+        LocalRunner().run(
+            config,
+            target,
+            run_id="run-sampler-required",
+            artifact_dir=tmp_path / "run-sampler-required",
+        )
+
+    assert exc_info.value.stdout == ""
+    assert exc_info.value.stderr == ""
+
+
+def test_local_runner_sampler_metrics_take_precedence_over_stdout_resource_metrics(
+    tmp_path: Path,
+    bench_config,
+    target_profile,
+    monkeypatch,
+):
+    class FakeSampler:
+        name = "fake-sampler"
+
+        def start(self, context):
+            raw_log = context.artifact_dir / "sampler" / "tegrastats.log"
+            raw_log.parent.mkdir(parents=True)
+            raw_log.write_text("RAM 100/7620MB\n", encoding="utf-8")
+
+        def stop(self):
+            return None
+
+        def summary(self):
+            return SamplerSummary(
+                resource_metrics=ResourceMetrics(
+                    memory_peak_mb=100.0,
+                    source="jetson-tegrastats",
+                ),
+                metadata={
+                    "schema_version": "edgeenv.sampler-metadata.v1",
+                    "sampler_name": "jetson-tegrastats",
+                    "platform_tool": "tegrastats",
+                    "sampling_scope": "host",
+                    "benchmark_window": "sampler-start-before-command-stop-after-command",
+                    "sample_count": 1,
+                    "raw_artifacts": ["sampler/tegrastats.log"],
+                    "fields": {},
+                    "warnings": [],
+                },
+                raw_artifacts=[],
+                warnings=[],
+            )
+
+    monkeypatch.setattr(
+        "inferedge_env.runners.local.build_sampler",
+        lambda profile: FakeSampler(),
+    )
+    script = _write_script(
+        tmp_path,
+        """
+import json
+print("EDGEENV_RESOURCE_METRICS_JSON=" + json.dumps({
+    "memory_peak_mb": 999.0,
+    "source": "benchmark-command",
+}))
+print("EDGEENV_METRICS_JSON=" + json.dumps({
+    "latency_mean_ms": 10.0,
+    "latency_p50_ms": 9.5,
+    "latency_p95_ms": 11.0,
+    "latency_p99_ms": 12.0,
+    "throughput_fps": 100.0,
+}))
+""",
+    )
+    config = bench_config.model_copy(update={"command": _python_command(script)})
+    target = target_profile.model_copy(
+        update={
+            "target_type": "local",
+            "sampler": SamplerProfile(
+                name="jetson-tegrastats",
+                interval_ms=50,
+                startup_wait_ms=0,
+            ),
+        }
+    )
+    artifact_dir = tmp_path / "run-sampler-precedence"
+
+    result = LocalRunner().run(
+        config,
+        target,
+        run_id="run-sampler-precedence",
+        artifact_dir=artifact_dir,
+    )
+
+    assert result.resource_metrics is not None
+    assert result.resource_metrics.source == "jetson-tegrastats"
+    assert result.resource_metrics.memory_peak_mb == 100.0
+    assert result.sampler_summary is not None
+    assert result.sampler_summary.metadata["raw_artifacts"] == ["sampler/tegrastats.log"]
+    assert (artifact_dir / "sampler" / "tegrastats.log").is_file()
 
 
 def test_local_runner_uses_last_metrics_line(tmp_path: Path, bench_config, target_profile):
@@ -313,6 +465,22 @@ def _write_script(tmp_path: Path, body: str) -> Path:
     script = tmp_path / "local_bench.py"
     script.write_text(body.strip() + "\n", encoding="utf-8")
     return script
+
+
+def _write_metrics_script(tmp_path: Path) -> Path:
+    return _write_script(
+        tmp_path,
+        """
+import json
+print("EDGEENV_METRICS_JSON=" + json.dumps({
+    "latency_mean_ms": 10.0,
+    "latency_p50_ms": 9.5,
+    "latency_p95_ms": 11.0,
+    "latency_p99_ms": 12.0,
+    "throughput_fps": 100.0,
+}))
+""",
+    )
 
 
 def _python_command(script: Path) -> str:

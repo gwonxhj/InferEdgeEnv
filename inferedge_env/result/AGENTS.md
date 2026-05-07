@@ -18,6 +18,7 @@ result field 변경은 registry insert, runs show, comparability checker, README
 
 - `result.json` schema를 임의로 바꾸지 말 것 — registry와 compare가 같은 run을 해석하지 못한다.
 - 성공 run artifact를 `.edgeenv/runs/<run_id>/` 외부에 흩뿌리지 말 것 — local registry layout이 깨진다.
+- sampler가 command 실행 중 raw log를 먼저 쓰는 경우를 위해 `.edgeenv/runs/<run_id>/sampler/`만 pre-created된 successful run directory는 허용한다.
 - 실패 run을 성공 run처럼 registry에 insert하지 말 것 — 실패 evidence는 `.edgeenv/failed-runs/<run_id>/`에 분리 보존한다.
 - config/profile 원본 복사를 생략하지 말 것 — 나중에 같은 조건인지 검증할 evidence가 사라진다.
 

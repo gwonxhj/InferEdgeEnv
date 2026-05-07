@@ -206,7 +206,7 @@ Recommended next work should stay in coherent bundles rather than tiny one-off P
 
 Good next bundles:
 
-- **LocalRunner sampler lifecycle wiring**: allocate run ids before local command execution, start/stop optional sampler adapters, and write sampler artifacts following [LocalRunner Sampler Wiring Design](local-runner-sampler-wiring-design.md).
+- **Sampler inspection UX**: add a focused `runs sampler show <run_id>` command or equivalent documentation so users can inspect `sampler/metadata.json` without opening artifact files manually.
 - **Registry resource query migration**: implement only after query/index use cases are clear, following [Registry Resource Query Design](registry-resource-query-design.md).
 
 Avoid next bundles that jump straight into:
