@@ -126,6 +126,7 @@ Start here:
 - [Local Real Benchmark Example Guide](docs/local-real-benchmark-example.md) — how to wrap a user-owned runtime command
 - [Jetson Tegrastats Wrapper Guide](docs/jetson-tegrastats-wrapper.md) — how to collect Jetson `tegrastats` as optional resource evidence
 - [Sampler Adapter API Design](docs/sampler-adapter-api-design.md) — future sampler adapter lifecycle and metadata schema
+- [Sampler Metadata Artifact Policy](docs/sampler-metadata-artifact-policy.md) — where sampler metadata/raw artifacts belong
 - [Compare Workflow Guide](docs/compare-workflow-guide.md) — how to create two runs and judge comparability
 - [Export/Import Design](docs/export-import-design.md) — proposed portable evidence bundle contract
 
@@ -136,6 +137,7 @@ Design references:
 - [Sampler Failure Policy](docs/sampler-failure-policy.md)
 - [Platform Sampler Design](docs/platform-sampler-design.md)
 - [Sampler Adapter API Design](docs/sampler-adapter-api-design.md)
+- [Sampler Metadata Artifact Policy](docs/sampler-metadata-artifact-policy.md)
 - [Registry Resource Query Design](docs/registry-resource-query-design.md)
 
 ## Benchmark Config Example

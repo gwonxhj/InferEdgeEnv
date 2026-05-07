@@ -16,6 +16,7 @@
 - `.edgeenv/runs/<run_id>/env.json` — captured environment evidence
 - `.edgeenv/runs/<run_id>/stdout.log` — captured benchmark stdout
 - `.edgeenv/runs/<run_id>/stderr.log` — captured benchmark stderr
+- `.edgeenv/runs/<run_id>/sampler/metadata.json` — optional future sampler metadata extension evidence
 - `.edgeenv/failed-runs/<run_id>/failure.json` — canonical failed-run diagnostic metadata
 - `.edgeenv/runs.db` — local successful-run index, not canonical export evidence
 - `inferedge_env/result/schema.py` — `edgeenv.result.v1` validation target
@@ -165,6 +166,29 @@ edgeenv failed-runs import edgeenv-failed-run-<run_id>.zip
 
 Import validates the manifest, checksums, byte sizes, top-level run id, and `failure.json` schema marker before copying files into `.edgeenv/failed-runs/<run_id>/`. It does not insert or rebuild any `runs.db` row.
 
+### Sampler artifact extension
+
+Sampler metadata and raw sampler logs are optional extension evidence, not required successful-run files.
+
+Future export/import support should include these only when present:
+
+```text
+<run_id>/
+  sampler/
+    metadata.json
+    tegrastats.log
+```
+
+Rules:
+
+- `sampler/metadata.json` is optional and must never be required for older bundles.
+- If `sampler/metadata.json` exists, it must be listed in `manifest.files` with checksum and byte size.
+- Every path listed in `sampler/metadata.json.raw_artifacts` must be present in the archive and manifest.
+- Import must apply the same path traversal, symlink, duplicate entry, checksum, and byte-size validation to sampler files.
+- Registry rebuild still uses `result.json`; sampler metadata must not become a registry source of truth.
+
+Detailed storage policy is defined in [Sampler Metadata Artifact Policy](sampler-metadata-artifact-policy.md).
+
 ## 4. HOW NOT — 피해야 할 함정
 
 - Do not export `runs.db` as the source of truth.
@@ -175,6 +199,7 @@ Import validates the manifest, checksums, byte sizes, top-level run id, and `fai
 - Do not turn export/import into cloud sync, auth, public leaderboard, or model upload behavior.
 - Do not export failed-run artifacts through the successful-run bundle contract.
 - Do not import failed-run artifacts into `runs.db` or allow `report compare` to compare them.
+- Do not make optional sampler artifacts required for successful-run import.
 
 ## 5. WHERE — 다른 설계와의 관계
 
@@ -183,6 +208,7 @@ Import validates the manifest, checksums, byte sizes, top-level run id, and `fai
 - **Compare Workflow**: imported runs can be compared only after normal comparability judgement.
 - **Failed Run Inspection**: failed-run artifacts stay diagnostic and portable, but out of the successful-run registry/compare path.
 - **Local Command Contract**: stdout/stderr/config/target/env files preserve evidence for later review.
+- **Sampler Metadata Artifact Policy**: sampler metadata stays in optional `sampler/metadata.json` extension evidence.
 
 ## 6. WHY — 배경 판단
 
