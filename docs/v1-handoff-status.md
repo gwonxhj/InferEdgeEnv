@@ -92,6 +92,8 @@ Related docs:
 edgeenv failed-runs list
 edgeenv failed-runs show <run_id>
 edgeenv failed-runs show <run_id> --log-chars 0
+edgeenv failed-runs export <run_id> --output edgeenv-failed-run-<run_id>.zip
+edgeenv failed-runs import edgeenv-failed-run-<run_id>.zip
 ```
 
 Use this path after a local command failure or malformed metrics/resource metrics output. Failed runs are diagnostic artifacts, not successful registry records, so they are intentionally absent from `runs list`.
@@ -156,7 +158,7 @@ Do not break these contracts without an explicit migration plan:
 - `.edgeenv/failed-runs/<run_id>/` diagnostic artifact layout
 - `.edgeenv/runs.db` successful run registry semantics
 - `report compare` output labels: `Comparable`, `Mode`, `Reason`
-- `failed-runs show` reads failed artifacts only and must not insert into `runs.db`
+- `failed-runs show` and `failed-runs import` read/copy failed artifacts only and must not insert into `runs.db`
 - export/import must treat run artifacts as canonical evidence and `runs.db` as a rebuildable local index
 
 Related portability design:
@@ -198,7 +200,6 @@ Recommended next work should stay in coherent bundles rather than tiny one-off P
 
 Good next bundles:
 
-- **Failed-run portability design**: design failed-run export/import separately from successful run evidence bundles.
 - **Sampler adapter design**: write platform-specific adapter designs for Jetson/macOS/Windows before adding any adapter code.
 - **Registry resource query migration**: implement only after query/index use cases are clear, following [Registry Resource Query Design](registry-resource-query-design.md).
 

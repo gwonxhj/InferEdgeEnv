@@ -956,6 +956,66 @@ runtime_tags: [local]
     assert shown_without_logs["stdout"] == ""
     assert shown_without_logs["stderr"] == ""
 
+    export_path = tmp_path / "exports" / "failed-run.zip"
+    imported_root = tmp_path / "imported" / ".edgeenv"
+    export_result = runner.invoke(
+        app,
+        [
+            "failed-runs",
+            "export",
+            failure["run_id"],
+            "--output",
+            str(export_path),
+            "--edgeenv-root",
+            str(edgeenv_root),
+        ],
+    )
+    import_result = runner.invoke(
+        app,
+        [
+            "failed-runs",
+            "import",
+            str(export_path),
+            "--edgeenv-root",
+            str(imported_root),
+        ],
+    )
+    imported_show = runner.invoke(
+        app,
+        [
+            "failed-runs",
+            "show",
+            failure["run_id"],
+            "--edgeenv-root",
+            str(imported_root),
+        ],
+    )
+    duplicate_import = runner.invoke(
+        app,
+        [
+            "failed-runs",
+            "import",
+            str(export_path),
+            "--edgeenv-root",
+            str(imported_root),
+        ],
+    )
+
+    assert export_result.exit_code == 0
+    assert "Failed-run evidence exported" in export_result.output
+    assert export_path.is_file()
+    assert import_result.exit_code == 0
+    assert "Failed-run evidence imported" in import_result.output
+    assert (imported_root / "failed-runs" / failure["run_id"] / "failure.json").is_file()
+    assert not (imported_root / "runs.db").exists()
+    assert imported_show.exit_code == 0
+    imported_payload = json.loads(imported_show.output)
+    assert imported_payload["failure"]["run_id"] == failure["run_id"]
+    assert imported_payload["stdout"] == "before failure\n"
+    assert imported_payload["stderr"] == "failure details\n"
+    assert duplicate_import.exit_code == 1
+    assert "Failed-run artifact already exists" in duplicate_import.output
+
 
 def test_cli_failed_runs_show_rejects_path_like_id(tmp_path):
     runner = CliRunner()

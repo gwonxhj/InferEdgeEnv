@@ -10,8 +10,9 @@ Failed run은 성공 run registry인 `.edgeenv/runs.db`에 insert되지 않는�
 
 관련 파일:
 
-- `inferedge_env/cli.py` — `failed-runs list`, `failed-runs show`
+- `inferedge_env/cli.py` — `failed-runs list`, `failed-runs show`, `failed-runs export`, `failed-runs import`
 - `inferedge_env/result/writer.py` — failed-run artifact writer
+- `inferedge_env/result/exporter.py` — failed-run diagnostic bundle export/import
 - `.edgeenv/failed-runs/<run_id>/failure.json` — failure metadata
 - `.edgeenv/failed-runs/<run_id>/stdout.log` — captured stdout
 - `.edgeenv/failed-runs/<run_id>/stderr.log` — captured stderr
@@ -61,12 +62,24 @@ Use `--log-chars 0` to suppress log previews, or set a larger value when the fir
 edgeenv failed-runs show <run_id> --log-chars 0
 ```
 
+### 4. Export/import diagnostic evidence
+
+Use export/import when a failed local command needs to be reviewed in another workspace without copying the whole `.edgeenv` directory:
+
+```bash
+edgeenv failed-runs export <run_id> --output edgeenv-failed-run-<run_id>.zip
+edgeenv failed-runs import edgeenv-failed-run-<run_id>.zip
+```
+
+Import validates `manifest.json`, file checksums, byte sizes, top-level run id, and `failure.json` before copying evidence into `.edgeenv/failed-runs/<run_id>/`. It does not update `runs.db`.
+
 ## 4. HOW NOT — 피해야 할 함정
 
 - 실패 run을 `runs list`나 `runs show`에서 찾으려 하지 않는다. Those commands are for successful registry records.
 - failed-run artifact를 성공 run처럼 compare하지 않는다.
 - `failure.json` schema marker인 `edgeenv.failed-run.v1`을 임의로 바꾸지 않는다.
 - stdout/stderr만 보고 benchmark result를 복구해 registry에 넣지 않는다.
+- failed-run import를 successful run import처럼 registry rebuild로 취급하지 않는다.
 
 ## 5. WHERE — 다른 설계와의 관계
 

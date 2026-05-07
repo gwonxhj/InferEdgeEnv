@@ -6,11 +6,14 @@ import zipfile
 import pytest
 
 from inferedge_env.result.exporter import (
+    REQUIRED_FAILED_RUN_FILES,
     REQUIRED_RUN_FILES,
     RunExportError,
     RunImportError,
     _safe_archive_path,
+    export_failed_run,
     export_successful_run,
+    import_failed_run,
     import_successful_run,
 )
 from inferedge_env.result.schema import ResourceMetrics
@@ -289,6 +292,139 @@ def test_import_successful_run_rejects_existing_run_directory(
         import_successful_run(archive_path, destination_root)
 
 
+def test_export_failed_run_creates_manifest_and_checksums(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    failed_dir = _write_failed_run_fixture(
+        tmp_path,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="run-failed-export",
+    )
+    archive_path = export_failed_run(
+        failed_dir,
+        tmp_path / "edgeenv-failed-run-export.zip",
+    )
+
+    with zipfile.ZipFile(archive_path) as archive:
+        names = sorted(archive.namelist())
+        assert names == sorted(
+            [
+                f"run-failed-export/{name}"
+                for name in [*REQUIRED_FAILED_RUN_FILES, "manifest.json"]
+            ]
+        )
+        manifest = json.loads(archive.read("run-failed-export/manifest.json"))
+        assert manifest["schema_version"] == "edgeenv.export.v1"
+        assert manifest["bundle_type"] == "failed-run"
+        assert manifest["run_id"] == "run-failed-export"
+        assert manifest["source_failed_schema_version"] == "edgeenv.failed-run.v1"
+        file_entries = {entry["path"]: entry for entry in manifest["files"]}
+        assert sorted(file_entries) == sorted(REQUIRED_FAILED_RUN_FILES)
+        for name in REQUIRED_FAILED_RUN_FILES:
+            assert file_entries[name]["sha256"] == sha256_file(failed_dir / name)
+
+
+def test_import_failed_run_copies_files_without_registry(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    failed_dir = _write_failed_run_fixture(
+        tmp_path,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="run-failed-import",
+    )
+    archive_path = export_failed_run(failed_dir, tmp_path / "failed.zip")
+    failure, imported_dir = import_failed_run(
+        archive_path,
+        tmp_path / "imported-edgeenv",
+    )
+
+    assert failure["run_id"] == "run-failed-import"
+    assert imported_dir == (
+        tmp_path / "imported-edgeenv" / "failed-runs" / "run-failed-import"
+    )
+    for name in REQUIRED_FAILED_RUN_FILES:
+        assert (imported_dir / name).read_bytes() == (failed_dir / name).read_bytes()
+    assert not (tmp_path / "imported-edgeenv" / "runs.db").exists()
+    assert not (imported_dir / "manifest.json").exists()
+
+
+def test_import_failed_run_rejects_checksum_mismatch(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    failed_dir = _write_failed_run_fixture(
+        tmp_path,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="run-failed-checksum",
+    )
+    archive_path = export_failed_run(failed_dir, tmp_path / "failed-checksum.zip")
+    tampered = tmp_path / "failed-tampered.zip"
+    with zipfile.ZipFile(archive_path) as source, zipfile.ZipFile(tampered, "w") as dest:
+        for info in source.infolist():
+            data = source.read(info)
+            if info.filename == "run-failed-checksum/stderr.log":
+                data = b"x" + data[1:]
+            dest.writestr(info, data)
+
+    with pytest.raises(RunImportError, match="Checksum mismatch"):
+        import_failed_run(tampered, tmp_path / "imported-edgeenv")
+    assert not (tmp_path / "imported-edgeenv").exists()
+
+
+def test_import_failed_run_rejects_successful_run_bundle(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    run_dir = _write_export_fixture(
+        tmp_path,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="run-success-not-failed",
+    )
+    archive_path = export_successful_run(run_dir, tmp_path / "successful.zip")
+
+    with pytest.raises(RunImportError, match="Unsupported run evidence bundle type"):
+        import_failed_run(archive_path, tmp_path / "imported-edgeenv")
+
+
+def test_import_failed_run_rejects_existing_failed_run_directory(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    failed_dir = _write_failed_run_fixture(
+        tmp_path,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="run-failed-existing",
+    )
+    archive_path = export_failed_run(failed_dir, tmp_path / "failed-existing.zip")
+    destination_root = tmp_path / "imported-edgeenv"
+    (destination_root / "failed-runs" / "run-failed-existing").mkdir(parents=True)
+
+    with pytest.raises(RunImportError, match="Failed-run artifact already exists"):
+        import_failed_run(archive_path, destination_root)
+
+
 def _write_export_fixture(
     tmp_path,
     bench_config,
@@ -305,4 +441,26 @@ def _write_export_fixture(
         profile_path,
         runner_result.stdout,
         runner_result.stderr,
+    )
+
+
+def _write_failed_run_fixture(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+    run_id: str,
+):
+    bench_path, profile_path = config_files
+    return FailedRunArtifactWriter(tmp_path / ".edgeenv").write(
+        config=bench_config,
+        target=target_profile,
+        config_path=bench_path,
+        target_path=profile_path,
+        error_message="Local benchmark command failed with exit code 7",
+        stdout="failed stdout\n",
+        stderr="failed stderr\n",
+        return_code=7,
+        run_id=run_id,
+        env={"python_version": "test"},
     )

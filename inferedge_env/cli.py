@@ -17,7 +17,9 @@ from inferedge_env.registry.models import RegistryRecord
 from inferedge_env.result.exporter import (
     RunExportError,
     RunImportError,
+    export_failed_run,
     export_successful_run,
+    import_failed_run,
     import_successful_run,
     validate_successful_run_import,
 )
@@ -303,6 +305,51 @@ def show_failed_run(
         "stderr": _read_log_preview(failed_dir / "stderr.log", log_chars),
     }
     console.print(json.dumps(payload, indent=2, sort_keys=True), soft_wrap=True)
+
+
+@failed_runs_app.command("export")
+def export_failed_run_artifact(
+    run_id: str,
+    output_path: Path = typer.Option(
+        ...,
+        "--output",
+        "-o",
+        help="Path to write the exported failed-run evidence zip.",
+    ),
+    edgeenv_root: Path = typer.Option(
+        Path(".edgeenv"),
+        "--edgeenv-root",
+        help="Directory for EdgeEnv artifacts and registry.",
+    ),
+) -> None:
+    """Export a failed-run diagnostic evidence bundle as a zip archive."""
+    try:
+        failed_dir = _failed_run_dir(edgeenv_root, run_id)
+        archive_path = export_failed_run(failed_dir, output_path)
+    except (RunExportError, OSError, ValueError) as exc:
+        _fail(str(exc))
+    console.print("[bold green]Failed-run evidence exported[/bold green]")
+    console.print(f"Run ID: {run_id}")
+    console.print(f"Archive: {archive_path}", soft_wrap=True)
+
+
+@failed_runs_app.command("import")
+def import_failed_run_artifact(
+    archive_path: Path,
+    edgeenv_root: Path = typer.Option(
+        Path(".edgeenv"),
+        "--edgeenv-root",
+        help="Directory for EdgeEnv artifacts and registry.",
+    ),
+) -> None:
+    """Import a failed-run diagnostic evidence zip."""
+    try:
+        failure, failed_dir = import_failed_run(archive_path, edgeenv_root)
+    except (RunImportError, OSError) as exc:
+        _fail(str(exc))
+    console.print("[bold green]Failed-run evidence imported[/bold green]")
+    console.print(f"Run ID: {failure['run_id']}")
+    console.print(f"Artifact: {failed_dir}", soft_wrap=True)
 
 
 @report_app.command("compare")
