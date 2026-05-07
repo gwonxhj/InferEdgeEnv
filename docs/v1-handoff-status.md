@@ -108,11 +108,19 @@ Reason:
 - Same input shape
 - Same precision
 - Same benchmark protocol
+Metrics Delta:
+- latency_mean_ms: 18.0 ms -> 16.4 ms (delta -1.6 ms, -8.89%)
+- latency_p50_ms: 17.6 ms -> 16.0 ms (delta -1.6 ms, -9.09%)
+- latency_p95_ms: 20.5 ms -> 18.2 ms (delta -2.3 ms, -11.22%)
+- latency_p99_ms: 22.0 ms -> 19.7 ms (delta -2.3 ms, -10.45%)
+- throughput_fps: 55.5 fps -> 61.0 fps (delta +5.5 fps, +9.91%)
 ```
 
 Related doc:
 
 - [Compare Workflow Guide](compare-workflow-guide.md)
+
+Metric deltas are supplemental and only appear for `Comparable: Yes` with `Mode: same-condition`; conditional and non-comparable reports intentionally suppress them.
 
 ## 4. HOW NOT — scope boundaries to preserve
 
@@ -170,7 +178,6 @@ Recommended next work should stay in coherent bundles rather than tiny one-off P
 Good next bundles:
 
 - **Local real benchmark examples**: add one realistic but still lightweight local benchmark adapter template around a common runtime command, without shipping model or dataset artifacts.
-- **Compare report UX**: improve `report compare` output with side-by-side metric deltas only after comparability mode is shown; keep ranking out of scope.
 - **Failed-run inspection UX**: add a safe `failed-runs list/show` or documented artifact inspection path if failed-run debugging becomes frequent.
 - **Export/import design**: design zip export/import for evidence bundles before implementing it.
 - **Sampler adapter design**: write platform-specific adapter designs for Jetson/macOS/Windows before adding any adapter code.

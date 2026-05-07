@@ -183,6 +183,8 @@ Comparable: Yes
 Mode: same-condition
 ```
 
+For same-condition comparisons only, `report compare` also prints supplemental latency and throughput deltas after the comparability judgement. Conditional and non-comparable reports do not print metric deltas, and EdgeEnv does not produce rankings or composite scores.
+
 If required fields differ, EdgeEnv reports:
 
 ```text

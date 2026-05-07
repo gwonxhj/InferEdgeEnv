@@ -13,6 +13,8 @@
 ## 3. HOW — 일반적인 수정은 어떻게 하는가
 비교 규칙은 명시적인 field list로 유지한다. 필드 추가 시 README의 comparability rules와 tests를 먼저 갱신하고, CLI 출력 문구도 함께 확인한다.
 
+`report compare`가 metric delta를 표시할 때는 반드시 `Comparable`/`Mode`/`Reason`을 먼저 출력하고, `Comparable: Yes` + `Mode: same-condition`인 경우에만 보조 정보로 표시한다.
+
 ## 4. ⛔ HOW NOT — 시스템을 깨뜨리는 비명백한 함정 (중요)
 > 아래 항목은 MVP 프롬프트 기반 추정이므로 구현 중 검토가 필요하다.
 
@@ -20,6 +22,7 @@
 - model hash, input shape, precision, benchmark protocol 차이를 무시하지 말 것 — direct regression comparison이 오판된다.
 - 모든 모델을 단일 점수로 줄 세우는 ranking 기능을 넣지 말 것 — EdgeEnv의 목표와 다르다.
 - compare workflow 예시에서 metrics 차이만으로 결론을 쓰지 말 것 — 먼저 `Comparable`/`Mode`를 확인해야 한다.
+- conditional 또는 non-comparable report에 latency/throughput delta를 표시하지 말 것 — direct regression처럼 오해될 수 있다.
 
 ## 5. WHERE — 다른 모듈과의 의존성
 - **의존**: result schema, registry result_path loading
