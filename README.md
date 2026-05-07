@@ -62,6 +62,12 @@ edgeenv bench run --target examples/profiles/local.yaml --config examples/benche
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_sampler_unavailable.yaml
 ```
 
+On Jetson, use the `tegrastats` wrapper path from the repo root:
+
+```bash
+edgeenv bench run --target examples/profiles/jetson_nano_local.yaml --config examples/benches/jetson_tegrastats_local.yaml
+```
+
 If a sampler is unavailable, the wrapper should omit `EDGEENV_RESOURCE_METRICS_JSON=` and preserve the successful primary benchmark run. If a wrapper emits malformed resource metrics, EdgeEnv writes a failed-run artifact and does not update the registry:
 
 ```bash
@@ -118,6 +124,7 @@ Start here:
 - [CI Readiness Workflow](docs/ci-readiness.md) — automated PR/main checks for MVP contracts
 - [Local Command Contract Guide](docs/local-command-contract.md) — how to connect your own local benchmark command
 - [Local Real Benchmark Example Guide](docs/local-real-benchmark-example.md) — how to wrap a user-owned runtime command
+- [Jetson Tegrastats Wrapper Guide](docs/jetson-tegrastats-wrapper.md) — how to collect Jetson `tegrastats` as optional resource evidence
 - [Compare Workflow Guide](docs/compare-workflow-guide.md) — how to create two runs and judge comparability
 - [Export/Import Design](docs/export-import-design.md) — proposed portable evidence bundle contract
 
@@ -267,7 +274,8 @@ Included in MVP v1:
 - `runs list` and `runs show`
 - `runs export`
 - `runs import`
-- `failed-runs list` and `failed-runs show`
+- `failed-runs list`, `failed-runs show`, `failed-runs export`, and `failed-runs import`
+- Jetson `tegrastats` wrapper example for optional resource metrics
 - `report compare` comparability checker
 - pytest tests
 

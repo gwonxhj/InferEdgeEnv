@@ -85,6 +85,7 @@ Related docs:
 - [Resource Metrics Design](resource-metrics-design.md)
 - [Sampler Failure Policy](sampler-failure-policy.md)
 - [Platform Sampler Design](platform-sampler-design.md)
+- [Jetson Tegrastats Wrapper Guide](jetson-tegrastats-wrapper.md)
 - [Registry Resource Query Design](registry-resource-query-design.md)
 
 ### Failed-run inspection workflow
@@ -194,7 +195,7 @@ Notes:
 - `scripts/smoke_entrypoints.sh` may need network access if build dependencies are not already available locally.
 - Tests should use `tmp_path` for `.edgeenv` data and must not pollute the repo root registry.
 - GitHub Actions repeats the core readiness contract on Python 3.10 and 3.11.
-- Before tagging v1, rerun or review [EdgeEnv MVP v1 Release Rehearsal](v1-release-rehearsal.md).
+- Before tagging a release, rerun or review [EdgeEnv MVP v1 Release Rehearsal](v1-release-rehearsal.md) and update the package version intentionally.
 
 ## 6. WHY — next work candidates
 
@@ -202,8 +203,7 @@ Recommended next work should stay in coherent bundles rather than tiny one-off P
 
 Good next bundles:
 
-- **V1 release/tag execution**: after a final clean `main` validation, create the `v0.1.0` tag using [EdgeEnv MVP v1 Release Rehearsal](v1-release-rehearsal.md) as the gate.
-- **Sampler adapter design**: write platform-specific adapter designs for Jetson/macOS/Windows before adding any adapter code.
+- **Sampler adapter API design**: use the Jetson `tegrastats` wrapper validation as input before adding `inferedge_env/samplers/` adapter code.
 - **Registry resource query migration**: implement only after query/index use cases are clear, following [Registry Resource Query Design](registry-resource-query-design.md).
 
 Avoid next bundles that jump straight into:

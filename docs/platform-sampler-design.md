@@ -17,6 +17,8 @@ Platform sampler는 Jetson `tegrastats`, macOS `powermetrics`, Windows counters,
 - `docs/sampler-failure-policy.md` — sampler failure와 benchmark success/failure policy
 - `examples/scripts/emit_resource_metrics.py` — deterministic resource metrics smoke example
 - `examples/scripts/run_with_sampler.py` — deterministic wrapper command sampler example
+- `examples/scripts/run_with_tegrastats.py` — Jetson `tegrastats` wrapper command example
+- `examples/benches/jetson_tegrastats_local.yaml` — Jetson local sampler config example
 
 미래 구현 후보:
 
@@ -130,8 +132,9 @@ _(아직 없음)_
 ## Implementation Checklist
 
 - [x] wrapper command example design
+- [x] Jetson `tegrastats` wrapper example
 - [ ] sampler metadata schema decision
-- [ ] Jetson `tegrastats` adapter design
+- [ ] Jetson `tegrastats` adapter API design
 - [ ] macOS `powermetrics` adapter design
 - [ ] Windows counter adapter design
 - [ ] external meter adapter design
