@@ -236,7 +236,7 @@ Reason:
 `runs.db` is a local SQLite index. The run directory remains the evidence bundle.
 Failed local runs are stored under `failed-runs/` for debugging and are not inserted into `runs.db`. Use `edgeenv failed-runs list` and `edgeenv failed-runs show <run_id>` to inspect failed-run artifacts safely.
 
-Use `edgeenv runs export <run_id> --output edgeenv-run-<run_id>.zip` to create a portable successful-run evidence bundle. Import is future work; the artifact-first zip contract is described in [Export/Import Design](docs/export-import-design.md).
+Use `edgeenv runs export <run_id> --output edgeenv-run-<run_id>.zip` to create a portable successful-run evidence bundle. Use `edgeenv runs import edgeenv-run-<run_id>.zip` to validate the bundle, copy it into `.edgeenv/runs/`, and rebuild the local registry row. The artifact-first zip contract is described in [Export/Import Design](docs/export-import-design.md).
 
 ## Relation To InferEdge And EdgeBench
 
@@ -261,6 +261,7 @@ Included in MVP v1:
 - SQLite local registry
 - `runs list` and `runs show`
 - `runs export`
+- `runs import`
 - `failed-runs list` and `failed-runs show`
 - `report compare` comparability checker
 - pytest tests

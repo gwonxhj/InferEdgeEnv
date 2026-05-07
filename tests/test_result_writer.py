@@ -8,8 +8,10 @@ import pytest
 from inferedge_env.result.exporter import (
     REQUIRED_RUN_FILES,
     RunExportError,
+    RunImportError,
     _safe_archive_path,
     export_successful_run,
+    import_successful_run,
 )
 from inferedge_env.result.schema import ResourceMetrics
 from inferedge_env.result.writer import FailedRunArtifactWriter, ResultArtifactWriter, load_result
@@ -187,3 +189,120 @@ def test_export_archive_path_safety_rejects_traversal():
         _safe_archive_path("run-safe", "../result.json")
     with pytest.raises(RunExportError, match="Unsafe export archive path component"):
         _safe_archive_path("../run-safe", "result.json")
+
+
+def test_import_successful_run_copies_files_after_validation(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    run_dir = _write_export_fixture(
+        tmp_path,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="run-import",
+    )
+    archive_path = export_successful_run(run_dir, tmp_path / "run-import.zip")
+    result, imported_dir = import_successful_run(
+        archive_path,
+        tmp_path / "imported-edgeenv",
+    )
+
+    assert result.run_id == "run-import"
+    assert imported_dir == tmp_path / "imported-edgeenv" / "runs" / "run-import"
+    for name in REQUIRED_RUN_FILES:
+        assert (imported_dir / name).read_bytes() == (run_dir / name).read_bytes()
+    assert not (imported_dir / "manifest.json").exists()
+
+
+def test_import_successful_run_rejects_checksum_mismatch(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    run_dir = _write_export_fixture(
+        tmp_path,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="run-import-checksum",
+    )
+    archive_path = export_successful_run(run_dir, tmp_path / "run-import-checksum.zip")
+    tampered = tmp_path / "tampered.zip"
+    with zipfile.ZipFile(archive_path) as source, zipfile.ZipFile(tampered, "w") as dest:
+        for info in source.infolist():
+            data = source.read(info)
+            if info.filename == "run-import-checksum/stdout.log":
+                data = b"x" + data[1:]
+            dest.writestr(info, data)
+
+    with pytest.raises(RunImportError, match="Checksum mismatch"):
+        import_successful_run(tampered, tmp_path / "imported-edgeenv")
+    assert not (tmp_path / "imported-edgeenv").exists()
+
+
+def test_import_successful_run_rejects_unsafe_archive_path(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    run_dir = _write_export_fixture(
+        tmp_path,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="run-import-unsafe",
+    )
+    archive_path = export_successful_run(run_dir, tmp_path / "run-import-unsafe.zip")
+    unsafe = tmp_path / "unsafe.zip"
+    with zipfile.ZipFile(archive_path) as source, zipfile.ZipFile(unsafe, "w") as dest:
+        for info in source.infolist():
+            dest.writestr(info, source.read(info))
+        dest.writestr("../outside.txt", "nope")
+
+    with pytest.raises(RunImportError, match="Unsafe archive entry path"):
+        import_successful_run(unsafe, tmp_path / "imported-edgeenv")
+
+
+def test_import_successful_run_rejects_existing_run_directory(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    run_dir = _write_export_fixture(
+        tmp_path,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="run-import-existing",
+    )
+    archive_path = export_successful_run(run_dir, tmp_path / "run-import-existing.zip")
+    destination_root = tmp_path / "imported-edgeenv"
+    (destination_root / "runs" / "run-import-existing").mkdir(parents=True)
+
+    with pytest.raises(RunImportError, match="Run artifact already exists"):
+        import_successful_run(archive_path, destination_root)
+
+
+def _write_export_fixture(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+    run_id: str,
+):
+    bench_path, profile_path = config_files
+    runner_result = FakeRunner().run(bench_config, target_profile)
+    result = make_result(bench_config, target_profile, run_id=run_id)
+    return ResultArtifactWriter(tmp_path / ".edgeenv").write(
+        result,
+        bench_path,
+        profile_path,
+        runner_result.stdout,
+        runner_result.stderr,
+    )

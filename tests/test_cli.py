@@ -286,6 +286,128 @@ def test_cli_runs_export_creates_evidence_zip(tmp_path, config_files):
     ]
 
 
+def test_cli_runs_import_rebuilds_registry_from_evidence_zip(tmp_path, config_files):
+    runner = CliRunner()
+    bench_path, profile_path = config_files
+    source_root = tmp_path / "source" / ".edgeenv"
+    imported_root = tmp_path / "imported" / ".edgeenv"
+    export_path = tmp_path / "exports" / "run.zip"
+
+    run_result = runner.invoke(
+        app,
+        [
+            "bench",
+            "run",
+            "--target",
+            str(profile_path),
+            "--config",
+            str(bench_path),
+            "--edgeenv-root",
+            str(source_root),
+        ],
+    )
+    assert run_result.exit_code == 0
+    source_run_dir = next((source_root / "runs").iterdir())
+    payload = json.loads((source_run_dir / "result.json").read_text(encoding="utf-8"))
+    export_result = runner.invoke(
+        app,
+        [
+            "runs",
+            "export",
+            payload["run_id"],
+            "--output",
+            str(export_path),
+            "--edgeenv-root",
+            str(source_root),
+        ],
+    )
+    assert export_result.exit_code == 0
+
+    import_result = runner.invoke(
+        app,
+        [
+            "runs",
+            "import",
+            str(export_path),
+            "--edgeenv-root",
+            str(imported_root),
+        ],
+    )
+    show_result = runner.invoke(
+        app,
+        [
+            "runs",
+            "show",
+            payload["run_id"],
+            "--edgeenv-root",
+            str(imported_root),
+        ],
+    )
+
+    assert import_result.exit_code == 0
+    assert "Run evidence imported" in import_result.output
+    assert payload["run_id"] in import_result.output
+    imported_result_path = imported_root / "runs" / payload["run_id"] / "result.json"
+    assert imported_result_path.is_file()
+    assert (imported_root / "runs.db").is_file()
+    assert show_result.exit_code == 0
+    shown = json.loads(show_result.output)
+    assert shown["run_id"] == payload["run_id"]
+    assert shown["result_path"] == str(imported_result_path)
+    assert shown["metrics"]["latency_mean_ms"] == payload["metrics"]["latency_mean_ms"]
+
+
+def test_cli_runs_import_rejects_duplicate_run_id(tmp_path, config_files):
+    runner = CliRunner()
+    bench_path, profile_path = config_files
+    edgeenv_root = tmp_path / ".edgeenv"
+    export_path = tmp_path / "exports" / "run.zip"
+
+    run_result = runner.invoke(
+        app,
+        [
+            "bench",
+            "run",
+            "--target",
+            str(profile_path),
+            "--config",
+            str(bench_path),
+            "--edgeenv-root",
+            str(edgeenv_root),
+        ],
+    )
+    assert run_result.exit_code == 0
+    run_dir = next((edgeenv_root / "runs").iterdir())
+    payload = json.loads((run_dir / "result.json").read_text(encoding="utf-8"))
+    export_result = runner.invoke(
+        app,
+        [
+            "runs",
+            "export",
+            payload["run_id"],
+            "--output",
+            str(export_path),
+            "--edgeenv-root",
+            str(edgeenv_root),
+        ],
+    )
+    assert export_result.exit_code == 0
+
+    import_result = runner.invoke(
+        app,
+        [
+            "runs",
+            "import",
+            str(export_path),
+            "--edgeenv-root",
+            str(edgeenv_root),
+        ],
+    )
+
+    assert import_result.exit_code == 1
+    assert f"Run already exists in registry: {payload['run_id']}" in import_result.output
+
+
 def test_cli_resource_metrics_example_run_and_show(tmp_path):
     runner = CliRunner()
     edgeenv_root = tmp_path / ".edgeenv"

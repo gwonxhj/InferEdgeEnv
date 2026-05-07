@@ -4,7 +4,7 @@
 
 성공 run evidence bundle인 `.edgeenv/runs/<run_id>/`를 zip으로 내보내고, 다른 workspace에서 검증 가능한 evidence로 다시 들여오기 위한 v1.1 설계 기준을 정한다.
 
-현재 구현은 successful run export만 제공한다. Import command는 아직 future work이며, 이 문서의 import validation order를 구현 기준으로 삼는다.
+현재 구현은 successful run export/import를 제공한다. Failed-run export/import, replace/alias import policy, detached signatures는 future work다.
 
 ## 2. CONTENTS — 관련 파일과 기술 스택
 
@@ -18,8 +18,8 @@
 - `.edgeenv/runs/<run_id>/stderr.log` — captured benchmark stderr
 - `.edgeenv/runs.db` — local successful-run index, not canonical export evidence
 - `inferedge_env/result/schema.py` — `edgeenv.result.v1` validation target
-- `inferedge_env/result/exporter.py` — successful run zip export and manifest/checksum generation
-- `inferedge_env/registry/db.py` — future import registry insertion/rebuild path
+- `inferedge_env/result/exporter.py` — successful run zip export/import, manifest/checksum generation, safe import validation
+- `inferedge_env/registry/db.py` — import registry insertion/rebuild path
 
 기술 스택: zip archive, JSON manifest, SHA-256 checksums, existing Pydantic result schema, local filesystem
 
@@ -102,9 +102,19 @@ Required files for successful-run export/import:
 
 Import must reject bundles that are missing any required file.
 
+### Import command
+
+Import a successful run evidence bundle:
+
+```bash
+edgeenv runs import edgeenv-run-<run_id>.zip
+```
+
+The command validates the zip bundle, copies required files into `.edgeenv/runs/<run_id>/`, and rebuilds the local registry row from `result.json`.
+
 ### Import validation order
 
-Future import should validate in this order:
+Import validates in this order:
 
 1. Open zip without extracting outside the destination root.
 2. Require exactly one top-level run directory.
@@ -117,7 +127,7 @@ Future import should validate in this order:
 9. Validate `result.json` against `RunResult`.
 10. Require `manifest.run_id == result.run_id`.
 11. Require archive directory name to match `run_id`.
-12. Copy files into `.edgeenv/runs/<run_id>/` only if the destination does not already exist, unless a future explicit `--replace` policy is designed.
+12. Copy files into `.edgeenv/runs/<run_id>/` only if the destination does not already exist.
 13. Insert or rebuild the local registry row from `result.json`, with `result_path` pointing at the imported artifact.
 
 ### Registry policy
@@ -126,7 +136,7 @@ Future import should validate in this order:
 
 Import should rebuild the registry row from `result.json` rather than trusting an exported SQLite row. This keeps portability independent of local paths, SQLite versions, and registry migration state.
 
-If a run id already exists locally, default import should fail with a clear message. A future `--replace` or `--alias-run-id` policy needs a separate design because changing `run_id` affects compare references and artifact identity.
+If a run id already exists locally, import fails with a clear message. A future `--replace` or `--alias-run-id` policy needs a separate design because changing `run_id` affects compare references and artifact identity.
 
 ### Checksum policy
 

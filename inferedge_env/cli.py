@@ -14,7 +14,13 @@ from inferedge_env.config.bench_config import load_benchmark_config
 from inferedge_env.config.target_profile import TargetProfile, load_target_profile
 from inferedge_env.registry.db import RunRegistry
 from inferedge_env.registry.models import RegistryRecord
-from inferedge_env.result.exporter import RunExportError, export_successful_run
+from inferedge_env.result.exporter import (
+    RunExportError,
+    RunImportError,
+    export_successful_run,
+    import_successful_run,
+    validate_successful_run_import,
+)
 from inferedge_env.result.schema import ResourceMetrics, RunResult
 from inferedge_env.result.writer import (
     FailedRunArtifactWriter,
@@ -201,6 +207,34 @@ def export_run(
     console.print("[bold green]Run evidence exported[/bold green]")
     console.print(f"Run ID: {run_id}")
     console.print(f"Archive: {archive_path}", soft_wrap=True)
+
+
+@runs_app.command("import")
+def import_run(
+    archive_path: Path,
+    edgeenv_root: Path = typer.Option(
+        Path(".edgeenv"),
+        "--edgeenv-root",
+        help="Directory for EdgeEnv artifacts and registry.",
+    ),
+) -> None:
+    """Import a successful run evidence zip and rebuild the registry row."""
+    registry = RunRegistry(edgeenv_root / "runs.db")
+    try:
+        plan = validate_successful_run_import(archive_path)
+        try:
+            registry.show(plan.result.run_id)
+        except KeyError:
+            pass
+        else:
+            _fail(f"Run already exists in registry: {plan.result.run_id}")
+        result, run_dir = import_successful_run(archive_path, edgeenv_root)
+        registry.insert(result, run_dir / "result.json")
+    except (RunImportError, OSError) as exc:
+        _fail(str(exc))
+    console.print("[bold green]Run evidence imported[/bold green]")
+    console.print(f"Run ID: {result.run_id}")
+    console.print(f"Result: {run_dir / 'result.json'}", soft_wrap=True)
 
 
 @failed_runs_app.command("list")
