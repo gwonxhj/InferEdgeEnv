@@ -108,6 +108,7 @@ edgeenv bench run --target examples/profiles/local.yaml --config examples/benche
 edgeenv runs list
 edgeenv runs show <run_id>
 edgeenv runs export <run_id> --output edgeenv-run-<run_id>.zip
+edgeenv runs import edgeenv-run-<run_id>.zip
 edgeenv report compare <run_id_a> <run_id_b>
 ```
 
@@ -197,7 +198,7 @@ Recommended next work should stay in coherent bundles rather than tiny one-off P
 
 Good next bundles:
 
-- **Export/import implementation**: add import after following [Export/Import Design](export-import-design.md), including manifest/checksum validation, safe zip extraction, duplicate run_id rejection, and registry rebuild semantics.
+- **Failed-run portability design**: design failed-run export/import separately from successful run evidence bundles.
 - **Sampler adapter design**: write platform-specific adapter designs for Jetson/macOS/Windows before adding any adapter code.
 - **Registry resource query migration**: implement only after query/index use cases are clear, following [Registry Resource Query Design](registry-resource-query-design.md).
 
