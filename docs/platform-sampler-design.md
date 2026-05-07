@@ -15,6 +15,7 @@ Platform sampler는 Jetson `tegrastats`, macOS `powermetrics`, Windows counters,
 - `docs/resource-metrics-design.md` — resource metrics schema and policy
 - `docs/local-runner-design.md` — local command contract
 - `docs/sampler-failure-policy.md` — sampler failure와 benchmark success/failure policy
+- `docs/sampler-adapter-api-design.md` — future `inferedge_env/samplers/` API, metadata, failure taxonomy
 - `examples/scripts/emit_resource_metrics.py` — deterministic resource metrics smoke example
 - `examples/scripts/run_with_sampler.py` — deterministic wrapper command sampler example
 - `examples/scripts/run_with_tegrastats.py` — Jetson `tegrastats` wrapper command example
@@ -79,6 +80,8 @@ Sampler.summary() -> ResourceMetrics
 
 Adapter는 platform-specific tool을 감싸고, EdgeEnv core schema로 normalize한다.
 
+Detailed API, metadata schema, raw artifact policy, and failure taxonomy are defined in [Sampler Adapter API Design](sampler-adapter-api-design.md).
+
 초기 adapter 후보:
 
 - Jetson: `tegrastats`
@@ -133,8 +136,8 @@ _(아직 없음)_
 
 - [x] wrapper command example design
 - [x] Jetson `tegrastats` wrapper example
-- [ ] sampler metadata schema decision
-- [ ] Jetson `tegrastats` adapter API design
+- [x] sampler metadata schema decision
+- [x] Jetson `tegrastats` adapter API design
 - [ ] macOS `powermetrics` adapter design
 - [ ] Windows counter adapter design
 - [ ] external meter adapter design
