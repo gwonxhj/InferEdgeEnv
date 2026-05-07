@@ -8,6 +8,18 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 
 TargetType = Literal["fake", "local"]
+SamplerName = Literal["jetson-tegrastats"]
+
+
+class SamplerProfile(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: SamplerName
+    required: bool = False
+    interval_ms: int = Field(default=500, gt=0)
+    startup_wait_ms: int = Field(default=600, ge=0)
+    raw_log: bool = True
+    tegrastats_path: str = Field(default="tegrastats", min_length=1)
 
 
 class TargetProfile(BaseModel):
@@ -18,6 +30,7 @@ class TargetProfile(BaseModel):
     board_name: str = Field(min_length=1)
     os: str = Field(min_length=1)
     runtime_tags: list[str] = Field(default_factory=list)
+    sampler: SamplerProfile | None = None
 
 
 def load_target_profile(path: Path | str) -> TargetProfile:

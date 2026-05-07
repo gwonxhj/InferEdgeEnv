@@ -5,7 +5,7 @@ benchmark config와 target profile의 Pydantic schema를 소유한다. EdgeEnv�
 
 ## 2. CONTENTS — 파일/디렉토리와 기술 스택
 - `bench_config.py` — benchmark config schema와 YAML loading
-- `target_profile.py` — target profile schema와 YAML loading
+- `target_profile.py` — target profile schema, optional sampler profile schema, YAML loading
 
 기술 스택: Python, Pydantic, YAML
 

@@ -45,6 +45,35 @@ print("EDGEENV_METRICS_JSON=" + json.dumps({
     assert result.stderr == ""
 
 
+def test_local_runner_disabled_sampler_preserves_current_behavior(
+    tmp_path: Path,
+    bench_config,
+    target_profile,
+):
+    script = _write_script(
+        tmp_path,
+        """
+import json
+print("EDGEENV_METRICS_JSON=" + json.dumps({
+    "latency_mean_ms": 10.0,
+    "latency_p50_ms": 9.5,
+    "latency_p95_ms": 11.0,
+    "latency_p99_ms": 12.0,
+    "throughput_fps": 100.0,
+}))
+""",
+    )
+    config = bench_config.model_copy(update={"command": _python_command(script)})
+    target = target_profile.model_copy(update={"target_type": "local", "sampler": None})
+
+    result = LocalRunner().run(config, target)
+
+    assert result.latency_mean_ms == 10.0
+    assert result.resource_metrics is None
+    assert "EDGEENV_METRICS_JSON=" in result.stdout
+    assert result.stderr == ""
+
+
 def test_local_runner_uses_last_metrics_line(tmp_path: Path, bench_config, target_profile):
     script = _write_script(
         tmp_path,

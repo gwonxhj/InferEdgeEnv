@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from inferedge_env.result.schema import ResourceMetrics
+from inferedge_env.config.target_profile import SamplerProfile
 from inferedge_env.samplers.base import (
     SamplerContext,
     SamplerNoSamples,
@@ -14,6 +15,7 @@ from inferedge_env.samplers.base import (
     SamplerUnavailable,
     SamplerUnparseableOutput,
 )
+from inferedge_env.samplers.factory import build_sampler
 from inferedge_env.samplers.jetson_tegrastats import (
     JetsonTegrastatsSampler,
     parse_tegrastats_line,
@@ -35,6 +37,30 @@ def test_sampler_summary_metadata_is_json_ready(tmp_path):
     assert summary.resource_metrics is not None
     assert summary.raw_artifacts == [tmp_path / "sampler" / "raw.log"]
     assert summary.warnings == ["warning"]
+
+
+def test_sampler_factory_returns_none_when_disabled():
+    assert build_sampler(None) is None
+
+
+def test_sampler_factory_builds_jetson_tegrastats_sampler():
+    sampler = build_sampler(
+        SamplerProfile(
+            name="jetson-tegrastats",
+            required=True,
+            interval_ms=250,
+            startup_wait_ms=100,
+            raw_log=False,
+            tegrastats_path="/usr/bin/tegrastats",
+        )
+    )
+
+    assert isinstance(sampler, JetsonTegrastatsSampler)
+    assert sampler.required is True
+    assert sampler.interval_ms == 250
+    assert sampler.startup_wait_ms == 100
+    assert sampler.raw_log is False
+    assert sampler.tegrastats_path == "/usr/bin/tegrastats"
 
 
 def test_parse_tegrastats_line_extracts_supported_fields():
