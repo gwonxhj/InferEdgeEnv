@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import shlex
 import sys
+from pathlib import Path
 
 from typer.testing import CliRunner
 
@@ -383,6 +384,92 @@ def test_cli_compare_workflow_examples_same_condition(tmp_path):
     assert "Comparable: Yes" in compare_result.output
     assert "Mode: same-condition" in compare_result.output
     assert "- Same benchmark protocol" in compare_result.output
+    mode_index = compare_result.output.index("Mode: same-condition")
+    delta_index = compare_result.output.index("Metrics Delta:")
+    assert mode_index < delta_index
+    assert "Metrics Delta:" in compare_result.output
+    assert (
+        "- latency_mean_ms: 18.0 ms -> 16.4 ms "
+        "(delta -1.6 ms, -8.89%)"
+    ) in compare_result.output
+    assert (
+        "- throughput_fps: 55.5 fps -> 61.0 fps "
+        "(delta +5.5 fps, +9.91%)"
+    ) in compare_result.output
+
+
+def test_cli_compare_runtime_difference_suppresses_metric_delta(tmp_path):
+    runner = CliRunner()
+    edgeenv_root = tmp_path / ".edgeenv"
+    runtime_config = tmp_path / "local_compare_b_runtime.yaml"
+    runtime_config.write_text(
+        Path("examples/benches/local_compare_b.yaml")
+        .read_text(encoding="utf-8")
+        .replace("runtime: local-python", "runtime: local-python-alt"),
+        encoding="utf-8",
+    )
+
+    first = runner.invoke(
+        app,
+        [
+            "bench",
+            "run",
+            "--target",
+            "examples/profiles/local.yaml",
+            "--config",
+            "examples/benches/local_compare_a.yaml",
+            "--edgeenv-root",
+            str(edgeenv_root),
+        ],
+    )
+    second = runner.invoke(
+        app,
+        [
+            "bench",
+            "run",
+            "--target",
+            "examples/profiles/local.yaml",
+            "--config",
+            str(runtime_config),
+            "--edgeenv-root",
+            str(edgeenv_root),
+        ],
+    )
+
+    assert first.exit_code == 0
+    assert second.exit_code == 0
+    payloads = [
+        json.loads((run_dir / "result.json").read_text(encoding="utf-8"))
+        for run_dir in sorted((edgeenv_root / "runs").iterdir())
+    ]
+    run_id_a = next(
+        payload["run_id"]
+        for payload in payloads
+        if payload["benchmark_name"] == "local-compare-a"
+    )
+    run_id_b = next(
+        payload["run_id"]
+        for payload in payloads
+        if payload["benchmark_name"] == "local-compare-b"
+    )
+
+    compare_result = runner.invoke(
+        app,
+        [
+            "report",
+            "compare",
+            run_id_a,
+            run_id_b,
+            "--edgeenv-root",
+            str(edgeenv_root),
+        ],
+    )
+
+    assert compare_result.exit_code == 0
+    assert "Comparable: Conditional" in compare_result.output
+    assert "Mode: runtime-comparison" in compare_result.output
+    assert "- Different runtime or execution provider" in compare_result.output
+    assert "Metrics Delta:" not in compare_result.output
 
 
 def test_cli_sampler_wrapper_example_run_and_show(tmp_path):

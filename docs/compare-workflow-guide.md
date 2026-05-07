@@ -62,13 +62,21 @@ Reason:
 - Same input shape
 - Same precision
 - Same benchmark protocol
+Metrics Delta:
+- latency_mean_ms: 18.0 ms -> 16.4 ms (delta -1.6 ms, -8.89%)
+- latency_p50_ms: 17.6 ms -> 16.0 ms (delta -1.6 ms, -9.09%)
+- latency_p95_ms: 20.5 ms -> 18.2 ms (delta -2.3 ms, -11.22%)
+- latency_p99_ms: 22.0 ms -> 19.7 ms (delta -2.3 ms, -10.45%)
+- throughput_fps: 55.5 fps -> 61.0 fps (delta +5.5 fps, +9.91%)
 ```
+
+`Metrics Delta` is supplemental evidence and appears only after `Comparable: Yes` with `Mode: same-condition`. Conditional or non-comparable reports suppress metric deltas because the CLI should not imply a direct regression comparison across runtime, provider, target, or protocol differences.
 
 ### Reading outcomes
 
 | Output | Meaning | Next action |
 | --- | --- | --- |
-| `Comparable: Yes`, `Mode: same-condition` | Required fields, runtime, provider, and target match | It is reasonable to inspect latency/throughput deltas |
+| `Comparable: Yes`, `Mode: same-condition` | Required fields, runtime, provider, and target match | Inspect the supplemental latency/throughput deltas |
 | `Comparable: Conditional`, `Mode: runtime-comparison` | Required fields match, but runtime or execution provider differs | Treat as runtime/provider comparison, not direct regression |
 | `Comparable: Conditional`, `Mode: target-comparison` | Required fields match, but target differs | Treat as target/platform comparison |
 | `Comparable: No` | Required fields differ | Do not make direct regression claims |

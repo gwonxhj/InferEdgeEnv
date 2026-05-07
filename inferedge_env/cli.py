@@ -14,7 +14,7 @@ from inferedge_env.config.bench_config import load_benchmark_config
 from inferedge_env.config.target_profile import TargetProfile, load_target_profile
 from inferedge_env.registry.db import RunRegistry
 from inferedge_env.registry.models import RegistryRecord
-from inferedge_env.result.schema import ResourceMetrics
+from inferedge_env.result.schema import ResourceMetrics, RunResult
 from inferedge_env.result.writer import (
     FailedRunArtifactWriter,
     ResultArtifactWriter,
@@ -198,6 +198,8 @@ def compare_runs(
     console.print("Reason:")
     for reason in report.reasons:
         console.print(f"- {reason}")
+    if report.comparable == "Yes" and report.mode == "same-condition":
+        _print_same_condition_metric_delta(result_a, result_b)
 
 
 def _runner_for_target(target: TargetProfile) -> FakeRunner | LocalRunner:
@@ -238,6 +240,49 @@ def _resource_metrics_status(resource_metrics: ResourceMetrics | None) -> str:
     if measured_fields:
         return f"Resource metrics: stored (fields={', '.join(measured_fields)})"
     return "Resource metrics: stored"
+
+
+def _print_same_condition_metric_delta(a: RunResult, b: RunResult) -> None:
+    console.print("Metrics Delta:")
+    metric_specs = [
+        ("latency_mean_ms", "ms"),
+        ("latency_p50_ms", "ms"),
+        ("latency_p95_ms", "ms"),
+        ("latency_p99_ms", "ms"),
+        ("throughput_fps", "fps"),
+    ]
+    for field, unit in metric_specs:
+        left = getattr(a.metrics, field)
+        right = getattr(b.metrics, field)
+        console.print(_metric_delta_line(field, left, right, unit))
+
+
+def _metric_delta_line(field: str, left: float, right: float, unit: str) -> str:
+    delta = right - left
+    percent = _format_percent_delta(left, delta)
+    return (
+        f"- {field}: {_format_float(left)} {unit} -> {_format_float(right)} {unit} "
+        f"(delta {_format_signed_float(delta)} {unit}, {percent})"
+    )
+
+
+def _format_percent_delta(baseline: float, delta: float) -> str:
+    if baseline == 0:
+        return "percent n/a"
+    return f"{(delta / baseline) * 100:+.2f}%"
+
+
+def _format_signed_float(value: float) -> str:
+    if value > 0:
+        return f"+{_format_float(value)}"
+    return _format_float(value)
+
+
+def _format_float(value: float) -> str:
+    text = f"{value:.6f}".rstrip("0").rstrip(".")
+    if "." not in text:
+        return f"{text}.0"
+    return text
 
 
 def _fail(message: str) -> None:
