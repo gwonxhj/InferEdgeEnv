@@ -17,7 +17,17 @@ from inferedge_env.result.exporter import (
     import_successful_run,
 )
 from inferedge_env.result.schema import ResourceMetrics
-from inferedge_env.result.writer import FailedRunArtifactWriter, ResultArtifactWriter, load_result
+from inferedge_env.result.writer import (
+    FailedRunArtifactWriter,
+    ResultArtifactWriter,
+    SamplerArtifactError,
+    load_result,
+    write_sampler_artifacts,
+)
+from inferedge_env.samplers.base import (
+    SAMPLER_METADATA_SCHEMA_VERSION,
+    SamplerSummary,
+)
 from inferedge_env.utils.hashing import sha256_file
 from inferedge_env.runners.fake import FakeRunner
 from helpers import make_result
@@ -85,6 +95,86 @@ def test_result_json_persists_resource_metrics(
     assert payload["resource_metrics"]["memory_peak_mb"] == 512.0
     assert payload["resource_metrics"]["power_mean_w"] == 8.2
     assert payload["resource_metrics"]["source"] == "benchmark-command"
+
+
+def test_write_sampler_artifacts_persists_metadata_under_sampler_dir(tmp_path):
+    run_dir = tmp_path / ".edgeenv" / "runs" / "run-sampler"
+    sampler_dir = run_dir / "sampler"
+    sampler_dir.mkdir(parents=True)
+    raw_log = sampler_dir / "tegrastats.log"
+    raw_log.write_text("RAM 100/4096MB VDD_IN 4000mW/3900mW\n", encoding="utf-8")
+    summary = SamplerSummary(
+        resource_metrics=ResourceMetrics(memory_peak_mb=100.0),
+        metadata=_sampler_metadata(raw_artifacts=["sampler/tegrastats.log"]),
+        raw_artifacts=[raw_log],
+        warnings=[],
+    )
+
+    metadata_path = write_sampler_artifacts(run_dir, summary)
+
+    assert metadata_path == sampler_dir / "metadata.json"
+    payload = json.loads(metadata_path.read_text(encoding="utf-8"))
+    assert payload["schema_version"] == SAMPLER_METADATA_SCHEMA_VERSION
+    assert payload["sampler_name"] == "jetson-tegrastats"
+    assert payload["raw_artifacts"] == ["sampler/tegrastats.log"]
+    assert not (run_dir / "result.json").exists()
+    assert not (run_dir / "env.json").exists()
+
+
+def test_write_sampler_artifacts_rejects_unsafe_metadata_raw_path(tmp_path):
+    run_dir = tmp_path / ".edgeenv" / "runs" / "run-sampler-unsafe"
+    run_dir.mkdir(parents=True)
+    summary = SamplerSummary(
+        resource_metrics=None,
+        metadata=_sampler_metadata(raw_artifacts=["../tegrastats.log"]),
+        raw_artifacts=[],
+        warnings=[],
+    )
+
+    with pytest.raises(SamplerArtifactError, match="Unsafe sampler raw artifact path"):
+        write_sampler_artifacts(run_dir, summary)
+
+    assert not (run_dir / "sampler" / "metadata.json").exists()
+
+
+def test_write_sampler_artifacts_rejects_missing_required_metadata_key(tmp_path):
+    run_dir = tmp_path / ".edgeenv" / "runs" / "run-sampler-missing-key"
+    run_dir.mkdir(parents=True)
+    metadata = _sampler_metadata(raw_artifacts=[])
+    del metadata["platform_tool"]
+    summary = SamplerSummary(
+        resource_metrics=None,
+        metadata=metadata,
+        raw_artifacts=[],
+        warnings=[],
+    )
+
+    with pytest.raises(
+        SamplerArtifactError,
+        match="Sampler metadata missing required keys: platform_tool",
+    ):
+        write_sampler_artifacts(run_dir, summary)
+
+    assert not (run_dir / "sampler" / "metadata.json").exists()
+
+
+def test_write_sampler_artifacts_rejects_raw_artifact_outside_sampler_dir(tmp_path):
+    run_dir = tmp_path / ".edgeenv" / "runs" / "run-sampler-outside"
+    outside_log = tmp_path / "tegrastats.log"
+    outside_log.write_text("RAM 100/4096MB\n", encoding="utf-8")
+    (run_dir / "sampler").mkdir(parents=True)
+    (run_dir / "sampler" / "tegrastats.log").write_text("ok\n", encoding="utf-8")
+    summary = SamplerSummary(
+        resource_metrics=None,
+        metadata=_sampler_metadata(raw_artifacts=["sampler/tegrastats.log"]),
+        raw_artifacts=[outside_log],
+        warnings=[],
+    )
+
+    with pytest.raises(SamplerArtifactError, match="must be under"):
+        write_sampler_artifacts(run_dir, summary)
+
+    assert not (run_dir / "sampler" / "metadata.json").exists()
 
 
 def test_failed_run_artifact_files_created(
@@ -464,3 +554,17 @@ def _write_failed_run_fixture(
         run_id=run_id,
         env={"python_version": "test"},
     )
+
+
+def _sampler_metadata(raw_artifacts: list[str]) -> dict:
+    return {
+        "schema_version": SAMPLER_METADATA_SCHEMA_VERSION,
+        "sampler_name": "jetson-tegrastats",
+        "platform_tool": "tegrastats",
+        "sampling_scope": "host",
+        "benchmark_window": "sampler-start-before-command-stop-after-command",
+        "sample_count": 1,
+        "raw_artifacts": raw_artifacts,
+        "fields": {},
+        "warnings": [],
+    }

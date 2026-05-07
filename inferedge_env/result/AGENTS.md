@@ -5,7 +5,7 @@ run result schema와 `.edgeenv/runs/<run_id>/` artifact writer를 담당한다. 
 
 ## 2. CONTENTS — 파일/디렉토리와 기술 스택
 - `schema.py` — result JSON schema
-- `writer.py` — artifact directory와 파일 생성
+- `writer.py` — artifact directory, core run files, optional sampler metadata file 생성
 - `exporter.py` — successful run evidence와 failed-run diagnostic bundle zip export/import, manifest, checksum generation, safe archive validation
 
 기술 스택: Python, Pydantic, JSON/YAML file IO

@@ -10,7 +10,7 @@ future sampler adapter가 만든 metadata와 raw sampler output을 성공 run ar
 
 관련 파일:
 
-- `inferedge_env/result/writer.py` — future sampler artifact writer integration point
+- `inferedge_env/result/writer.py` — sampler artifact writer helper and future integration point
 - `inferedge_env/result/schema.py` — `RunResult.resource_metrics` remains normalized summary only
 - `inferedge_env/samplers/base.py` — `SamplerSummary.metadata`, `SamplerSummary.raw_artifacts`
 - `inferedge_env/samplers/jetson_tegrastats.py` — first adapter metadata/raw artifact producer
@@ -106,13 +106,14 @@ Required keys:
 
 ### Writer behavior
 
-Future writer integration should accept `SamplerSummary` only after a successful primary benchmark result is available.
+`inferedge_env/result/writer.py` provides `write_sampler_artifacts(run_dir, sampler_summary)` to persist the metadata artifact. Future runner integration should call this only after a successful primary benchmark result is available.
 
 Expected behavior:
 
 - If `SamplerSummary.resource_metrics` is present, persist it in `result.json.resource_metrics`.
 - If `SamplerSummary.metadata` is present, write `.edgeenv/runs/<run_id>/sampler/metadata.json`.
 - If `SamplerSummary.raw_artifacts` is present, ensure raw files live under `.edgeenv/runs/<run_id>/sampler/`.
+- Reject unsafe raw artifact references such as absolute paths, `..`, or files outside `sampler/`.
 - If sampler failed recoverably, write metadata with warnings and `sample_count: 0` only if adapter integration has enough context to make that useful.
 - Do not create `.edgeenv/failed-runs/` only because optional sampler metadata is absent.
 
