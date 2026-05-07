@@ -88,6 +88,7 @@ edgeenv report compare <run_id_a> <run_id_b>
 - Single-score ranking across models
 - Registry indexing/querying for resource metrics columns
 - Platform-native sampler adapters beyond wrapper command examples
+- Export/import commands for evidence bundle portability
 
 ## 4. HOW NOT — 피해야 할 함정
 
@@ -103,6 +104,7 @@ edgeenv report compare <run_id_a> <run_id_b>
 - **Local Command Contract Guide**: 사용자가 자기 command를 붙일 때의 실행 기준이다.
 - **Compare Workflow Guide**: MVP의 핵심 가치인 comparability judgement를 end-to-end로 보여준다.
 - **Resource Metrics / Sampler Failure docs**: optional evidence와 실패 보존 정책을 설명한다.
+- **Export/Import Design**: future portable evidence bundle contract를 구현 전에 고정한다.
 
 ## 6. WHY — 배경 판단
 
