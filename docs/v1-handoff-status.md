@@ -85,6 +85,7 @@ Related docs:
 - [Resource Metrics Design](resource-metrics-design.md)
 - [Sampler Failure Policy](sampler-failure-policy.md)
 - [Platform Sampler Design](platform-sampler-design.md)
+- [Sampler Adapter API Design](sampler-adapter-api-design.md)
 - [Jetson Tegrastats Wrapper Guide](jetson-tegrastats-wrapper.md)
 - [Registry Resource Query Design](registry-resource-query-design.md)
 
@@ -203,7 +204,7 @@ Recommended next work should stay in coherent bundles rather than tiny one-off P
 
 Good next bundles:
 
-- **Sampler adapter API design**: use the Jetson `tegrastats` wrapper validation as input before adding `inferedge_env/samplers/` adapter code.
+- **Sampler adapter implementation skeleton**: add `inferedge_env/samplers/base.py` and Jetson parser/adapter behind tests, following [Sampler Adapter API Design](sampler-adapter-api-design.md), without wiring it into `LocalRunner` yet.
 - **Registry resource query migration**: implement only after query/index use cases are clear, following [Registry Resource Query Design](registry-resource-query-design.md).
 
 Avoid next bundles that jump straight into:
