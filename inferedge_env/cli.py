@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 from pathlib import Path
 from typing import Any, Optional
 
@@ -27,8 +28,11 @@ from inferedge_env.result.schema import ResourceMetrics, RunResult
 from inferedge_env.result.writer import (
     FailedRunArtifactWriter,
     ResultArtifactWriter,
+    SamplerArtifactError,
     build_run_result,
     load_result,
+    new_run_id,
+    write_sampler_artifacts,
 )
 from inferedge_env.runners.fake import FakeRunner
 from inferedge_env.runners.local import LocalRunner, LocalRunnerError
@@ -96,9 +100,19 @@ def run_benchmark(
         _fail(str(exc))
 
     runner = _runner_for_target(target)
+    run_id = new_run_id()
     try:
-        runner_result = runner.run(config, target)
+        if isinstance(runner, LocalRunner):
+            runner_result = runner.run(
+                config,
+                target,
+                run_id=run_id,
+                artifact_dir=edgeenv_root / "runs" / run_id,
+            )
+        else:
+            runner_result = runner.run(config, target)
     except LocalRunnerError as exc:
+        shutil.rmtree(edgeenv_root / "runs" / run_id, ignore_errors=True)
         failed_dir = FailedRunArtifactWriter(edgeenv_root).write(
             config=config,
             target=target,
@@ -108,6 +122,7 @@ def run_benchmark(
             stdout=exc.stdout,
             stderr=exc.stderr,
             return_code=exc.return_code,
+            run_id=run_id,
         )
         console.print(
             f"[yellow]Failed run artifact:[/yellow] {failed_dir}",
@@ -115,14 +130,23 @@ def run_benchmark(
         )
         console.print("[yellow]Registry:[/yellow] not updated")
         _fail(str(exc))
-    result = build_run_result(config, target, runner_result)
-    run_dir = ResultArtifactWriter(edgeenv_root).write(
-        result=result,
-        config_path=config_path,
-        target_path=target_path,
-        stdout=runner_result.stdout,
-        stderr=runner_result.stderr,
-    )
+    result = build_run_result(config, target, runner_result, run_id=run_id)
+    sampler_metadata_path: Path | None = None
+    try:
+        run_dir = ResultArtifactWriter(edgeenv_root).write(
+            result=result,
+            config_path=config_path,
+            target_path=target_path,
+            stdout=runner_result.stdout,
+            stderr=runner_result.stderr,
+        )
+        if runner_result.sampler_summary is not None:
+            sampler_metadata_path = write_sampler_artifacts(
+                run_dir,
+                runner_result.sampler_summary,
+            )
+    except (OSError, SamplerArtifactError) as exc:
+        _fail(str(exc))
     result_path = run_dir / "result.json"
     RunRegistry(edgeenv_root / "runs.db").insert(result, result_path)
 
@@ -131,6 +155,11 @@ def run_benchmark(
     console.print(f"Result: {result_path}", soft_wrap=True)
     console.print(f"Latency mean: {result.metrics.latency_mean_ms} ms")
     console.print(_resource_metrics_status(result.resource_metrics), soft_wrap=True)
+    if sampler_metadata_path is not None:
+        console.print(
+            f"Sampler metadata: stored ({sampler_metadata_path})",
+            soft_wrap=True,
+        )
 
 
 @runs_app.command("list")

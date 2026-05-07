@@ -98,6 +98,32 @@ def test_result_json_persists_resource_metrics(
     assert payload["resource_metrics"]["source"] == "benchmark-command"
 
 
+def test_result_writer_allows_precreated_sampler_directory(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    bench_path, profile_path = config_files
+    result = make_result(bench_config, target_profile, run_id="run-precreated-sampler")
+    sampler_dir = tmp_path / ".edgeenv" / "runs" / result.run_id / "sampler"
+    sampler_dir.mkdir(parents=True)
+    (sampler_dir / "tegrastats.log").write_text("raw\n", encoding="utf-8")
+
+    run_dir = ResultArtifactWriter(tmp_path / ".edgeenv").write(
+        result,
+        bench_path,
+        profile_path,
+        stdout="stdout\n",
+        stderr="",
+    )
+
+    assert (run_dir / "result.json").is_file()
+    assert (run_dir / "sampler" / "tegrastats.log").read_text(
+        encoding="utf-8"
+    ) == "raw\n"
+
+
 def test_write_sampler_artifacts_persists_metadata_under_sampler_dir(tmp_path):
     run_dir = tmp_path / ".edgeenv" / "runs" / "run-sampler"
     sampler_dir = run_dir / "sampler"

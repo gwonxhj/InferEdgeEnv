@@ -110,7 +110,7 @@ class ResultArtifactWriter:
         stderr: str,
     ) -> Path:
         run_dir = self.root / "runs" / result.run_id
-        run_dir.mkdir(parents=True, exist_ok=False)
+        _prepare_successful_run_dir(run_dir)
 
         payload = result.model_dump(mode="json")
         if payload["resource_metrics"] is None:
@@ -224,6 +224,17 @@ class FailedRunArtifactWriter:
 
 def load_result(path: Path | str) -> RunResult:
     return RunResult.model_validate_json(Path(path).read_text(encoding="utf-8"))
+
+
+def _prepare_successful_run_dir(run_dir: Path) -> None:
+    if not run_dir.exists():
+        run_dir.mkdir(parents=True, exist_ok=False)
+        return
+    sampler_dir = run_dir / "sampler"
+    allowed = {sampler_dir}
+    existing = set(run_dir.iterdir())
+    if not existing <= allowed or (sampler_dir.exists() and not sampler_dir.is_dir()):
+        raise FileExistsError(f"Run artifact directory already exists: {run_dir}")
 
 
 def _validate_sampler_metadata(metadata: dict[str, Any], run_dir: Path) -> None:

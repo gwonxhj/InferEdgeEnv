@@ -233,13 +233,13 @@ Target-profile sampler enablement keeps platform concerns near the target, leave
 
 - [x] Add optional sampler schema to target profile.
 - [x] Add sampler factory for `jetson-tegrastats`.
-- [ ] Allocate run id before local command execution.
-- [ ] Start/stop sampler around command execution with mandatory cleanup.
-- [ ] Preserve `EDGEENV_METRICS_JSON=` as the only primary metrics source.
-- [ ] Resolve resource metrics precedence without merging sources.
-- [ ] Write sampler metadata/raw artifacts only for successful runs.
-- [ ] Export/import sampled runs using existing optional sampler artifact support.
+- [x] Allocate run id before local command execution.
+- [x] Start/stop sampler around command execution with mandatory cleanup.
+- [x] Preserve `EDGEENV_METRICS_JSON=` as the only primary metrics source.
+- [x] Resolve resource metrics precedence without merging sources.
+- [x] Write sampler metadata/raw artifacts only for successful runs.
+- [x] Export/import sampled runs using existing optional sampler artifact support.
 - [x] Add tests for disabled sampler preserving current local runner behavior.
-- [ ] Add tests for recoverable sampler failure preserving successful primary run.
-- [ ] Add tests for required sampler failure creating failed-run artifact.
-- [ ] Add tests for both resource metrics sources choosing sampler source.
+- [x] Add tests for recoverable sampler failure preserving successful primary run.
+- [x] Add tests for required sampler failure creating failed-run artifact.
+- [x] Add tests for both resource metrics sources choosing sampler source.
