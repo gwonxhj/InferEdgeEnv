@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "inferedge-env"
-version = "0.1.0"
+version = "0.1.1"
 description = "Config-driven Edge AI inference benchmark runner, local registry, and comparability checker."
 readme = "README.md"
 requires-python = ">=3.10"

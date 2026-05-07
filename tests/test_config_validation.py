@@ -39,6 +39,16 @@ def test_example_sampler_wrapper_config_validation():
     assert profile.target_type == "local"
 
 
+def test_example_jetson_tegrastats_config_validation():
+    bench = load_benchmark_config("examples/benches/jetson_tegrastats_local.yaml")
+    profile = load_target_profile("examples/profiles/jetson_nano_local.yaml")
+
+    assert "examples/scripts/run_with_tegrastats.py" in bench.command
+    assert bench.extra_env == {"LOCAL_DEMO_FLAG": "jetson-tegrastats"}
+    assert profile.target_type == "local"
+    assert "jetson" in profile.runtime_tags
+
+
 def test_config_validation_local_execution_options(tmp_path):
     path = tmp_path / "bench.yaml"
     path.write_text(

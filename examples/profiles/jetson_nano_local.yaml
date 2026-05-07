@@ -1,0 +1,8 @@
+target_name: jetson-nano-local
+target_type: local
+board_name: Jetson Orin Nano
+os: Ubuntu 22.04 LTS for Tegra
+runtime_tags:
+  - local
+  - jetson
+  - tegrastats
