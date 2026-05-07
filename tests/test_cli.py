@@ -676,3 +676,67 @@ runtime_tags: [local]
     assert (failed_dirs[0] / "config.yaml").is_file()
     assert (failed_dirs[0] / "target.yaml").is_file()
     assert (failed_dirs[0] / "env.json").is_file()
+
+    list_result = runner.invoke(
+        app,
+        ["failed-runs", "list", "--edgeenv-root", str(edgeenv_root)],
+    )
+    show_result = runner.invoke(
+        app,
+        [
+            "failed-runs",
+            "show",
+            failure["run_id"],
+            "--edgeenv-root",
+            str(edgeenv_root),
+        ],
+    )
+    show_without_logs = runner.invoke(
+        app,
+        [
+            "failed-runs",
+            "show",
+            failure["run_id"],
+            "--edgeenv-root",
+            str(edgeenv_root),
+            "--log-chars",
+            "0",
+        ],
+    )
+
+    assert list_result.exit_code == 0
+    assert "EdgeEnv Failed Runs" in list_result.output
+    assert failure["run_id"] in list_result.output
+    assert "local-cli-fail" in list_result.output
+    assert "Local benchmark command failed with exit code 7" in list_result.output
+    assert show_result.exit_code == 0
+    shown = json.loads(show_result.output)
+    assert shown["failure"]["run_id"] == failure["run_id"]
+    assert shown["failure"]["schema_version"] == "edgeenv.failed-run.v1"
+    assert shown["failure"]["return_code"] == 7
+    assert shown["stdout"] == "before failure\n"
+    assert shown["stderr"] == "failure details\n"
+    assert shown["files"]["failure"].endswith("failure.json")
+    assert shown["files"]["stdout"].endswith("stdout.log")
+    assert show_without_logs.exit_code == 0
+    shown_without_logs = json.loads(show_without_logs.output)
+    assert shown_without_logs["stdout"] == ""
+    assert shown_without_logs["stderr"] == ""
+
+
+def test_cli_failed_runs_show_rejects_path_like_id(tmp_path):
+    runner = CliRunner()
+
+    result = runner.invoke(
+        app,
+        [
+            "failed-runs",
+            "show",
+            "../not-a-run",
+            "--edgeenv-root",
+            str(tmp_path / ".edgeenv"),
+        ],
+    )
+
+    assert result.exit_code == 1
+    assert "Invalid failed run id: ../not-a-run" in result.output

@@ -79,7 +79,7 @@ edgeenv runs show <run_id>
 | `Invalid local metrics schema` | 필수 latency/throughput field가 빠졌거나 값 type이 틀렸다 | 필수 primary metrics 5개를 numeric 값으로 출력한다 |
 | `Invalid EDGEENV_RESOURCE_METRICS_JSON JSON` | optional resource metrics JSON이 깨졌다 | 확실히 만들 수 없으면 line을 출력하지 않는다 |
 | `Invalid local resource metrics schema` | 알 수 없는 field나 잘못된 type을 출력했다 | `ResourceMetrics` schema의 unit-suffixed field만 사용한다 |
-| `Local benchmark command failed with exit code N` | benchmark command 자체가 실패했다 | `.edgeenv/failed-runs/<run_id>/stdout.log`와 `stderr.log`를 확인한다 |
+| `Local benchmark command failed with exit code N` | benchmark command 자체가 실패했다 | `edgeenv failed-runs list`로 run ID를 찾고 `edgeenv failed-runs show <run_id>`로 stdout/stderr를 확인한다 |
 | `Local benchmark command timed out after ... seconds` | `timeout_seconds` 안에 command가 끝나지 않았다 | benchmark loop를 줄이거나 timeout을 늘린다 |
 | `Failed to start local benchmark command` | command path가 없거나 실행할 수 없다 | `command`, `working_directory`, virtualenv/path를 확인한다 |
 

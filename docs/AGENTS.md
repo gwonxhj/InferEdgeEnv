@@ -13,6 +13,7 @@ README와 설계/운영 문서가 위치하는 영역이다. EdgeEnv가 무엇�
 - `docs/sampler-failure-policy.md` — sampler/wrapper failure가 benchmark 성공 여부에 미치는 영향 기준
 - `docs/local-command-contract.md` — 사용자가 자기 local benchmark command를 연결할 때 지켜야 하는 stdout/config/troubleshooting contract
 - `docs/compare-workflow-guide.md` — 두 local run 생성부터 `runs list/show/report compare`까지 이어지는 compare workflow guide
+- `docs/failed-run-inspection.md` — failed-run artifact를 `failed-runs list/show`로 안전하게 확인하는 guide
 - `docs/mvp-readiness-checklist.md` — MVP에서 가능한 흐름과 non-goals를 release/readiness 관점으로 정리한 상태판
 - `docs/packaging-entrypoints.md` — editable install, module entrypoint, console script readiness 기준
 - `docs/ci-readiness.md` — GitHub Actions에서 자동 검증하는 MVP readiness workflow 기준

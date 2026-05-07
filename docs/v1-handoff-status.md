@@ -21,11 +21,7 @@ EdgeEnv MVP v1 기반의 현재 상태, 검증 방법, 남은 future work, 다�
 - Tests: `tests/`
 - Readiness CI: `.github/workflows/readiness.yml`
 
-현재 기준 commit:
-
-```text
-183890d ci: add MVP readiness workflow
-```
+현재 기준 commit은 repo에서 `git log -1 --oneline`으로 확인한다. 이 문서는 특정 SHA보다 현재 MVP capability snapshot을 우선한다.
 
 ## 3. HOW — 현재 가능한 사용자 흐름
 
@@ -88,6 +84,20 @@ Related docs:
 - [Platform Sampler Design](platform-sampler-design.md)
 - [Registry Resource Query Design](registry-resource-query-design.md)
 
+### Failed-run inspection workflow
+
+```bash
+edgeenv failed-runs list
+edgeenv failed-runs show <run_id>
+edgeenv failed-runs show <run_id> --log-chars 0
+```
+
+Use this path after a local command failure or malformed metrics/resource metrics output. Failed runs are diagnostic artifacts, not successful registry records, so they are intentionally absent from `runs list`.
+
+Related doc:
+
+- [Failed Run Inspection Guide](failed-run-inspection.md)
+
 ### Registry and compare workflow
 
 ```bash
@@ -142,6 +152,7 @@ Do not break these contracts without an explicit migration plan:
 - `.edgeenv/failed-runs/<run_id>/` diagnostic artifact layout
 - `.edgeenv/runs.db` successful run registry semantics
 - `report compare` output labels: `Comparable`, `Mode`, `Reason`
+- `failed-runs show` reads failed artifacts only and must not insert into `runs.db`
 
 ## 5. WHERE — validation commands
 
@@ -178,7 +189,6 @@ Recommended next work should stay in coherent bundles rather than tiny one-off P
 Good next bundles:
 
 - **Local real benchmark examples**: add one realistic but still lightweight local benchmark adapter template around a common runtime command, without shipping model or dataset artifacts.
-- **Failed-run inspection UX**: add a safe `failed-runs list/show` or documented artifact inspection path if failed-run debugging becomes frequent.
 - **Export/import design**: design zip export/import for evidence bundles before implementing it.
 - **Sampler adapter design**: write platform-specific adapter designs for Jetson/macOS/Windows before adding any adapter code.
 - **Registry resource query migration**: implement only after query/index use cases are clear, following [Registry Resource Query Design](registry-resource-query-design.md).

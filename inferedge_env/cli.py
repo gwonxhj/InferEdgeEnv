@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 import typer
 from rich.console import Console
@@ -29,12 +29,14 @@ app = typer.Typer(help="EdgeEnv benchmark runner and local result registry.")
 profile_app = typer.Typer(help="Target profile commands.")
 bench_app = typer.Typer(help="Benchmark config and run commands.")
 runs_app = typer.Typer(help="Local run registry commands.")
+failed_runs_app = typer.Typer(help="Failed local run artifact commands.")
 report_app = typer.Typer(help="Report and comparison commands.")
 console = Console()
 
 app.add_typer(profile_app, name="profile")
 app.add_typer(bench_app, name="bench")
 app.add_typer(runs_app, name="runs")
+app.add_typer(failed_runs_app, name="failed-runs")
 app.add_typer(report_app, name="report")
 
 
@@ -171,6 +173,74 @@ def show_run(
     )
 
 
+@failed_runs_app.command("list")
+def list_failed_runs(
+    edgeenv_root: Path = typer.Option(
+        Path(".edgeenv"),
+        "--edgeenv-root",
+        help="Directory for EdgeEnv artifacts and registry.",
+    ),
+) -> None:
+    """List failed local run artifacts."""
+    failures = _load_failed_run_summaries(edgeenv_root)
+    console.print("[bold]EdgeEnv Failed Runs[/bold]")
+    if not failures:
+        console.print("No failed run artifacts found.")
+        return
+    for failure in failures:
+        console.print(f"- Run ID: {failure.get('run_id', '')}", soft_wrap=True)
+        console.print(f"  Created: {failure.get('created_at', '')}", soft_wrap=True)
+        console.print(
+            f"  Benchmark: {failure.get('benchmark_name', '')}",
+            soft_wrap=True,
+        )
+        console.print(f"  Target: {failure.get('target_name', '')}", soft_wrap=True)
+        console.print(
+            f"  Return Code: {_optional_value(failure.get('return_code'))}",
+            soft_wrap=True,
+        )
+        console.print(f"  Error: {failure.get('error_message', '')}", soft_wrap=True)
+
+
+@failed_runs_app.command("show")
+def show_failed_run(
+    run_id: str,
+    edgeenv_root: Path = typer.Option(
+        Path(".edgeenv"),
+        "--edgeenv-root",
+        help="Directory for EdgeEnv artifacts and registry.",
+    ),
+    log_chars: int = typer.Option(
+        2000,
+        "--log-chars",
+        min=0,
+        help="Maximum stdout/stderr characters to include in the JSON output.",
+    ),
+) -> None:
+    """Show a failed local run artifact bundle."""
+    try:
+        failed_dir = _failed_run_dir(edgeenv_root, run_id)
+        failure = _read_failure_json(failed_dir)
+    except (OSError, ValueError) as exc:
+        _fail(str(exc))
+
+    payload = {
+        "artifact_path": str(failed_dir),
+        "failure": failure,
+        "files": {
+            "failure": str(failed_dir / "failure.json"),
+            "config": str(failed_dir / "config.yaml"),
+            "target": str(failed_dir / "target.yaml"),
+            "env": str(failed_dir / "env.json"),
+            "stdout": str(failed_dir / "stdout.log"),
+            "stderr": str(failed_dir / "stderr.log"),
+        },
+        "stdout": _read_log_preview(failed_dir / "stdout.log", log_chars),
+        "stderr": _read_log_preview(failed_dir / "stderr.log", log_chars),
+    }
+    console.print(json.dumps(payload, indent=2, sort_keys=True), soft_wrap=True)
+
+
 @report_app.command("compare")
 def compare_runs(
     run_id_a: str,
@@ -222,6 +292,63 @@ def _show_payload(record: RegistryRecord) -> dict:
             exclude_none=True,
         )
     return payload
+
+
+def _load_failed_run_summaries(edgeenv_root: Path) -> list[dict[str, Any]]:
+    failed_root = edgeenv_root / "failed-runs"
+    if not failed_root.exists():
+        return []
+    failures: list[dict[str, Any]] = []
+    for failed_dir in sorted(path for path in failed_root.iterdir() if path.is_dir()):
+        try:
+            failures.append(_read_failure_json(failed_dir))
+        except (OSError, ValueError):
+            continue
+    return sorted(
+        failures,
+        key=lambda failure: str(failure.get("created_at", "")),
+        reverse=True,
+    )
+
+
+def _failed_run_dir(edgeenv_root: Path, run_id: str) -> Path:
+    if (
+        not run_id
+        or run_id in {".", ".."}
+        or Path(run_id).parts != (run_id,)
+        or "\\" in run_id
+    ):
+        raise ValueError(f"Invalid failed run id: {run_id}")
+    failed_dir = edgeenv_root / "failed-runs" / run_id
+    if not failed_dir.is_dir():
+        raise ValueError(f"Failed run not found: {run_id}")
+    return failed_dir
+
+
+def _read_failure_json(failed_dir: Path) -> dict[str, Any]:
+    failure_path = failed_dir / "failure.json"
+    try:
+        payload = json.loads(failure_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Invalid failed run artifact: {failure_path}") from exc
+    if payload.get("schema_version") != "edgeenv.failed-run.v1":
+        raise ValueError(f"Unsupported failed run schema: {failure_path}")
+    return payload
+
+
+def _read_log_preview(path: Path, max_chars: int) -> str:
+    if max_chars == 0:
+        return ""
+    text = path.read_text(encoding="utf-8")
+    if len(text) <= max_chars:
+        return text
+    return text[:max_chars] + "\n[truncated]"
+
+
+def _optional_value(value: object) -> str:
+    if value is None:
+        return ""
+    return str(value)
 
 
 def _resource_metrics_status(resource_metrics: ResourceMetrics | None) -> str:

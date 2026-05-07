@@ -65,6 +65,8 @@ If a sampler is unavailable, the wrapper should omit `EDGEENV_RESOURCE_METRICS_J
 
 ```bash
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_sampler_malformed_resource.yaml
+edgeenv failed-runs list
+edgeenv failed-runs show <failed_run_id>
 ```
 
 ### 4. Inspect Evidence
@@ -229,7 +231,7 @@ Reason:
 ```
 
 `runs.db` is a local SQLite index. The run directory remains the evidence bundle.
-Failed local runs are stored under `failed-runs/` for debugging and are not inserted into `runs.db`.
+Failed local runs are stored under `failed-runs/` for debugging and are not inserted into `runs.db`. Use `edgeenv failed-runs list` and `edgeenv failed-runs show <run_id>` to inspect failed-run artifacts safely.
 
 ## Relation To InferEdge And EdgeBench
 
@@ -252,6 +254,7 @@ Included in MVP v1:
 - Result JSON and artifact directory creation
 - SQLite local registry
 - `runs list` and `runs show`
+- `failed-runs list` and `failed-runs show`
 - `report compare` comparability checker
 - pytest tests
 
@@ -271,5 +274,6 @@ Non-goals:
 - [Local Runner Design](docs/local-runner-design.md)
 - [Local Command Contract Guide](docs/local-command-contract.md)
 - [Compare Workflow Guide](docs/compare-workflow-guide.md)
+- [Failed Run Inspection Guide](docs/failed-run-inspection.md)
 - [Resource Metrics Design](docs/resource-metrics-design.md)
 - [Sampler Failure Policy](docs/sampler-failure-policy.md)
