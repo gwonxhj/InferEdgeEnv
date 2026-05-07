@@ -116,6 +116,7 @@ Start here:
 - [Local Command Contract Guide](docs/local-command-contract.md) — how to connect your own local benchmark command
 - [Local Real Benchmark Example Guide](docs/local-real-benchmark-example.md) — how to wrap a user-owned runtime command
 - [Compare Workflow Guide](docs/compare-workflow-guide.md) — how to create two runs and judge comparability
+- [Export/Import Design](docs/export-import-design.md) — proposed portable evidence bundle contract
 
 Design references:
 
@@ -234,6 +235,8 @@ Reason:
 
 `runs.db` is a local SQLite index. The run directory remains the evidence bundle.
 Failed local runs are stored under `failed-runs/` for debugging and are not inserted into `runs.db`. Use `edgeenv failed-runs list` and `edgeenv failed-runs show <run_id>` to inspect failed-run artifacts safely.
+
+Export/import is future work. The proposed artifact-first zip contract is described in [Export/Import Design](docs/export-import-design.md).
 
 ## Relation To InferEdge And EdgeBench
 

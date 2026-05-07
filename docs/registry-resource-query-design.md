@@ -15,6 +15,7 @@ Resource metrics를 SQLite registry에 언제 넣을지, 언제까지 `result.js
 - `inferedge_env/result/schema.py` — optional `ResourceMetrics`
 - `inferedge_env/cli.py` — `runs show`가 `result_path`의 `result.json`을 읽어 resource metrics를 표시
 - `docs/resource-metrics-design.md` — resource metrics contract
+- `docs/export-import-design.md` — import 시 registry row를 artifact에서 rebuild하는 portability policy
 
 기술 스택: SQLite, JSON artifact, Pydantic
 
@@ -81,6 +82,8 @@ runs.db row
 SQLite registry는 local search index이고, result artifact는 evidence bundle이다. Resource metrics는 sampler와 target 환경에 따라 field 존재 여부와 의미가 달라질 수 있으므로, 너무 일찍 DB schema로 고정하면 migration 비용이 먼저 커진다.
 
 EdgeEnv는 benchmark 결과를 더 빨리 줄 세우기보다, 어떤 evidence가 어떤 조건에서 기록됐는지 보존하는 쪽을 우선한다. 그래서 resource metrics query/index는 사용 패턴이 분명해질 때까지 늦춘다.
+
+같은 이유로 export/import 설계에서도 `runs.db`는 archive에 넣는 canonical evidence가 아니라 import 후 `result.json`에서 다시 만들 수 있는 local index로 취급한다.
 
 ## 7. ⚠️ LEARNED CAUTIONS — 학습된 주의사항
 
