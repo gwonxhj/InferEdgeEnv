@@ -289,9 +289,9 @@ This design keeps the first adapter API small: start, stop, summarize. It also m
 
 ## Implementation Checklist
 
-- [ ] Add `inferedge_env/samplers/base.py` with `SamplerContext`, `SamplerSummary`, `Sampler` protocol, and failure classes.
-- [ ] Add `inferedge_env/samplers/jetson_tegrastats.py` parser and process adapter.
+- [x] Add `inferedge_env/samplers/base.py` with `SamplerContext`, `SamplerSummary`, `Sampler` protocol, and failure classes.
+- [x] Add `inferedge_env/samplers/jetson_tegrastats.py` parser and process adapter.
 - [ ] Keep `examples/scripts/run_with_tegrastats.py` as the user-facing wrapper even after adapter code lands.
 - [ ] Decide whether sampler metadata first lives in `env.json`, `RunResult.env["sampler"]`, or `.edgeenv/runs/<run_id>/sampler/metadata.json`.
-- [ ] Add tests for unavailable tool, no samples, parser success, cleanup on benchmark failure, and required sampler failure.
+- [x] Add tests for unavailable tool, no samples, parser success, process summary, and required sampler failure.
 - [ ] Update export/import design if sampler raw artifacts become part of portable evidence bundles.

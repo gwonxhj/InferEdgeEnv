@@ -23,6 +23,7 @@ README와 설계/운영 문서가 위치하는 영역이다. EdgeEnv가 무엇�
 - `docs/ci-readiness.md` — GitHub Actions에서 자동 검증하는 MVP readiness workflow 기준
 - `docs/v1-handoff-status.md` — MVP v1 현재 상태, 검증 커맨드, future work, 다음 작업 진입점 snapshot
 - `docs/v1-release-rehearsal.md` — main 기준 사용자 흐름 리허설 기록과 v1 release/tag gate 기준
+- `inferedge_env/samplers/AGENTS.md` — sampler adapter code 영역 작업 가이드
 
 기술 스택: Markdown
 
