@@ -16,6 +16,7 @@ Platform sampler는 Jetson `tegrastats`, macOS `powermetrics`, Windows counters,
 - `docs/local-runner-design.md` — local command contract
 - `docs/sampler-failure-policy.md` — sampler failure와 benchmark success/failure policy
 - `docs/sampler-adapter-api-design.md` — future `inferedge_env/samplers/` API, metadata, failure taxonomy
+- `docs/local-runner-sampler-wiring-design.md` — future LocalRunner sampler lifecycle wiring policy
 - `examples/scripts/emit_resource_metrics.py` — deterministic resource metrics smoke example
 - `examples/scripts/run_with_sampler.py` — deterministic wrapper command sampler example
 - `examples/scripts/run_with_tegrastats.py` — Jetson `tegrastats` wrapper command example
@@ -82,6 +83,8 @@ Adapter는 platform-specific tool을 감싸고, EdgeEnv core schema로 normalize
 
 Detailed API, metadata schema, raw artifact policy, and failure taxonomy are defined in [Sampler Adapter API Design](sampler-adapter-api-design.md).
 
+LocalRunner enablement, resource metrics precedence, and artifact timing are defined in [LocalRunner Sampler Wiring Design](local-runner-sampler-wiring-design.md).
+
 초기 adapter 후보:
 
 - Jetson: `tegrastats`
@@ -118,6 +121,7 @@ Sampler output은 값뿐 아니라 source를 남겨야 한다.
 
 - **Resource Metrics Design**: sampler output은 optional `resource_metrics` evidence로 저장한다.
 - **Local Runner Design**: local runner는 explicit stdout contract만 읽는다.
+- **LocalRunner Sampler Wiring Design**: native adapters can be enabled later without replacing the stdout contract.
 - **Registry Resource Query Design**: sampler 값은 당분간 DB column이 아니라 `result.json` artifact에 남긴다.
 - **Sampler Failure Policy**: sampler 실패만으로 primary benchmark result를 버리지 않는다.
 - **Comparability**: sampler 값은 direct comparability gate가 아니다.
@@ -138,6 +142,7 @@ _(아직 없음)_
 - [x] Jetson `tegrastats` wrapper example
 - [x] sampler metadata schema decision
 - [x] Jetson `tegrastats` adapter API design
+- [x] LocalRunner sampler wiring design
 - [ ] macOS `powermetrics` adapter design
 - [ ] Windows counter adapter design
 - [ ] external meter adapter design

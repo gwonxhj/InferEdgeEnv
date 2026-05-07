@@ -212,5 +212,6 @@ _(아직 없음)_
 ## Deferred Work
 
 - platform-specific resource samplers; 기준은 [Platform Sampler Design](platform-sampler-design.md)을 따른다.
+- LocalRunner sampler adapter wiring; 기준은 [LocalRunner Sampler Wiring Design](local-runner-sampler-wiring-design.md)을 따른다.
 - registry migration for querying resource metrics without opening `result.json`
 - SSH/WSL/Docker targets
