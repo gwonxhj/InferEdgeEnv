@@ -16,6 +16,7 @@ README와 설계/운영 문서가 위치하는 영역이다. EdgeEnv가 무엇�
 - `docs/mvp-readiness-checklist.md` — MVP에서 가능한 흐름과 non-goals를 release/readiness 관점으로 정리한 상태판
 - `docs/packaging-entrypoints.md` — editable install, module entrypoint, console script readiness 기준
 - `docs/ci-readiness.md` — GitHub Actions에서 자동 검증하는 MVP readiness workflow 기준
+- `docs/v1-handoff-status.md` — MVP v1 현재 상태, 검증 커맨드, future work, 다음 작업 진입점 snapshot
 
 기술 스택: Markdown
 

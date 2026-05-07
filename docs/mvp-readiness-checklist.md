@@ -17,6 +17,7 @@ EdgeEnv MVP가 현재 어떤 사용자 흐름을 지원하고, 어떤 범위를 
 - `docs/resource-metrics-design.md` — optional resource metrics 정책
 - `docs/sampler-failure-policy.md` — sampler/resource evidence 실패 정책
 - `docs/ci-readiness.md` — PR/main 자동 검증 기준
+- `docs/v1-handoff-status.md` — handoff snapshot과 next work candidates
 - `examples/` — 실행 가능한 deterministic fixtures
 - `tests/` — CLI, registry, writer, compare regression coverage
 

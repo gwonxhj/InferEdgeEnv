@@ -1,0 +1,191 @@
+# EdgeEnv MVP v1 Handoff Status
+
+## 1. WHAT — 이 문서가 정하는 것
+
+EdgeEnv MVP v1 기반의 현재 상태, 검증 방법, 남은 future work, 다음 개발자가 어디서 시작해야 하는지를 한 장으로 정리한다.
+
+이 문서는 새 기능 설계가 아니라 handoff snapshot이다. 구현된 것과 아직 구현하지 않은 것을 섞지 않는 것이 목적이다.
+
+## 2. CONTENTS — 현재 repo 상태
+
+주요 구현 영역:
+
+- Python package: `inferedge_env`
+- User-facing CLI command: `edgeenv`
+- Config schema: `inferedge_env/config/`
+- Runner: `FakeRunner`, `LocalRunner`
+- Result artifact writer: `inferedge_env/result/`
+- SQLite registry: `inferedge_env/registry/`
+- Comparability checker: `inferedge_env/compare/`
+- Examples: `examples/`
+- Tests: `tests/`
+- Readiness CI: `.github/workflows/readiness.yml`
+
+현재 기준 commit:
+
+```text
+183890d ci: add MVP readiness workflow
+```
+
+## 3. HOW — 현재 가능한 사용자 흐름
+
+### Install and entrypoints
+
+```bash
+python -m pip install -e ".[dev]"
+python -m inferedge_env.cli doctor
+edgeenv doctor
+```
+
+관련 문서:
+
+- [Packaging And Entrypoint Readiness](packaging-entrypoints.md)
+- [CI Readiness Workflow](ci-readiness.md)
+
+### Fake run
+
+```bash
+edgeenv profile validate examples/profiles/local_fake.yaml
+edgeenv bench validate examples/benches/yolov8n_fire.yaml
+edgeenv bench run --target examples/profiles/local_fake.yaml --config examples/benches/yolov8n_fire.yaml
+```
+
+Use this path when checking config/result/registry lifecycle without executing a real model.
+
+### Local command run
+
+```bash
+edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_template.yaml
+```
+
+Use this path when wiring a user-owned local benchmark command to EdgeEnv's explicit stdout contract.
+
+Related docs:
+
+- [Local Command Contract Guide](local-command-contract.md)
+- [Local Runner Design](local-runner-design.md)
+
+### Resource metrics and sampler wrappers
+
+```bash
+edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_resource_metrics.yaml
+edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_sampler_wrapper.yaml
+edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_sampler_unavailable.yaml
+edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_sampler_malformed_resource.yaml
+```
+
+Current policy:
+
+- resource metrics are optional secondary evidence
+- missing resource metrics keeps a successful run valid
+- malformed resource metrics creates a failed-run artifact
+- resource metrics are not a comparability gate
+
+Related docs:
+
+- [Resource Metrics Design](resource-metrics-design.md)
+- [Sampler Failure Policy](sampler-failure-policy.md)
+- [Platform Sampler Design](platform-sampler-design.md)
+- [Registry Resource Query Design](registry-resource-query-design.md)
+
+### Registry and compare workflow
+
+```bash
+edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_compare_a.yaml
+edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_compare_b.yaml
+edgeenv runs list
+edgeenv runs show <run_id>
+edgeenv report compare <run_id_a> <run_id_b>
+```
+
+Expected same-condition example output:
+
+```text
+Comparable: Yes
+Mode: same-condition
+Reason:
+- Same model hash
+- Same input shape
+- Same precision
+- Same benchmark protocol
+```
+
+Related doc:
+
+- [Compare Workflow Guide](compare-workflow-guide.md)
+
+## 4. HOW NOT — scope boundaries to preserve
+
+Do not add these as hidden defaults or quickstart paths:
+
+- OS, bootloader, GRUB, BCD, or Linux compatibility behavior
+- VM, Docker, WSL, SSH, or cloud target execution
+- Cloud DB, login/auth, web dashboard, public leaderboard
+- Model upload server or dataset upload server
+- Single-score model ranking
+- Resource metrics as a required comparability field
+- Platform-native sampler adapters inside `LocalRunner`
+
+Do not break these contracts without an explicit migration plan:
+
+- `result.json` schema version: `edgeenv.result.v1`
+- failed-run artifact schema marker: `edgeenv.failed-run.v1`
+- `.edgeenv/runs/<run_id>/` success artifact layout
+- `.edgeenv/failed-runs/<run_id>/` diagnostic artifact layout
+- `.edgeenv/runs.db` successful run registry semantics
+- `report compare` output labels: `Comparable`, `Mode`, `Reason`
+
+## 5. WHERE — validation commands
+
+Run these before considering a change ready:
+
+```bash
+python -m pytest -q
+python -m inferedge_env.cli doctor
+edgeenv doctor
+python -m inferedge_env.cli profile validate examples/profiles/local_fake.yaml
+python -m inferedge_env.cli profile validate examples/profiles/local.yaml
+python -m inferedge_env.cli bench validate examples/benches/yolov8n_fire.yaml
+python -m inferedge_env.cli bench validate examples/benches/local_template.yaml
+python -m inferedge_env.cli bench validate examples/benches/local_compare_a.yaml
+git diff --check
+```
+
+For install and entrypoint readiness:
+
+```bash
+bash scripts/smoke_entrypoints.sh
+```
+
+Notes:
+
+- `scripts/smoke_entrypoints.sh` may need network access if build dependencies are not already available locally.
+- Tests should use `tmp_path` for `.edgeenv` data and must not pollute the repo root registry.
+- GitHub Actions repeats the core readiness contract on Python 3.10 and 3.11.
+
+## 6. WHY — next work candidates
+
+Recommended next work should stay in coherent bundles rather than tiny one-off PRs.
+
+Good next bundles:
+
+- **Local real benchmark examples**: add one realistic but still lightweight local benchmark adapter template around a common runtime command, without shipping model or dataset artifacts.
+- **Compare report UX**: improve `report compare` output with side-by-side metric deltas only after comparability mode is shown; keep ranking out of scope.
+- **Failed-run inspection UX**: add a safe `failed-runs list/show` or documented artifact inspection path if failed-run debugging becomes frequent.
+- **Export/import design**: design zip export/import for evidence bundles before implementing it.
+- **Sampler adapter design**: write platform-specific adapter designs for Jetson/macOS/Windows before adding any adapter code.
+- **Registry resource query migration**: implement only after query/index use cases are clear, following [Registry Resource Query Design](registry-resource-query-design.md).
+
+Avoid next bundles that jump straight into:
+
+- Docker/WSL/SSH target implementation
+- cloud sync or hosted dashboard
+- public leaderboard
+- model/dataset upload service
+- composite performance score
+
+## 7. ⚠️ LEARNED CAUTIONS — 학습된 주의사항
+
+- Keep branch names area-based and intuitive, such as `docs/...`, `runners/...`, `compare/...`, `ci/...`, or `packaging/...`.
+- Finish each coherent work bundle with tests, PR, merge, and a clear next-step recommendation.
+- If install smoke fails only because sandbox networking blocks build dependency lookup, rerun with proper network approval and record that in validation notes.

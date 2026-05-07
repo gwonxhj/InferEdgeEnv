@@ -107,6 +107,7 @@ The Python package is `inferedge_env`; the user-facing CLI command remains `edge
 Start here:
 
 - [MVP Readiness Checklist](docs/mvp-readiness-checklist.md) — what works in this MVP and what remains out of scope
+- [EdgeEnv MVP v1 Handoff Status](docs/v1-handoff-status.md) — current state, validation commands, and next work candidates
 - [Packaging And Entrypoint Readiness](docs/packaging-entrypoints.md) — install, module entrypoint, and console script checks
 - [CI Readiness Workflow](docs/ci-readiness.md) — automated PR/main checks for MVP contracts
 - [Local Command Contract Guide](docs/local-command-contract.md) — how to connect your own local benchmark command
@@ -262,6 +263,7 @@ Non-goals:
 ## Design Notes
 
 - [MVP Readiness Checklist](docs/mvp-readiness-checklist.md)
+- [EdgeEnv MVP v1 Handoff Status](docs/v1-handoff-status.md)
 - [Packaging And Entrypoint Readiness](docs/packaging-entrypoints.md)
 - [CI Readiness Workflow](docs/ci-readiness.md)
 - [Local Runner Design](docs/local-runner-design.md)
