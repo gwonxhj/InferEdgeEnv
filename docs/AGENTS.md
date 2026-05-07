@@ -12,6 +12,7 @@ README와 설계/운영 문서가 위치하는 영역이다. EdgeEnv가 무엇�
 - `docs/platform-sampler-design.md` — platform-specific resource sampler boundary와 future adapter 기준
 - `docs/sampler-failure-policy.md` — sampler/wrapper failure가 benchmark 성공 여부에 미치는 영향 기준
 - `docs/local-command-contract.md` — 사용자가 자기 local benchmark command를 연결할 때 지켜야 하는 stdout/config/troubleshooting contract
+- `docs/local-real-benchmark-example.md` — 실제 runtime command adapter pattern을 deterministic local example로 설명하는 guide
 - `docs/compare-workflow-guide.md` — 두 local run 생성부터 `runs list/show/report compare`까지 이어지는 compare workflow guide
 - `docs/failed-run-inspection.md` — failed-run artifact를 `failed-runs list/show`로 안전하게 확인하는 guide
 - `docs/mvp-readiness-checklist.md` — MVP에서 가능한 흐름과 non-goals를 release/readiness 관점으로 정리한 상태판

@@ -45,6 +45,7 @@ edgeenv bench run --target examples/profiles/local_fake.yaml --config examples/b
 
 ```bash
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_template.yaml
+edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_runtime_adapter.yaml
 ```
 
 4. Inspect registry and artifacts:
@@ -67,6 +68,7 @@ edgeenv report compare <run_id_a> <run_id_b>
 - Config validation for benchmark configs and target profiles
 - Deterministic `FakeRunner`
 - `LocalRunner` with explicit stdout metrics contract
+- Local runtime adapter example for user-owned command integration
 - Optional resource metrics evidence
 - Success artifacts under `.edgeenv/runs/<run_id>/`
 - Failed local run artifacts under `.edgeenv/failed-runs/<run_id>/`

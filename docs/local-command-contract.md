@@ -13,7 +13,10 @@ EdgeEnv는 모델을 대신 실행하거나 benchmark log를 추측하지 않는
 - `inferedge_env/runners/local.py` — local command 실행과 stdout contract parser
 - `examples/scripts/local_benchmark_template.py` — 사용자가 복사해 시작할 수 있는 최소 benchmark template
 - `examples/benches/local_template.yaml` — template script를 실행하는 benchmark config
+- `examples/scripts/local_runtime_adapter_demo.py` — runtime command adapter pattern 예시
+- `examples/benches/local_runtime_adapter.yaml` — adapter demo를 실행하는 benchmark config
 - `examples/profiles/local.yaml` — local target profile
+- `docs/local-real-benchmark-example.md` — runtime command wrapper를 붙이는 흐름
 - `docs/local-runner-design.md` — local runner 내부 설계
 - `docs/resource-metrics-design.md` — optional resource metrics contract
 - `docs/sampler-failure-policy.md` — sampler/resource metrics 실패 정책
@@ -60,6 +63,15 @@ edgeenv runs show <run_id>
 - 실제 측정 부분을 넣을 위치
 - primary metrics JSON line 출력
 - optional resource metrics JSON line 출력
+
+### Runtime adapter flow
+
+```bash
+edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_runtime_adapter.yaml
+edgeenv runs show <run_id>
+```
+
+`examples/scripts/local_runtime_adapter_demo.py` shows the next step after the minimal template: wrap a user-owned runtime command, pass through diagnostic stdout/stderr, fail if that command fails, and emit EdgeEnv metrics/resource metrics lines. See [Local Real Benchmark Example Guide](local-real-benchmark-example.md) for the full walkthrough.
 
 ### Benchmark config checklist
 
