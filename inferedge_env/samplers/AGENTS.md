@@ -7,6 +7,7 @@ platform-specific resource sampler adapter의 독립 lifecycle과 parser를 담�
 ## 2. CONTENTS — 파일/디렉토리와 기술 스택
 
 - `base.py` — `SamplerContext`, `SamplerSummary`, `Sampler` protocol, sampler failure taxonomy
+- `factory.py` — optional target sampler profile을 concrete sampler adapter로 변환
 - `jetson_tegrastats.py` — Jetson `tegrastats` line parser, metadata builder, process adapter
 
 기술 스택: Python standard library subprocess, dataclasses, Protocol, Pydantic `ResourceMetrics`
