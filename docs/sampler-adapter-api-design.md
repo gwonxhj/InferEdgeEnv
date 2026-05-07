@@ -15,6 +15,7 @@
 - `docs/resource-metrics-design.md` — optional `ResourceMetrics` schema and policy
 - `docs/sampler-failure-policy.md` — sampler failure가 benchmark success/failure에 미치는 영향
 - `docs/local-runner-design.md` — `LocalRunner`는 explicit stdout contract만 처리한다는 기준
+- `docs/sampler-metadata-artifact-policy.md` — sampler metadata and raw artifact storage decision
 - `inferedge_env/result/schema.py` — current `ResourceMetrics`
 - future `inferedge_env/samplers/` — adapter interfaces and implementations
 
@@ -119,7 +120,7 @@ The `finally` block is mandatory. Adapter cleanup must run even if the benchmark
 }
 ```
 
-Sampler metadata should be separate from `ResourceMetrics`. First implementation should store it in `RunResult.env["sampler"]` or a future explicit diagnostics artifact, not by adding broad fields to `ResourceMetrics`.
+Sampler metadata should be separate from `ResourceMetrics`. The chosen canonical location is `.edgeenv/runs/<run_id>/sampler/metadata.json`, as defined in [Sampler Metadata Artifact Policy](sampler-metadata-artifact-policy.md). Do not add broad sampler fields to `ResourceMetrics`.
 
 Proposed metadata shape:
 
@@ -193,7 +194,7 @@ Recommended layout for a future adapter run:
     tegrastats.log
 ```
 
-This is a layout extension, not a `result.json` schema break. Export/import must include sampler artifacts only after a separate portability update.
+This is a layout extension, not a `result.json` schema break. Export/import must include sampler artifacts only after a separate portability update. See [Sampler Metadata Artifact Policy](sampler-metadata-artifact-policy.md).
 
 ### Jetson tegrastats adapter mapping
 
@@ -271,6 +272,7 @@ This should remain optional and target-aware. Existing configs without `sampler`
 
 - **Jetson Tegrastats Wrapper Guide**: provides the first proven sampler lifecycle and field mapping.
 - **Resource Metrics Design**: normalized resource metrics remain optional evidence.
+- **Sampler Metadata Artifact Policy**: sampler metadata belongs under `sampler/metadata.json`.
 - **Sampler Failure Policy**: failure taxonomy maps to preserve/omit/fail behavior.
 - **Local Runner Design**: adapter work must not blur local command responsibility.
 - **Export/Import Design**: sampler raw artifacts need a future portability update before becoming export evidence.
@@ -292,6 +294,6 @@ This design keeps the first adapter API small: start, stop, summarize. It also m
 - [x] Add `inferedge_env/samplers/base.py` with `SamplerContext`, `SamplerSummary`, `Sampler` protocol, and failure classes.
 - [x] Add `inferedge_env/samplers/jetson_tegrastats.py` parser and process adapter.
 - [ ] Keep `examples/scripts/run_with_tegrastats.py` as the user-facing wrapper even after adapter code lands.
-- [ ] Decide whether sampler metadata first lives in `env.json`, `RunResult.env["sampler"]`, or `.edgeenv/runs/<run_id>/sampler/metadata.json`.
+- [x] Decide whether sampler metadata first lives in `env.json`, `RunResult.env["sampler"]`, or `.edgeenv/runs/<run_id>/sampler/metadata.json`.
 - [x] Add tests for unavailable tool, no samples, parser success, process summary, and required sampler failure.
 - [ ] Update export/import design if sampler raw artifacts become part of portable evidence bundles.
