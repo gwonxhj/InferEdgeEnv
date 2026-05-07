@@ -59,6 +59,13 @@ CLI는 이 상태를 `Resource metrics: omitted`으로 표시한다.
 현재 `LocalRunner`는 `EDGEENV_RESOURCE_METRICS_JSON=` line이 있으면 schema validation을 수행한다. 따라서 잘못된 resource metrics line을 출력하는 wrapper는 실패한다. 확신이 없으면 line을 출력하지 않는 것이 맞다.
 CLI는 failed-run artifact path와 `Registry: not updated`를 표시한다.
 
+실패 원인 확인은 성공 run registry가 아니라 failed-run artifact inspection command를 사용한다.
+
+```bash
+edgeenv failed-runs list
+edgeenv failed-runs show <run_id>
+```
+
 ### Wrapper command behavior
 
 Wrapper command는 다음 순서를 지켜야 한다.

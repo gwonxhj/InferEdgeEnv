@@ -154,6 +154,13 @@ Registry: not updated
 Error: <reason>
 ```
 
+실패 artifact는 registry에 insert되지 않으므로 `runs list/show`가 아니라 failed-run 전용 inspection command로 확인한다.
+
+```bash
+edgeenv failed-runs list
+edgeenv failed-runs show <run_id>
+```
+
 이 출력은 result schema나 registry schema를 바꾸지 않는다. 사람이 CLI에서 run 보존 여부와 resource evidence 상태를 즉시 구분하도록 돕는 UX layer다.
 
 ## 6. WHY — 배경 판단

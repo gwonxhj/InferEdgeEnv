@@ -71,7 +71,7 @@ edgeenv report compare <run_id_a> <run_id_b>
 - Success artifacts under `.edgeenv/runs/<run_id>/`
 - Failed local run artifacts under `.edgeenv/failed-runs/<run_id>/`
 - SQLite local registry for successful runs
-- `runs list`, `runs show`, and `report compare`
+- `runs list`, `runs show`, `failed-runs list`, `failed-runs show`, and `report compare`
 - Same-condition, conditional, and non-comparable judgement
 - Deterministic examples and pytest coverage
 - Editable install and `edgeenv` console script smoke path
