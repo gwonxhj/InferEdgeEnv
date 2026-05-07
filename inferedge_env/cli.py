@@ -14,6 +14,7 @@ from inferedge_env.config.bench_config import load_benchmark_config
 from inferedge_env.config.target_profile import TargetProfile, load_target_profile
 from inferedge_env.registry.db import RunRegistry
 from inferedge_env.registry.models import RegistryRecord
+from inferedge_env.result.exporter import RunExportError, export_successful_run
 from inferedge_env.result.schema import ResourceMetrics, RunResult
 from inferedge_env.result.writer import (
     FailedRunArtifactWriter,
@@ -171,6 +172,35 @@ def show_run(
         json.dumps(_show_payload(record), indent=2, sort_keys=True),
         soft_wrap=True,
     )
+
+
+@runs_app.command("export")
+def export_run(
+    run_id: str,
+    output_path: Path = typer.Option(
+        ...,
+        "--output",
+        "-o",
+        help="Path to write the exported run evidence zip.",
+    ),
+    edgeenv_root: Path = typer.Option(
+        Path(".edgeenv"),
+        "--edgeenv-root",
+        help="Directory for EdgeEnv artifacts and registry.",
+    ),
+) -> None:
+    """Export a successful run evidence bundle as a zip archive."""
+    try:
+        record = RunRegistry(edgeenv_root / "runs.db").show(run_id)
+        archive_path = export_successful_run(
+            Path(record.result_path).parent,
+            output_path,
+        )
+    except (KeyError, RunExportError, OSError) as exc:
+        _fail(str(exc))
+    console.print("[bold green]Run evidence exported[/bold green]")
+    console.print(f"Run ID: {run_id}")
+    console.print(f"Archive: {archive_path}", soft_wrap=True)
 
 
 @failed_runs_app.command("list")

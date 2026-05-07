@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import shlex
 import sys
+import zipfile
 from pathlib import Path
 
 from typer.testing import CliRunner
@@ -225,6 +226,64 @@ runtime_tags: [local]
     assert shown["resource_metrics"]["memory_peak_mb"] == 512.0
     assert shown["resource_metrics"]["power_mean_w"] == 8.2
     assert shown["resource_metrics"]["source"] == "benchmark-command"
+
+
+def test_cli_runs_export_creates_evidence_zip(tmp_path, config_files):
+    runner = CliRunner()
+    bench_path, profile_path = config_files
+    edgeenv_root = tmp_path / ".edgeenv"
+    export_path = tmp_path / "exports" / "run.zip"
+
+    run_result = runner.invoke(
+        app,
+        [
+            "bench",
+            "run",
+            "--target",
+            str(profile_path),
+            "--config",
+            str(bench_path),
+            "--edgeenv-root",
+            str(edgeenv_root),
+        ],
+    )
+
+    assert run_result.exit_code == 0
+    run_dir = next((edgeenv_root / "runs").iterdir())
+    payload = json.loads((run_dir / "result.json").read_text(encoding="utf-8"))
+    export_result = runner.invoke(
+        app,
+        [
+            "runs",
+            "export",
+            payload["run_id"],
+            "--output",
+            str(export_path),
+            "--edgeenv-root",
+            str(edgeenv_root),
+        ],
+    )
+
+    assert export_result.exit_code == 0
+    assert "Run evidence exported" in export_result.output
+    assert payload["run_id"] in export_result.output
+    assert export_path.is_file()
+    with zipfile.ZipFile(export_path) as archive:
+        names = set(archive.namelist())
+        assert f"{payload['run_id']}/manifest.json" in names
+        assert f"{payload['run_id']}/result.json" in names
+        manifest = json.loads(archive.read(f"{payload['run_id']}/manifest.json"))
+    assert manifest["schema_version"] == "edgeenv.export.v1"
+    assert manifest["bundle_type"] == "successful-run"
+    assert manifest["run_id"] == payload["run_id"]
+    assert sorted(entry["path"] for entry in manifest["files"]) == [
+        "config.yaml",
+        "env.json",
+        "result.json",
+        "stderr.log",
+        "stdout.log",
+        "target.yaml",
+    ]
 
 
 def test_cli_resource_metrics_example_run_and_show(tmp_path):

@@ -107,6 +107,7 @@ edgeenv bench run --target examples/profiles/local.yaml --config examples/benche
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_compare_b.yaml
 edgeenv runs list
 edgeenv runs show <run_id>
+edgeenv runs export <run_id> --output edgeenv-run-<run_id>.zip
 edgeenv report compare <run_id_a> <run_id_b>
 ```
 
@@ -155,7 +156,7 @@ Do not break these contracts without an explicit migration plan:
 - `.edgeenv/runs.db` successful run registry semantics
 - `report compare` output labels: `Comparable`, `Mode`, `Reason`
 - `failed-runs show` reads failed artifacts only and must not insert into `runs.db`
-- future export/import must treat run artifacts as canonical evidence and `runs.db` as a rebuildable local index
+- export/import must treat run artifacts as canonical evidence and `runs.db` as a rebuildable local index
 
 Related portability design:
 
@@ -196,7 +197,7 @@ Recommended next work should stay in coherent bundles rather than tiny one-off P
 
 Good next bundles:
 
-- **Export/import implementation**: add export/import commands only after following [Export/Import Design](export-import-design.md), including manifest/checksum validation and registry rebuild semantics.
+- **Export/import implementation**: add import after following [Export/Import Design](export-import-design.md), including manifest/checksum validation, safe zip extraction, duplicate run_id rejection, and registry rebuild semantics.
 - **Sampler adapter design**: write platform-specific adapter designs for Jetson/macOS/Windows before adding any adapter code.
 - **Registry resource query migration**: implement only after query/index use cases are clear, following [Registry Resource Query Design](registry-resource-query-design.md).
 
