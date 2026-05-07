@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import posixpath
+import shutil
 import zipfile
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -11,7 +12,7 @@ from typing import Any
 
 from inferedge_env import __version__
 from inferedge_env.result.schema import RunResult
-from inferedge_env.result.writer import load_result
+from inferedge_env.result.writer import SAMPLER_METADATA_REQUIRED_KEYS, load_result
 from inferedge_env.utils.hashing import sha256_file
 
 
@@ -34,6 +35,7 @@ REQUIRED_FAILED_RUN_FILES = [
     "stdout.log",
     "stderr.log",
 ]
+SAMPLER_METADATA_FILE = "sampler/metadata.json"
 
 
 class RunExportError(ValueError):
@@ -70,6 +72,7 @@ def export_successful_run(run_dir: Path | str, output_path: Path | str) -> Path:
         )
 
     files = _collect_required_files(source_dir)
+    files.update(_collect_sampler_files(source_dir))
     destination.parent.mkdir(parents=True, exist_ok=True)
     manifest = _build_manifest(result, files)
     top_level = _safe_archive_dir(result.run_id)
@@ -132,6 +135,7 @@ def validate_successful_run_import(archive_path: Path | str) -> RunImportPlan:
                 file_entries,
                 REQUIRED_RUN_FILES,
             )
+            _validate_sampler_extension(archive, members, file_entries)
             result = _load_import_result(archive, members["result.json"])
             if manifest.get("run_id") != result.run_id:
                 raise RunImportError("Manifest run_id does not match result.json run_id")
@@ -205,12 +209,14 @@ def import_successful_run(
     destination.mkdir(parents=True)
     try:
         with zipfile.ZipFile(plan.archive_path) as archive:
-            for name in REQUIRED_RUN_FILES:
-                (destination / name).write_bytes(archive.read(plan.members[name]))
+            for name in plan.members:
+                if name == "manifest.json":
+                    continue
+                path = destination / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(archive.read(plan.members[name]))
     except Exception:
-        for path in destination.iterdir():
-            path.unlink()
-        destination.rmdir()
+        shutil.rmtree(destination)
         raise
     return plan.result, destination
 
@@ -268,6 +274,31 @@ def _collect_required_files(
     return files
 
 
+def _collect_sampler_files(source_dir: Path) -> dict[str, Path]:
+    metadata_path = source_dir / SAMPLER_METADATA_FILE
+    if not metadata_path.exists():
+        return {}
+    if not metadata_path.is_file():
+        raise RunExportError(
+            f"Sampler metadata artifact must be a file: {metadata_path}"
+        )
+    metadata = _load_sampler_metadata(metadata_path, RunExportError)
+    raw_artifacts = _sampler_raw_artifact_paths(metadata, RunExportError)
+    files = {SAMPLER_METADATA_FILE: metadata_path}
+    for raw_artifact in raw_artifacts:
+        raw_path = source_dir / Path(*PurePosixPath(raw_artifact).parts)
+        if not raw_path.is_file():
+            raise RunExportError(
+                f"Sampler raw artifact listed in metadata is missing: {raw_artifact}"
+            )
+        if raw_path.is_symlink():
+            raise RunExportError(
+                f"Sampler raw artifact must not be a symlink: {raw_artifact}"
+            )
+        files[raw_artifact] = raw_path
+    return files
+
+
 def _build_manifest(result: RunResult, files: dict[str, Path]) -> dict[str, Any]:
     return {
         "schema_version": EXPORT_SCHEMA_VERSION,
@@ -278,7 +309,7 @@ def _build_manifest(result: RunResult, files: dict[str, Path]) -> dict[str, Any]
         "files": [
             {
                 "path": name,
-                "required": True,
+                "required": name in REQUIRED_RUN_FILES,
                 "sha256": sha256_file(path),
                 "bytes": path.stat().st_size,
             }
@@ -452,7 +483,7 @@ def _verify_archive_members_match_manifest(
     entries: dict[str, dict[str, Any]],
     required_files: list[str],
 ) -> None:
-    expected = set(required_files) | {"manifest.json"}
+    expected = set(entries) | {"manifest.json"}
     actual = set(members)
     if actual != expected:
         extra = sorted(actual - expected)
@@ -464,11 +495,17 @@ def _verify_archive_members_match_manifest(
     for name in required_files:
         if entries[name].get("required") is not True:
             raise RunImportError(f"Manifest file entry is not marked required: {name}")
-    unexpected_manifest_entries = sorted(set(entries) - set(required_files))
+    unexpected_manifest_entries = [
+        name for name in sorted(set(entries) - set(required_files))
+        if not name.startswith("sampler/")
+    ]
     if unexpected_manifest_entries:
         raise RunImportError(
             f"Unexpected manifest file entry: {unexpected_manifest_entries[0]}"
         )
+    for name in sorted(set(entries) - set(required_files)):
+        if entries[name].get("required") is not False:
+            raise RunImportError(f"Optional manifest file entry is marked required: {name}")
 
 
 def _verify_manifest_checksums(
@@ -477,7 +514,7 @@ def _verify_manifest_checksums(
     entries: dict[str, dict[str, Any]],
     required_files: list[str],
 ) -> None:
-    for name in required_files:
+    for name in entries:
         entry = entries[name]
         data = archive.read(members[name])
         if entry.get("bytes") != len(data):
@@ -485,6 +522,90 @@ def _verify_manifest_checksums(
         digest = hashlib.sha256(data).hexdigest()
         if entry.get("sha256") != digest:
             raise RunImportError(f"Checksum mismatch for exported file: {name}")
+
+
+def _validate_sampler_extension(
+    archive: zipfile.ZipFile,
+    members: dict[str, zipfile.ZipInfo],
+    entries: dict[str, dict[str, Any]],
+) -> None:
+    sampler_entries = {name for name in entries if name.startswith("sampler/")}
+    if not sampler_entries:
+        return
+    if SAMPLER_METADATA_FILE not in sampler_entries:
+        raise RunImportError("Sampler artifact metadata missing: sampler/metadata.json")
+    metadata = _load_import_sampler_metadata(archive, members[SAMPLER_METADATA_FILE])
+    raw_artifacts = set(_sampler_raw_artifact_paths(metadata, RunImportError))
+    expected = raw_artifacts | {SAMPLER_METADATA_FILE}
+    if sampler_entries != expected:
+        extra = sorted(sampler_entries - expected)
+        missing = sorted(expected - sampler_entries)
+        if extra:
+            raise RunImportError(f"Unexpected sampler artifact file: {extra[0]}")
+        if missing:
+            raise RunImportError(f"Sampler raw artifact missing: {missing[0]}")
+
+
+def _load_import_sampler_metadata(
+    archive: zipfile.ZipFile,
+    info: zipfile.ZipInfo,
+) -> dict[str, Any]:
+    try:
+        payload = json.loads(archive.read(info))
+    except json.JSONDecodeError as exc:
+        raise RunImportError("Invalid sampler metadata JSON") from exc
+    _validate_sampler_metadata(payload, RunImportError)
+    return payload
+
+
+def _load_sampler_metadata(
+    path: Path,
+    error_cls: type[RunImportError] | type[RunExportError],
+) -> dict[str, Any]:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise error_cls(f"Invalid sampler metadata artifact: {path}") from exc
+    _validate_sampler_metadata(payload, error_cls)
+    return payload
+
+
+def _validate_sampler_metadata(
+    payload: Any,
+    error_cls: type[RunImportError] | type[RunExportError],
+) -> None:
+    if not isinstance(payload, dict):
+        raise error_cls("sampler/metadata.json must be a JSON object")
+    missing = sorted(SAMPLER_METADATA_REQUIRED_KEYS - payload.keys())
+    if missing:
+        raise error_cls(
+            "Sampler metadata missing required keys: " + ", ".join(missing)
+        )
+    if not isinstance(payload["raw_artifacts"], list):
+        raise error_cls("Sampler metadata raw_artifacts must be a list")
+
+
+def _sampler_raw_artifact_paths(
+    metadata: dict[str, Any],
+    error_cls: type[RunImportError] | type[RunExportError],
+) -> list[str]:
+    paths: list[str] = []
+    for item in metadata["raw_artifacts"]:
+        if not isinstance(item, str):
+            raise error_cls("Sampler metadata raw_artifacts entries must be strings")
+        path = PurePosixPath(item)
+        if path.is_absolute() or any(part in {"", ".", ".."} for part in path.parts):
+            raise error_cls(f"Unsafe sampler raw artifact path: {item}")
+        if not path.parts or path.parts[0] != "sampler":
+            raise error_cls(f"Sampler raw artifact must be under sampler/: {item}")
+        if item == SAMPLER_METADATA_FILE:
+            raise error_cls(
+                "Sampler metadata cannot list metadata.json as a raw artifact"
+            )
+        paths.append(path.as_posix())
+    if len(paths) != len(set(paths)):
+        raise error_cls("Duplicate sampler raw artifacts are not allowed")
+    return paths
 
 
 def _load_import_result(

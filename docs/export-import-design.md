@@ -4,7 +4,7 @@
 
 성공 run evidence bundle인 `.edgeenv/runs/<run_id>/`와 실패 run diagnostic evidence bundle인 `.edgeenv/failed-runs/<run_id>/`를 zip으로 내보내고, 다른 workspace에서 검증 가능한 evidence로 다시 들여오기 위한 v1.1 설계 기준을 정한다.
 
-현재 구현은 successful run export/import와 failed-run export/import를 제공한다. Replace/alias import policy와 detached signatures는 future work다.
+현재 구현은 successful run export/import, optional sampler artifact export/import, failed-run export/import를 제공한다. Replace/alias import policy와 detached signatures는 future work다.
 
 ## 2. CONTENTS — 관련 파일과 기술 스택
 
@@ -16,7 +16,7 @@
 - `.edgeenv/runs/<run_id>/env.json` — captured environment evidence
 - `.edgeenv/runs/<run_id>/stdout.log` — captured benchmark stdout
 - `.edgeenv/runs/<run_id>/stderr.log` — captured benchmark stderr
-- `.edgeenv/runs/<run_id>/sampler/metadata.json` — optional future sampler metadata extension evidence
+- `.edgeenv/runs/<run_id>/sampler/metadata.json` — optional sampler metadata extension evidence
 - `.edgeenv/failed-runs/<run_id>/failure.json` — canonical failed-run diagnostic metadata
 - `.edgeenv/runs.db` — local successful-run index, not canonical export evidence
 - `inferedge_env/result/schema.py` — `edgeenv.result.v1` validation target
@@ -170,7 +170,7 @@ Import validates the manifest, checksums, byte sizes, top-level run id, and `fai
 
 Sampler metadata and raw sampler logs are optional extension evidence, not required successful-run files.
 
-Future export/import support should include these only when present:
+Export/import includes these only when present:
 
 ```text
 <run_id>/

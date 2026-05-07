@@ -128,7 +128,7 @@ Current export/import requires the six core successful-run files:
 - `stdout.log`
 - `stderr.log`
 
-Sampler artifacts should be optional extension evidence in a future portability update:
+Sampler artifacts are optional extension evidence in export/import bundles:
 
 ```text
 <run_id>/
@@ -144,7 +144,7 @@ Sampler artifacts should be optional extension evidence in a future portability 
     tegrastats.log
 ```
 
-Manifest rules for that future update:
+Manifest rules:
 
 - `sampler/metadata.json` is optional but, if present, must be checksummed.
 - Every raw file listed in `sampler/metadata.json.raw_artifacts` must appear in the manifest.

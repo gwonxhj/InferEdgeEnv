@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import zipfile
 
 import pytest
@@ -254,6 +255,98 @@ def test_export_successful_run_creates_manifest_and_checksums(
             assert entry["sha256"] == sha256_file(run_dir / name)
 
 
+def test_export_successful_run_includes_optional_sampler_artifacts(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    run_dir = _write_export_fixture(
+        tmp_path,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="run-export-sampler",
+    )
+    _write_sampler_fixture(run_dir)
+
+    archive_path = export_successful_run(
+        run_dir,
+        tmp_path / "run-export-sampler.zip",
+    )
+
+    with zipfile.ZipFile(archive_path) as archive:
+        names = sorted(archive.namelist())
+        assert names == sorted(
+            [
+                f"run-export-sampler/{name}"
+                for name in [
+                    *REQUIRED_RUN_FILES,
+                    "manifest.json",
+                    "sampler/metadata.json",
+                    "sampler/tegrastats.log",
+                ]
+            ]
+        )
+        manifest = json.loads(archive.read("run-export-sampler/manifest.json"))
+        file_entries = {entry["path"]: entry for entry in manifest["files"]}
+        assert file_entries["sampler/metadata.json"]["required"] is False
+        assert file_entries["sampler/tegrastats.log"]["required"] is False
+        assert file_entries["sampler/metadata.json"]["sha256"] == sha256_file(
+            run_dir / "sampler" / "metadata.json"
+        )
+        assert file_entries["sampler/tegrastats.log"]["sha256"] == sha256_file(
+            run_dir / "sampler" / "tegrastats.log"
+        )
+
+
+def test_export_successful_run_rejects_missing_sampler_raw_artifact(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    run_dir = _write_export_fixture(
+        tmp_path,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="run-export-sampler-missing",
+    )
+    _write_sampler_fixture(run_dir)
+    (run_dir / "sampler" / "tegrastats.log").unlink()
+
+    with pytest.raises(
+        RunExportError,
+        match="Sampler raw artifact listed in metadata is missing",
+    ):
+        export_successful_run(run_dir, tmp_path / "missing-sampler.zip")
+
+
+def test_export_successful_run_rejects_sampler_raw_symlink(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    run_dir = _write_export_fixture(
+        tmp_path,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="run-export-sampler-symlink",
+    )
+    _write_sampler_fixture(run_dir)
+    raw_log = run_dir / "sampler" / "tegrastats.log"
+    raw_log.unlink()
+    outside_log = tmp_path / "outside.log"
+    outside_log.write_text("outside\n", encoding="utf-8")
+    raw_log.symlink_to(outside_log)
+
+    with pytest.raises(RunExportError, match="must not be a symlink"):
+        export_successful_run(run_dir, tmp_path / "symlink-sampler.zip")
+
+
 def test_export_successful_run_rejects_missing_required_file(
     tmp_path,
     bench_config,
@@ -308,6 +401,110 @@ def test_import_successful_run_copies_files_after_validation(
     for name in REQUIRED_RUN_FILES:
         assert (imported_dir / name).read_bytes() == (run_dir / name).read_bytes()
     assert not (imported_dir / "manifest.json").exists()
+
+
+def test_import_successful_run_copies_optional_sampler_artifacts(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    run_dir = _write_export_fixture(
+        tmp_path,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="run-import-sampler",
+    )
+    _write_sampler_fixture(run_dir)
+    archive_path = export_successful_run(run_dir, tmp_path / "run-import-sampler.zip")
+
+    result, imported_dir = import_successful_run(
+        archive_path,
+        tmp_path / "imported-edgeenv",
+    )
+
+    assert result.run_id == "run-import-sampler"
+    assert (
+        imported_dir / "sampler" / "metadata.json"
+    ).read_bytes() == (run_dir / "sampler" / "metadata.json").read_bytes()
+    assert (
+        imported_dir / "sampler" / "tegrastats.log"
+    ).read_bytes() == (run_dir / "sampler" / "tegrastats.log").read_bytes()
+    assert not (imported_dir / "manifest.json").exists()
+
+
+def test_import_successful_run_rejects_sampler_checksum_mismatch(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    run_dir = _write_export_fixture(
+        tmp_path,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="run-import-sampler-checksum",
+    )
+    _write_sampler_fixture(run_dir)
+    archive_path = export_successful_run(
+        run_dir,
+        tmp_path / "run-import-sampler-checksum.zip",
+    )
+    tampered = tmp_path / "sampler-tampered.zip"
+    with zipfile.ZipFile(archive_path) as source, zipfile.ZipFile(tampered, "w") as dest:
+        for info in source.infolist():
+            data = source.read(info)
+            if info.filename == "run-import-sampler-checksum/sampler/tegrastats.log":
+                data = b"x" + data[1:]
+            dest.writestr(info, data)
+
+    with pytest.raises(RunImportError, match="Checksum mismatch"):
+        import_successful_run(tampered, tmp_path / "imported-edgeenv")
+    assert not (tmp_path / "imported-edgeenv").exists()
+
+
+def test_import_successful_run_rejects_sampler_raw_without_metadata(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    run_dir = _write_export_fixture(
+        tmp_path,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="run-import-sampler-no-metadata",
+    )
+    archive_path = export_successful_run(run_dir, tmp_path / "base.zip")
+    broken = tmp_path / "sampler-no-metadata.zip"
+    with zipfile.ZipFile(archive_path) as source, zipfile.ZipFile(broken, "w") as dest:
+        manifest = json.loads(
+            source.read("run-import-sampler-no-metadata/manifest.json")
+        )
+        raw_data = b"RAM 100/4096MB\n"
+        manifest["files"].append(
+            {
+                "path": "sampler/tegrastats.log",
+                "required": False,
+                "sha256": hashlib.sha256(raw_data).hexdigest(),
+                "bytes": len(raw_data),
+            }
+        )
+        for info in source.infolist():
+            if info.filename == "run-import-sampler-no-metadata/manifest.json":
+                dest.writestr(
+                    info,
+                    json.dumps(manifest, indent=2, sort_keys=True),
+                )
+            else:
+                dest.writestr(info, source.read(info))
+        dest.writestr("run-import-sampler-no-metadata/sampler/tegrastats.log", raw_data)
+
+    with pytest.raises(RunImportError, match="Sampler artifact metadata missing"):
+        import_successful_run(broken, tmp_path / "imported-edgeenv")
 
 
 def test_import_successful_run_rejects_checksum_mismatch(
@@ -554,6 +751,20 @@ def _write_failed_run_fixture(
         run_id=run_id,
         env={"python_version": "test"},
     )
+
+
+def _write_sampler_fixture(run_dir) -> None:
+    sampler_dir = run_dir / "sampler"
+    sampler_dir.mkdir(parents=True)
+    raw_log = sampler_dir / "tegrastats.log"
+    raw_log.write_text("RAM 100/4096MB VDD_IN 4000mW/3900mW\n", encoding="utf-8")
+    summary = SamplerSummary(
+        resource_metrics=ResourceMetrics(memory_peak_mb=100.0),
+        metadata=_sampler_metadata(raw_artifacts=["sampler/tegrastats.log"]),
+        raw_artifacts=[raw_log],
+        warnings=[],
+    )
+    write_sampler_artifacts(run_dir, summary)
 
 
 def _sampler_metadata(raw_artifacts: list[str]) -> dict:
