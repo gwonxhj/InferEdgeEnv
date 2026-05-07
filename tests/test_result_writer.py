@@ -1,9 +1,19 @@
 from __future__ import annotations
 
 import json
+import zipfile
 
+import pytest
+
+from inferedge_env.result.exporter import (
+    REQUIRED_RUN_FILES,
+    RunExportError,
+    _safe_archive_path,
+    export_successful_run,
+)
 from inferedge_env.result.schema import ResourceMetrics
 from inferedge_env.result.writer import FailedRunArtifactWriter, ResultArtifactWriter, load_result
+from inferedge_env.utils.hashing import sha256_file
 from inferedge_env.runners.fake import FakeRunner
 from helpers import make_result
 
@@ -104,3 +114,76 @@ def test_failed_run_artifact_files_created(
     assert payload["run_id"] == "run-failed"
     assert payload["return_code"] == 7
     assert payload["error_type"] == "LocalRunnerError"
+
+
+def test_export_successful_run_creates_manifest_and_checksums(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    bench_path, profile_path = config_files
+    runner_result = FakeRunner().run(bench_config, target_profile)
+    result = make_result(bench_config, target_profile, run_id="run-export")
+    run_dir = ResultArtifactWriter(tmp_path / ".edgeenv").write(
+        result,
+        bench_path,
+        profile_path,
+        runner_result.stdout,
+        runner_result.stderr,
+    )
+    output_path = tmp_path / "exports" / "edgeenv-run-export.zip"
+
+    archive_path = export_successful_run(run_dir, output_path)
+
+    assert archive_path == output_path
+    assert archive_path.is_file()
+    with zipfile.ZipFile(archive_path) as archive:
+        names = sorted(archive.namelist())
+        assert names == sorted(
+            [f"run-export/{name}" for name in [*REQUIRED_RUN_FILES, "manifest.json"]]
+        )
+        manifest = json.loads(archive.read("run-export/manifest.json"))
+        assert manifest["schema_version"] == "edgeenv.export.v1"
+        assert manifest["bundle_type"] == "successful-run"
+        assert manifest["run_id"] == "run-export"
+        assert manifest["source_result_schema_version"] == "edgeenv.result.v1"
+        assert manifest["exported_by"]["tool"] == "edgeenv"
+        file_entries = {entry["path"]: entry for entry in manifest["files"]}
+        assert sorted(file_entries) == sorted(REQUIRED_RUN_FILES)
+        for name in REQUIRED_RUN_FILES:
+            entry = file_entries[name]
+            data = archive.read(f"run-export/{name}")
+            assert entry["required"] is True
+            assert entry["bytes"] == len(data)
+            assert entry["sha256"] == sha256_file(run_dir / name)
+
+
+def test_export_successful_run_rejects_missing_required_file(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    bench_path, profile_path = config_files
+    runner_result = FakeRunner().run(bench_config, target_profile)
+    result = make_result(bench_config, target_profile, run_id="run-export-missing")
+    run_dir = ResultArtifactWriter(tmp_path / ".edgeenv").write(
+        result,
+        bench_path,
+        profile_path,
+        runner_result.stdout,
+        runner_result.stderr,
+    )
+    (run_dir / "stdout.log").unlink()
+
+    with pytest.raises(RunExportError, match="Required run artifact file missing"):
+        export_successful_run(run_dir, tmp_path / "missing.zip")
+
+
+def test_export_archive_path_safety_rejects_traversal():
+    assert _safe_archive_path("run-safe", "result.json") == "run-safe/result.json"
+    with pytest.raises(RunExportError, match="Unsafe export archive path"):
+        _safe_archive_path("run-safe", "../result.json")
+    with pytest.raises(RunExportError, match="Unsafe export archive path component"):
+        _safe_archive_path("../run-safe", "result.json")

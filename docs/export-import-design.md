@@ -4,7 +4,7 @@
 
 성공 run evidence bundle인 `.edgeenv/runs/<run_id>/`를 zip으로 내보내고, 다른 workspace에서 검증 가능한 evidence로 다시 들여오기 위한 v1.1 설계 기준을 정한다.
 
-이 문서는 구현이 아니라 contract design이다. 현재 MVP는 export/import command를 제공하지 않는다.
+현재 구현은 successful run export만 제공한다. Import command는 아직 future work이며, 이 문서의 import validation order를 구현 기준으로 삼는다.
 
 ## 2. CONTENTS — 관련 파일과 기술 스택
 
@@ -18,6 +18,7 @@
 - `.edgeenv/runs/<run_id>/stderr.log` — captured benchmark stderr
 - `.edgeenv/runs.db` — local successful-run index, not canonical export evidence
 - `inferedge_env/result/schema.py` — `edgeenv.result.v1` validation target
+- `inferedge_env/result/exporter.py` — successful run zip export and manifest/checksum generation
 - `inferedge_env/registry/db.py` — future import registry insertion/rebuild path
 
 기술 스택: zip archive, JSON manifest, SHA-256 checksums, existing Pydantic result schema, local filesystem
@@ -27,6 +28,10 @@
 ### Export scope
 
 Export one successful run at a time:
+
+```bash
+edgeenv runs export <run_id> --output edgeenv-run-<run_id>.zip
+```
 
 ```text
 .edgeenv/runs/<run_id>/

@@ -53,6 +53,7 @@ edgeenv bench run --target examples/profiles/local.yaml --config examples/benche
 ```bash
 edgeenv runs list
 edgeenv runs show <run_id>
+edgeenv runs export <run_id> --output edgeenv-run-<run_id>.zip
 ```
 
 5. Compare two runs:
@@ -73,7 +74,7 @@ edgeenv report compare <run_id_a> <run_id_b>
 - Success artifacts under `.edgeenv/runs/<run_id>/`
 - Failed local run artifacts under `.edgeenv/failed-runs/<run_id>/`
 - SQLite local registry for successful runs
-- `runs list`, `runs show`, `failed-runs list`, `failed-runs show`, and `report compare`
+- `runs list`, `runs show`, `runs export`, `failed-runs list`, `failed-runs show`, and `report compare`
 - Same-condition, conditional, and non-comparable judgement
 - Deterministic examples and pytest coverage
 - Editable install and `edgeenv` console script smoke path
@@ -88,7 +89,7 @@ edgeenv report compare <run_id_a> <run_id_b>
 - Single-score ranking across models
 - Registry indexing/querying for resource metrics columns
 - Platform-native sampler adapters beyond wrapper command examples
-- Export/import commands for evidence bundle portability
+- Import commands for evidence bundle portability
 
 ## 4. HOW NOT — 피해야 할 함정
 
