@@ -42,6 +42,7 @@ app = typer.Typer(help="EdgeEnv benchmark runner and local result registry.")
 profile_app = typer.Typer(help="Target profile commands.")
 bench_app = typer.Typer(help="Benchmark config and run commands.")
 runs_app = typer.Typer(help="Local run registry commands.")
+runs_sampler_app = typer.Typer(help="Sampler metadata inspection commands.")
 failed_runs_app = typer.Typer(help="Failed local run artifact commands.")
 report_app = typer.Typer(help="Report and comparison commands.")
 console = Console()
@@ -49,6 +50,7 @@ console = Console()
 app.add_typer(profile_app, name="profile")
 app.add_typer(bench_app, name="bench")
 app.add_typer(runs_app, name="runs")
+runs_app.add_typer(runs_sampler_app, name="sampler")
 app.add_typer(failed_runs_app, name="failed-runs")
 app.add_typer(report_app, name="report")
 
@@ -209,6 +211,24 @@ def show_run(
         json.dumps(_show_payload(record), indent=2, sort_keys=True),
         soft_wrap=True,
     )
+
+
+@runs_sampler_app.command("show")
+def show_run_sampler(
+    run_id: str,
+    edgeenv_root: Path = typer.Option(
+        Path(".edgeenv"),
+        "--edgeenv-root",
+        help="Directory for EdgeEnv artifacts and registry.",
+    ),
+) -> None:
+    """Show sampler metadata for a successful run."""
+    try:
+        record = RunRegistry(edgeenv_root / "runs.db").show(run_id)
+        payload = _sampler_show_payload(record)
+    except (KeyError, OSError, ValueError) as exc:
+        _fail(str(exc))
+    console.print(json.dumps(payload, indent=2, sort_keys=True), soft_wrap=True)
 
 
 @runs_app.command("export")
@@ -432,6 +452,43 @@ def _show_payload(record: RegistryRecord) -> dict:
             exclude_none=True,
         )
     return payload
+
+
+def _sampler_show_payload(record: RegistryRecord) -> dict[str, Any]:
+    run_dir = Path(record.result_path).parent
+    metadata_path = run_dir / "sampler" / "metadata.json"
+    if not metadata_path.is_file():
+        raise ValueError(f"Sampler metadata not found for run: {record.run_id}")
+    try:
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Invalid sampler metadata JSON: {metadata_path}") from exc
+    if not isinstance(metadata, dict):
+        raise ValueError(f"Sampler metadata must be a JSON object: {metadata_path}")
+    raw_artifacts = metadata.get("raw_artifacts", [])
+    if not isinstance(raw_artifacts, list):
+        raise ValueError(
+            f"Sampler metadata raw_artifacts must be a list: {metadata_path}"
+        )
+    files = {
+        "metadata": str(metadata_path),
+        "raw_artifacts": {
+            str(path): str(run_dir / str(path))
+            for path in raw_artifacts
+            if isinstance(path, str)
+        },
+    }
+    return {
+        "run_id": record.run_id,
+        "artifact_path": str(run_dir),
+        "sampler_metadata_path": str(metadata_path),
+        "sampler_name": metadata.get("sampler_name"),
+        "sample_count": metadata.get("sample_count"),
+        "warnings": metadata.get("warnings", []),
+        "raw_artifacts": raw_artifacts,
+        "files": files,
+        "metadata": metadata,
+    }
 
 
 def _load_failed_run_summaries(edgeenv_root: Path) -> list[dict[str, Any]]:

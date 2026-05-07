@@ -206,7 +206,7 @@ Recommended next work should stay in coherent bundles rather than tiny one-off P
 
 Good next bundles:
 
-- **Sampler inspection UX**: add a focused `runs sampler show <run_id>` command or equivalent documentation so users can inspect `sampler/metadata.json` without opening artifact files manually.
+- **Jetson sampled-run rehearsal**: run a small sampled local benchmark on the Jetson path and record the native `runs sampler show <run_id>` output so parser, artifact, and inspection UX are validated together.
 - **Registry resource query migration**: implement only after query/index use cases are clear, following [Registry Resource Query Design](registry-resource-query-design.md).
 
 Avoid next bundles that jump straight into:
