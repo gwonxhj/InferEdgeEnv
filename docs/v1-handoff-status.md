@@ -205,7 +205,7 @@ Recommended next work should stay in coherent bundles rather than tiny one-off P
 
 Good next bundles:
 
-- **Sampler metadata export/import extension**: include optional `sampler/metadata.json` and listed raw sampler artifacts in successful-run zip bundles with manifest checksum/path-safety validation.
+- **LocalRunner sampler wiring design**: decide how sampler adapter lifecycle is enabled from target/config without changing the existing explicit stdout metrics contract.
 - **Registry resource query migration**: implement only after query/index use cases are clear, following [Registry Resource Query Design](registry-resource-query-design.md).
 
 Avoid next bundles that jump straight into:
