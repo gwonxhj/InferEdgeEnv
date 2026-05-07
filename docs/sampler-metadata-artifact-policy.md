@@ -156,12 +156,16 @@ Manifest rules:
 
 `runs show` should keep showing normalized `resource_metrics` from `result.json`.
 
-Future CLI additions can expose metadata explicitly:
+Sampler metadata inspection is explicit:
 
 ```bash
 edgeenv runs show <run_id>
 edgeenv runs sampler show <run_id>
 ```
+
+`runs sampler show <run_id>` reads `.edgeenv/runs/<run_id>/sampler/metadata.json`
+through the registry run path and prints sampler name, sample count, warnings,
+raw artifact references, resolved file paths, and the full metadata object.
 
 Do not add verbose sampler metadata to default `runs list`.
 

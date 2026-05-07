@@ -192,7 +192,7 @@ Resource metrics: omitted
 Sampler metadata: stored with warnings (.edgeenv/runs/<run_id>/sampler/metadata.json)
 ```
 
-Do not add sampler metadata to `runs list`. Future detailed inspection can use:
+Do not add sampler metadata to `runs list`. Detailed inspection uses:
 
 ```bash
 edgeenv runs sampler show <run_id>
@@ -243,3 +243,4 @@ Target-profile sampler enablement keeps platform concerns near the target, leave
 - [x] Add tests for recoverable sampler failure preserving successful primary run.
 - [x] Add tests for required sampler failure creating failed-run artifact.
 - [x] Add tests for both resource metrics sources choosing sampler source.
+- [x] Add explicit sampler metadata inspection through `runs sampler show <run_id>`.
