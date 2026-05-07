@@ -15,6 +15,7 @@
 - `docs/resource-metrics-design.md` — optional `ResourceMetrics` schema and policy
 - `docs/sampler-failure-policy.md` — sampler failure가 benchmark success/failure에 미치는 영향
 - `docs/local-runner-design.md` — `LocalRunner`는 explicit stdout contract만 처리한다는 기준
+- `docs/local-runner-sampler-wiring-design.md` — future LocalRunner sampler lifecycle enablement and precedence policy
 - `docs/sampler-metadata-artifact-policy.md` — sampler metadata and raw artifact storage decision
 - `inferedge_env/result/schema.py` — current `ResourceMetrics`
 - future `inferedge_env/samplers/` — adapter interfaces and implementations
@@ -273,9 +274,10 @@ This should remain optional and target-aware. Existing configs without `sampler`
 - **Jetson Tegrastats Wrapper Guide**: provides the first proven sampler lifecycle and field mapping.
 - **Resource Metrics Design**: normalized resource metrics remain optional evidence.
 - **Sampler Metadata Artifact Policy**: sampler metadata belongs under `sampler/metadata.json`.
+- **LocalRunner Sampler Wiring Design**: defines target-profile enablement, resource metrics precedence, and artifact timing.
 - **Sampler Failure Policy**: failure taxonomy maps to preserve/omit/fail behavior.
 - **Local Runner Design**: adapter work must not blur local command responsibility.
-- **Export/Import Design**: sampler raw artifacts need a future portability update before becoming export evidence.
+- **Export/Import Design**: sampler raw artifacts are portable optional evidence when present.
 - **Registry Resource Query Design**: sampler metadata and resource values remain artifact-first until query use cases are clear.
 
 ## 6. WHY — 배경 판단
@@ -296,4 +298,5 @@ This design keeps the first adapter API small: start, stop, summarize. It also m
 - [ ] Keep `examples/scripts/run_with_tegrastats.py` as the user-facing wrapper even after adapter code lands.
 - [x] Decide whether sampler metadata first lives in `env.json`, `RunResult.env["sampler"]`, or `.edgeenv/runs/<run_id>/sampler/metadata.json`.
 - [x] Add tests for unavailable tool, no samples, parser success, process summary, and required sampler failure.
-- [ ] Update export/import design if sampler raw artifacts become part of portable evidence bundles.
+- [x] Update export/import design if sampler raw artifacts become part of portable evidence bundles.
+- [x] Add LocalRunner sampler wiring design before implementation.
