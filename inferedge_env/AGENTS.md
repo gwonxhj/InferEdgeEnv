@@ -12,6 +12,7 @@
 - `inferedge_env/result/` — result schema와 artifact writer
 - `inferedge_env/registry/` — SQLite run registry
 - `inferedge_env/compare/` — comparability checker
+- `inferedge_env/report/` — read-only Markdown report generation
 - `inferedge_env/utils/` — hashing, system info helper
 
 기술 스택: Python, Typer, Rich, Pydantic, SQLite

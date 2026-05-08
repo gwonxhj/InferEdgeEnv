@@ -15,6 +15,12 @@ from inferedge_env.config.bench_config import load_benchmark_config
 from inferedge_env.config.target_profile import TargetProfile, load_target_profile
 from inferedge_env.registry.db import RunRegistry
 from inferedge_env.registry.models import RegistryRecord
+from inferedge_env.report.bundle_summary import (
+    BundleSummaryError,
+    BundleSummaryOptions,
+    parse_bundle_scenario,
+    render_bundle_summary_markdown,
+)
 from inferedge_env.result.exporter import (
     RunExportError,
     RunImportError,
@@ -430,6 +436,57 @@ def compare_runs(
         console.print(f"- {reason}")
     if report.comparable == "Yes" and report.mode == "same-condition":
         _print_same_condition_metric_delta(result_a, result_b)
+
+
+@report_app.command("bundle-summary")
+def bundle_summary(
+    scenarios: list[str] = typer.Option(
+        ...,
+        "--scenario",
+        help="Scenario in the form <label>:<run_id_a>:<run_id_b>.",
+    ),
+    edgeenv_root: Path = typer.Option(
+        Path(".edgeenv"),
+        "--edgeenv-root",
+        help="Directory for EdgeEnv artifacts and registry.",
+    ),
+    output_path: Path | None = typer.Option(
+        None,
+        "--output",
+        "-o",
+        help="Optional path to write the Markdown report.",
+    ),
+    source_device: str | None = typer.Option(
+        None,
+        "--source-device",
+        help="Optional source device name for the Markdown scope section.",
+    ),
+    note: list[str] | None = typer.Option(
+        None,
+        "--note",
+        help="Optional note line to include in the Markdown report.",
+    ),
+) -> None:
+    """Generate a read-only Markdown handoff summary for imported run pairs."""
+    try:
+        parsed = [parse_bundle_scenario(value) for value in scenarios]
+        markdown = render_bundle_summary_markdown(
+            parsed,
+            edgeenv_root=edgeenv_root,
+            options=BundleSummaryOptions(
+                source_device=source_device,
+                notes=tuple(note or ()),
+            ),
+        )
+        if output_path is not None:
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            output_path.write_text(markdown, encoding="utf-8")
+            console.print("[bold green]Bundle summary written[/bold green]")
+            console.print(f"Report: {output_path}", soft_wrap=True)
+            return
+    except (BundleSummaryError, OSError) as exc:
+        _fail(str(exc))
+    console.print(markdown, markup=False, soft_wrap=True)
 
 
 def _runner_for_target(target: TargetProfile) -> FakeRunner | LocalRunner:

@@ -140,7 +140,7 @@ Start here:
 - [Jetson Sampled Target Comparison Rehearsal](docs/jetson-sampled-target-comparison-rehearsal.md) — sampled Jetson target difference proving target-comparison suppresses metric deltas
 - [Jetson Sampled Evidence Bundle Handoff](docs/jetson-sampled-evidence-bundle-handoff.md) — export/import sampled bundles proving imported compare keeps the same interpretation rules
 - [Jetson Sampled Bundle Portability Review](docs/jetson-sampled-bundle-portability-review.md) — short human-readable handoff report format for sampled evidence bundles
-- [Bundle Report Generation Design](docs/bundle-report-generation-design.md) — future read-only Markdown summary generation from imported artifacts and compare output
+- [Bundle Report Generation Design](docs/bundle-report-generation-design.md) — read-only Markdown summary generation from imported artifacts and compare output
 - [Sampler Adapter API Design](docs/sampler-adapter-api-design.md) — future sampler adapter lifecycle and metadata schema
 - [LocalRunner Sampler Wiring Design](docs/local-runner-sampler-wiring-design.md) — how LocalRunner should enable sampler lifecycle without breaking stdout metrics
 - [Sampler Metadata Artifact Policy](docs/sampler-metadata-artifact-policy.md) — where sampler metadata/raw artifacts belong
@@ -272,6 +272,8 @@ Use `edgeenv runs export <run_id> --output edgeenv-run-<run_id>.zip` to create a
 
 Use `edgeenv failed-runs export <run_id> --output edgeenv-failed-run-<run_id>.zip` and `edgeenv failed-runs import edgeenv-failed-run-<run_id>.zip` for portable failed-run diagnostic evidence. Failed-run import copies files into `.edgeenv/failed-runs/` and does not update `runs.db`. The artifact-first zip contract is described in [Export/Import Design](docs/export-import-design.md).
 
+Use `edgeenv report bundle-summary --scenario <label>:<run_id_a>:<run_id_b>` to generate a read-only Markdown handoff summary from imported successful runs and normal compare judgement. The summary is for human review only; it does not replace `result.json`, sampler artifacts, manifests, or `report compare`.
+
 ## Relation To InferEdge And EdgeBench
 
 InferEdge is a broader validation evidence workflow around build provenance, runtime execution, evaluation, comparison, optional diagnosis, and deployment decision reports.
@@ -299,6 +301,7 @@ Included in MVP v1:
 - `failed-runs list`, `failed-runs show`, `failed-runs export`, and `failed-runs import`
 - Jetson `tegrastats` wrapper example for optional resource metrics
 - `report compare` comparability checker
+- `report bundle-summary` read-only Markdown handoff summary
 - pytest tests
 
 Non-goals:
