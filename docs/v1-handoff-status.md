@@ -213,6 +213,7 @@ Notes:
 - `scripts/smoke_jetson_sampled_bundle_handoff.sh` verifies sampled successful-run bundle export/import and imported compare outcomes for same-condition, runtime-conditional, and target-conditional paths.
 - [Jetson Sampled Bundle Portability Review](jetson-sampled-bundle-portability-review.md) records the decision to use a short Markdown handoff report for human review while keeping manifests/result artifacts canonical.
 - [Bundle Report Generation Design](bundle-report-generation-design.md) defines and records the read-only `report bundle-summary` generator contract.
+- [Jetson Bundle Summary Rehearsal](jetson-bundle-summary-rehearsal.md) records generated Markdown output from real imported Jetson sampled bundle runs.
 - Tests should use `tmp_path` for `.edgeenv` data and must not pollute the repo root registry.
 - GitHub Actions repeats the core readiness contract on Python 3.10 and 3.11.
 - Before tagging a release, rerun or review [EdgeEnv MVP v1 Release Rehearsal](v1-release-rehearsal.md) and update the package version intentionally.
@@ -223,7 +224,7 @@ Recommended next work should stay in coherent bundles rather than tiny one-off P
 
 Good next bundles:
 
-- **Jetson bundle-summary rehearsal**: run `report bundle-summary` against imported Jetson sampled bundle runs and record the generated Markdown output.
+- **Bundle summary smoke automation**: extend Jetson smoke coverage only if repeated release rehearsals need one-command generated report checks.
 - **Registry resource query migration**: implement only after query/index use cases are clear, following [Registry Resource Query Design](registry-resource-query-design.md).
 
 Avoid next bundles that jump straight into:

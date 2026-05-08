@@ -25,6 +25,7 @@ Jetson sampled run evidence를 zip bundle로 export/import한 뒤에도 compare 
 - `docs/sampler-metadata-artifact-policy.md` — optional `sampler/metadata.json` and raw artifact portability rules
 - `docs/compare-workflow-guide.md` — compare output interpretation rules
 - `docs/jetson-sampled-bundle-portability-review.md` — human-readable summary format for sharing sampled evidence bundle outcomes
+- `docs/jetson-bundle-summary-rehearsal.md` — generated Markdown summary validation against imported sampled bundle runs
 
 기술 스택: Jetson Linux, `tegrastats`, EdgeEnv local runner, successful-run export/import zip, manifest SHA-256, SQLite registry rebuild, `report compare`
 
@@ -97,6 +98,7 @@ Repeat that flow for:
 - **Jetson Sampled Conditional Comparison Rehearsal**: this extends runtime/provider conditional sampled compare through export/import.
 - **Jetson Sampled Target Comparison Rehearsal**: this extends target conditional sampled compare through export/import.
 - **Jetson Sampled Bundle Portability Review**: this decides how to summarize the raw manifest and smoke output for humans without creating a new source of truth.
+- **Jetson Bundle Summary Rehearsal**: this confirms that the handoff summary can be generated from imported sampled bundle runs.
 
 ## 6. WHY — 배경 판단
 
@@ -201,3 +203,7 @@ Conclusion:
 - Imported same-condition compare retained supplemental `Metrics Delta`.
 - Imported runtime/target conditional compares suppressed `Metrics Delta`.
 - Resource and sampler evidence did not appear as compare judgement reasons.
+
+Follow-up:
+
+- [Jetson Bundle Summary Rehearsal](jetson-bundle-summary-rehearsal.md) generated the Markdown handoff summary from imported sampled bundle runs and confirmed same-condition delta presence plus conditional delta suppression.
