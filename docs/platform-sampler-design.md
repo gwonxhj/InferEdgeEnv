@@ -122,7 +122,7 @@ Sampler output은 값뿐 아니라 source를 남겨야 한다.
 - **Resource Metrics Design**: sampler output은 optional `resource_metrics` evidence로 저장한다.
 - **Local Runner Design**: local runner는 explicit stdout contract만 읽는다.
 - **LocalRunner Sampler Wiring Design**: native adapters can be enabled later without replacing the stdout contract.
-- **Registry Resource Query Design**: sampler 값은 당분간 DB column이 아니라 `result.json` artifact에 남긴다.
+- **Registry Resource Query Design**: sampler metadata는 artifact에 남기고 normalized resource 값은 rebuildable lookup index로 찾는다.
 - **Sampler Failure Policy**: sampler 실패만으로 primary benchmark result를 버리지 않는다.
 - **Comparability**: sampler 값은 direct comparability gate가 아니다.
 

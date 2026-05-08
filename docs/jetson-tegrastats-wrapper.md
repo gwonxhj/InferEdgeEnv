@@ -136,7 +136,7 @@ The wrapped benchmark command must still emit `EDGEENV_METRICS_JSON=<json>` on s
 - **Platform Sampler Design**: this is the first real platform wrapper path before adding adapter APIs.
 - **Resource Metrics Design**: parsed values remain optional `resource_metrics` evidence in `result.json`.
 - **Local Runner Design**: `LocalRunner` still only executes command and parses explicit JSON lines.
-- **Registry Resource Query Design**: resource metrics stay in artifacts, not DB columns.
+- **Registry Resource Query Design**: resource metrics stay canonical in artifacts and can be found through a rebuildable lookup index.
 - **Comparability**: resource metrics do not affect `Comparable` mode.
 
 ## 6. WHY — 배경 판단

@@ -90,7 +90,7 @@ EDGEENV_RESOURCE_METRICS_JSON={"memory_peak_mb":512.0,"power_mean_w":8.2,"source
 
 초기 구현에서는 SQLite registry column을 추가하지 않는다. `runs.db`는 성공 run의 탐색 index이고, richer evidence의 source of truth는 `.edgeenv/runs/<run_id>/result.json`이다.
 
-`runs show`에서 resource metrics를 보여줄 필요가 생기면 registry row의 `result_path`를 통해 `result.json`을 읽어 출력한다. DB migration은 별도 작업으로 남긴다.
+`runs show`는 registry row의 `result_path`를 통해 `result.json`을 읽어 출력한다. `runs resources list`는 `runs.db`의 rebuildable `resource_metric_index`를 사용해 normalized resource metrics를 찾는다. 이 index는 local lookup용이며 `result.json`을 대체하지 않는다.
 
 ### CLI display policy
 
@@ -159,7 +159,8 @@ _(아직 없음)_
 - [x] `RunnerResult.resource_metrics` optional 전달 경로 추가
 - [x] `LocalRunner`에서 `EDGEENV_RESOURCE_METRICS_JSON=` optional parser 추가
 - [x] writer가 optional resource metrics를 `result.json`에 저장
-- [x] `runs show` 출력 방식 결정: DB column을 추가하지 않고 `result_path`의 result artifact를 읽어 표시한다.
+- [x] `runs show` 출력 방식 결정: `result_path`의 result artifact를 읽어 표시한다.
+- [x] `runs resources list`를 위한 rebuildable resource metric index 추가
 - [x] `bench run` UX가 resource metrics 저장/생략 상태를 명시한다.
 - [x] pytest:
   - missing resource metrics remains valid
@@ -171,4 +172,4 @@ _(아직 없음)_
 
 - Platform-specific samplers; 기준은 [Platform Sampler Design](platform-sampler-design.md)을 따른다.
 - Sampler failure handling; 기준은 [Sampler Failure Policy](sampler-failure-policy.md)을 따른다.
-- Registry migration for querying resource metrics; 기준은 [Registry Resource Query Design](registry-resource-query-design.md)을 따른다.
+- Richer resource query/report UX; 기준은 [Registry Resource Query Design](registry-resource-query-design.md)을 따른다.

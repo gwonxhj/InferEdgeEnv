@@ -49,6 +49,7 @@ profile_app = typer.Typer(help="Target profile commands.")
 bench_app = typer.Typer(help="Benchmark config and run commands.")
 runs_app = typer.Typer(help="Local run registry commands.")
 runs_sampler_app = typer.Typer(help="Sampler metadata inspection commands.")
+runs_resources_app = typer.Typer(help="Resource metric index commands.")
 failed_runs_app = typer.Typer(help="Failed local run artifact commands.")
 report_app = typer.Typer(help="Report and comparison commands.")
 console = Console()
@@ -57,6 +58,7 @@ app.add_typer(profile_app, name="profile")
 app.add_typer(bench_app, name="bench")
 app.add_typer(runs_app, name="runs")
 runs_app.add_typer(runs_sampler_app, name="sampler")
+runs_app.add_typer(runs_resources_app, name="resources")
 app.add_typer(failed_runs_app, name="failed-runs")
 app.add_typer(report_app, name="report")
 
@@ -235,6 +237,59 @@ def show_run_sampler(
     except (KeyError, OSError, ValueError) as exc:
         _fail(str(exc))
     console.print(json.dumps(payload, indent=2, sort_keys=True), soft_wrap=True)
+
+
+@runs_resources_app.command("list")
+def list_run_resources(
+    metric: str | None = typer.Option(
+        None,
+        "--metric",
+        help="Optional resource metric name to filter by.",
+    ),
+    source: str | None = typer.Option(
+        None,
+        "--source",
+        help="Optional resource metric source to filter by.",
+    ),
+    min_value: float | None = typer.Option(
+        None,
+        "--min-value",
+        help="Optional inclusive lower bound for metric values.",
+    ),
+    max_value: float | None = typer.Option(
+        None,
+        "--max-value",
+        help="Optional inclusive upper bound for metric values.",
+    ),
+    edgeenv_root: Path = typer.Option(
+        Path(".edgeenv"),
+        "--edgeenv-root",
+        help="Directory for EdgeEnv artifacts and registry.",
+    ),
+) -> None:
+    """List indexed resource metrics for registered successful runs."""
+    try:
+        records = RunRegistry(edgeenv_root / "runs.db").list_resource_metrics(
+            metric_name=metric,
+            source=source,
+            min_value=min_value,
+            max_value=max_value,
+        )
+    except ValueError as exc:
+        _fail(str(exc))
+    console.print("[bold]EdgeEnv Resource Metrics[/bold]")
+    if not records:
+        console.print("No indexed resource metrics found.")
+        return
+    for record in records:
+        console.print(f"- Run ID: {record.run_id}", soft_wrap=True)
+        console.print(
+            "  Metric: "
+            f"{record.metric_name}={_format_float(record.metric_value)} "
+            f"{record.unit}",
+            soft_wrap=True,
+        )
+        console.print(f"  Source: {record.source or ''}", soft_wrap=True)
 
 
 @runs_app.command("export")

@@ -216,7 +216,7 @@ edgeenv runs sampler show <run_id>
 - **Sampler Failure Policy**: maps sampler failures to preserve/omit/fail behavior.
 - **Sampler Metadata Artifact Policy**: stores metadata under `sampler/metadata.json`.
 - **Export/Import Design**: sampler artifacts are portable optional evidence once written.
-- **Registry Resource Query Design**: sampler data remains artifact-first and outside DB columns.
+- **Registry Resource Query Design**: sampler metadata remains artifact-first; normalized resource values use a rebuildable lookup index.
 - **Comparability**: sampler evidence remains secondary and does not change compare mode.
 
 ## 6. WHY — 배경 판단

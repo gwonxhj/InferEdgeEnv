@@ -63,7 +63,7 @@ EDGEENV_METRICS_JSON={"latency_mean_ms":12.3,"latency_p50_ms":12.0,"latency_p95_
 EDGEENV_RESOURCE_METRICS_JSON={"memory_peak_mb":512.0,"power_mean_w":8.2,"source":"example-script"}
 ```
 
-Resource metrics는 direct comparability gate가 아니라 `result.json`에 저장되는 secondary evidence다. `runs show`는 registry DB column을 추가하지 않고 `result_path`의 `result.json`을 읽어 resource metrics가 있을 때만 표시한다.
+Resource metrics는 direct comparability gate가 아니라 `result.json`에 저장되는 secondary evidence다. `runs show`는 `result_path`의 `result.json`을 읽어 resource metrics가 있을 때만 표시한다. `runs resources list`는 `runs.db`의 rebuildable `resource_metric_index`를 사용해 normalized resource metrics를 찾는다.
 
 ### Environment variables
 
@@ -191,6 +191,7 @@ _(아직 없음)_
 - [x] optional `EDGEENV_RESOURCE_METRICS_JSON=` parser
 - [x] resource metrics result artifact persistence
 - [x] `runs show` resource metrics display from `result_path`
+- [x] `runs resources list` lookup through rebuildable resource metric index
 - [x] local resource metrics smoke example
 - [x] local command contract guide
 - [x] copyable local benchmark template script/config
@@ -213,5 +214,5 @@ _(아직 없음)_
 
 - platform-specific resource samplers; 기준은 [Platform Sampler Design](platform-sampler-design.md)을 따른다.
 - LocalRunner sampler adapter wiring; 기준은 [LocalRunner Sampler Wiring Design](local-runner-sampler-wiring-design.md)을 따른다.
-- registry migration for querying resource metrics without opening `result.json`
+- richer resource query UX only after concrete lookup/report use cases appear
 - SSH/WSL/Docker targets

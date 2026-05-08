@@ -90,6 +90,11 @@ edgeenv failed-runs import edgeenv-failed-run-<failed_run_id>.zip
 
 `runs show` reads the result artifact and includes resource evidence when the local command emits it:
 
+```bash
+edgeenv runs show <run_id>
+edgeenv runs resources list --metric memory_peak_mb
+```
+
 ```json
 {
   "resource_metrics": {
@@ -269,6 +274,8 @@ Reason:
 `runs.db` is a local SQLite index. The run directory remains the evidence bundle.
 Failed local runs are stored under `failed-runs/` for debugging and are not inserted into `runs.db`. Use `edgeenv failed-runs list` and `edgeenv failed-runs show <run_id>` to inspect failed-run artifacts safely.
 
+Resource metrics remain canonical in `result.json`. `runs.db` also keeps a rebuildable `resource_metric_index` so `edgeenv runs resources list --metric <name>` can find runs by normalized memory, power, energy, or temperature evidence without turning those values into rankings or comparability gates.
+
 Use `edgeenv runs export <run_id> --output edgeenv-run-<run_id>.zip` to create a portable successful-run evidence bundle. Use `edgeenv runs import edgeenv-run-<run_id>.zip` to validate the bundle, copy it into `.edgeenv/runs/`, and rebuild the local registry row.
 
 Use `edgeenv failed-runs export <run_id> --output edgeenv-failed-run-<run_id>.zip` and `edgeenv failed-runs import edgeenv-failed-run-<run_id>.zip` for portable failed-run diagnostic evidence. Failed-run import copies files into `.edgeenv/failed-runs/` and does not update `runs.db`. The artifact-first zip contract is described in [Export/Import Design](docs/export-import-design.md).
@@ -297,6 +304,7 @@ Included in MVP v1:
 - Result JSON and artifact directory creation
 - SQLite local registry
 - `runs list` and `runs show`
+- `runs resources list`
 - `runs export`
 - `runs import`
 - `failed-runs list`, `failed-runs show`, `failed-runs export`, and `failed-runs import`

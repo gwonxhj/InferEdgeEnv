@@ -278,7 +278,7 @@ This should remain optional and target-aware. Existing configs without `sampler`
 - **Sampler Failure Policy**: failure taxonomy maps to preserve/omit/fail behavior.
 - **Local Runner Design**: adapter work must not blur local command responsibility.
 - **Export/Import Design**: sampler raw artifacts are portable optional evidence when present.
-- **Registry Resource Query Design**: sampler metadata and resource values remain artifact-first until query use cases are clear.
+- **Registry Resource Query Design**: resource values can be looked up through a rebuildable index while sampler metadata remains artifact-first.
 
 ## 6. WHY — 배경 판단
 

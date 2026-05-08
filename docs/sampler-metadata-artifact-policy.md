@@ -186,7 +186,7 @@ Do not add verbose sampler metadata to default `runs list`.
 - **Resource Metrics Design**: `result.json.resource_metrics` remains the normalized summary.
 - **Export/Import Design**: sampler artifacts use the optional manifest extension.
 - **Jetson Sampled Evidence Bundle Handoff**: confirms optional sampler metadata and raw artifacts survive successful-run bundle export/import.
-- **Registry Resource Query Design**: DB columns are still deferred; metadata is artifact-first.
+- **Registry Resource Query Design**: resource values have a rebuildable lookup index; sampler metadata remains artifact-first.
 - **Failed Run Inspection**: failed-run artifacts stay separate and should not be compared as successful sampler evidence.
 
 ## 6. WHY — 배경 판단
