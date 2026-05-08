@@ -219,6 +219,7 @@ Notes:
 - [Jetson Sampled Bundle Portability Review](jetson-sampled-bundle-portability-review.md) records the decision to use a short Markdown handoff report for human review while keeping manifests/result artifacts canonical.
 - [Bundle Report Generation Design](bundle-report-generation-design.md) defines and records the read-only `report bundle-summary` generator contract.
 - [Jetson Bundle Summary Rehearsal](jetson-bundle-summary-rehearsal.md) records generated Markdown output from real imported Jetson sampled bundle runs.
+- [Jetson Measurement Operations Checklist](jetson-operations-checklist.md) is the post-`v0.1.2` checklist for repeated Jetson measurement sessions, evidence retention, and failure triage.
 - Tests should use `tmp_path` for `.edgeenv` data and must not pollute the repo root registry.
 - GitHub Actions repeats the core readiness contract on Python 3.10 and 3.11.
 - Before tagging a release, rerun or review [EdgeEnv MVP v1 Release Rehearsal](v1-release-rehearsal.md) and update the package version intentionally.
@@ -229,6 +230,7 @@ Recommended next work should stay in coherent bundles rather than tiny one-off P
 
 Good next bundles:
 
+- **Jetson operations rehearsal refresh**: update the operations checklist when repeated hardware runs reveal a new preflight check, artifact naming convention, or triage step.
 - **Resource query UX refinement**: only if repeated use shows a need for JSON output, source summaries, or richer filters.
 - **Release rehearsal refresh**: rerun the v1 user-flow rehearsal when the next code feature changes CLI behavior or artifact layout.
 
