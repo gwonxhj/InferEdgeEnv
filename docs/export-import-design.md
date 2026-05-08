@@ -22,6 +22,7 @@
 - `inferedge_env/result/schema.py` — `edgeenv.result.v1` validation target
 - `inferedge_env/result/exporter.py` — successful/failed run zip export/import, manifest/checksum generation, safe import validation
 - `inferedge_env/registry/db.py` — import registry insertion/rebuild path
+- `scripts/smoke_jetson_sampled_bundle_handoff.sh` — sampled Jetson same/runtime/target evidence bundle portability smoke
 
 기술 스택: zip archive, JSON manifest, SHA-256 checksums, existing Pydantic result schema, local filesystem
 
@@ -189,6 +190,8 @@ Rules:
 
 Detailed storage policy is defined in [Sampler Metadata Artifact Policy](sampler-metadata-artifact-policy.md).
 
+For real sampled Jetson evidence, [Jetson Sampled Evidence Bundle Handoff](jetson-sampled-evidence-bundle-handoff.md) exports and imports same-condition, runtime-conditional, and target-conditional run bundles, then compares the imported runs to confirm that bundle portability does not change comparability judgement.
+
 ## 4. HOW NOT — 피해야 할 함정
 
 - Do not export `runs.db` as the source of truth.
@@ -206,6 +209,7 @@ Detailed storage policy is defined in [Sampler Metadata Artifact Policy](sampler
 - **Result schema**: `result.json` remains the canonical successful-run data.
 - **Registry**: `runs.db` remains a rebuildable local index.
 - **Compare Workflow**: imported runs can be compared only after normal comparability judgement.
+- **Jetson Sampled Evidence Bundle Handoff**: validates imported sampled bundles against same-condition, runtime-conditional, and target-conditional compare paths.
 - **Failed Run Inspection**: failed-run artifacts stay diagnostic and portable, but out of the successful-run registry/compare path.
 - **Local Command Contract**: stdout/stderr/config/target/env files preserve evidence for later review.
 - **Sampler Metadata Artifact Policy**: sampler metadata stays in optional `sampler/metadata.json` extension evidence.

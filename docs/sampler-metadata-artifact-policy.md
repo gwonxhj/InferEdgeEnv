@@ -16,6 +16,7 @@ future sampler adapter가 만든 metadata와 raw sampler output을 성공 run ar
 - `inferedge_env/samplers/jetson_tegrastats.py` — first adapter metadata/raw artifact producer
 - `docs/sampler-adapter-api-design.md` — adapter API and metadata schema
 - `docs/export-import-design.md` — portable evidence bundle contract
+- `docs/jetson-sampled-evidence-bundle-handoff.md` — real sampled Jetson export/import validation record
 - `docs/resource-metrics-design.md` — optional resource metrics policy
 
 기술 스택: JSON artifact, local filesystem, export/import manifest checksums
@@ -183,7 +184,8 @@ Do not add verbose sampler metadata to default `runs list`.
 
 - **Sampler Adapter API Design**: `SamplerSummary.metadata` maps directly to `sampler/metadata.json`.
 - **Resource Metrics Design**: `result.json.resource_metrics` remains the normalized summary.
-- **Export/Import Design**: sampler artifacts require a future optional manifest extension.
+- **Export/Import Design**: sampler artifacts use the optional manifest extension.
+- **Jetson Sampled Evidence Bundle Handoff**: confirms optional sampler metadata and raw artifacts survive successful-run bundle export/import.
 - **Registry Resource Query Design**: DB columns are still deferred; metadata is artifact-first.
 - **Failed Run Inspection**: failed-run artifacts stay separate and should not be compared as successful sampler evidence.
 
