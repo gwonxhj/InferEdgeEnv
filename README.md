@@ -134,6 +134,7 @@ Start here:
 - [Local Real Benchmark Example Guide](docs/local-real-benchmark-example.md) — how to wrap a user-owned runtime command
 - [Jetson Tegrastats Wrapper Guide](docs/jetson-tegrastats-wrapper.md) — how to collect Jetson `tegrastats` as optional resource evidence
 - [Jetson Sampled Run Rehearsal](docs/jetson-sampled-run-rehearsal.md) — real Jetson sampler adapter run, inspection UX, and export/import validation
+- [Jetson Environment Setup Hardening](docs/jetson-env-setup-hardening.md) — source snapshot + conda/PYTHONPATH smoke for repeated Jetson validation
 - [Sampler Adapter API Design](docs/sampler-adapter-api-design.md) — future sampler adapter lifecycle and metadata schema
 - [LocalRunner Sampler Wiring Design](docs/local-runner-sampler-wiring-design.md) — how LocalRunner should enable sampler lifecycle without breaking stdout metrics
 - [Sampler Metadata Artifact Policy](docs/sampler-metadata-artifact-policy.md) — where sampler metadata/raw artifacts belong

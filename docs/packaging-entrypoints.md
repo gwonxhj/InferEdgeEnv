@@ -20,6 +20,7 @@ edgeenv doctor
 - `inferedge_env/__init__.py` — package version
 - `inferedge_env/cli.py` — Typer CLI entrypoint
 - `scripts/smoke_entrypoints.sh` — install/module/console entrypoint smoke
+- `scripts/smoke_jetson_source_env.sh` — Jetson source snapshot + `PYTHONPATH` sampled-run smoke
 - `tests/test_entrypoints.py` — package metadata and entrypoint regression tests
 - `.github/workflows/readiness.yml` — PR/main automation for entrypoint smoke and pytest
 
@@ -76,12 +77,26 @@ python -m pytest -q
 
 The GitHub Actions readiness workflow repeats the same entrypoint contract on Python 3.10 and 3.11.
 
+### Jetson source snapshot smoke
+
+When validating a copied source snapshot on Jetson, prefer the dedicated smoke
+instead of assuming editable install support:
+
+```bash
+scripts/smoke_jetson_source_env.sh --python /home/risenano01/miniconda3/envs/yolo_env/bin/python --keep-artifacts
+```
+
+This script sets `PYTHONPATH` to the repo root, verifies runtime dependencies
+and `tegrastats`, runs the sampled Jetson local example, inspects sampler
+metadata, and checks successful-run export/import preservation.
+
 ## 4. HOW NOT — 피해야 할 함정
 
 - README에서 `edgeenv doctor`를 먼저 보여주면서 `[project.scripts]`를 깨뜨리지 않는다.
 - `pyproject.toml` version과 `inferedge_env.__version__`을 따로 움직이지 않는다.
 - console script만 테스트하고 `python -m inferedge_env.cli doctor`를 놓치지 않는다.
 - install smoke가 repo root `.edgeenv`를 만들도록 하지 않는다.
+- Jetson source snapshot smoke에서 editable install을 필수로 만들지 않는다.
 - packaging readiness 작업에 Docker/WSL/SSH/cloud release path를 섞지 않는다.
 
 ## 5. WHERE — 다른 설계와의 관계
@@ -90,6 +105,7 @@ The GitHub Actions readiness workflow repeats the same entrypoint contract on Py
 - **MVP Readiness Checklist**: MVP user path의 첫 단계가 install and smoke다.
 - **CLI**: `inferedge_env.cli:main`이 console script target이다.
 - **Tests**: metadata와 entrypoint behavior를 regression contract로 고정한다.
+- **Jetson Environment Setup Hardening**: source snapshot validation uses `PYTHONPATH` plus a known-good Python environment.
 
 ## 6. WHY — 배경 판단
 
