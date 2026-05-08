@@ -16,6 +16,7 @@ Resource metrics를 SQLite registry에서 어떻게 조회할지, 그리고 `res
 - `inferedge_env/cli.py` — `runs show`가 `result.json`을 읽고, `runs resources list`가 query index를 표시
 - `docs/resource-metrics-design.md` — resource metrics contract
 - `docs/export-import-design.md` — import 시 registry row를 artifact에서 rebuild하는 portability policy
+- `docs/resource-query-rehearsal.md` — source/imported lookup behavior validation record
 
 기술 스택: SQLite, JSON artifact, Pydantic, Typer/Rich CLI
 
@@ -163,3 +164,5 @@ Validation:
 python -m pytest tests/test_registry.py tests/test_cli.py -q
 python -m inferedge_env.cli runs resources list --help
 ```
+
+See [Resource Query Rehearsal](resource-query-rehearsal.md) for the local source/imported registry flow that confirms lookup semantics survive export/import.

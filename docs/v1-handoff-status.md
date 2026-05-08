@@ -91,6 +91,7 @@ Related docs:
 - [Sampler Metadata Artifact Policy](sampler-metadata-artifact-policy.md)
 - [Jetson Tegrastats Wrapper Guide](jetson-tegrastats-wrapper.md)
 - [Registry Resource Query Design](registry-resource-query-design.md)
+- [Resource Query Rehearsal](resource-query-rehearsal.md)
 
 ### Failed-run inspection workflow
 
@@ -227,7 +228,7 @@ Recommended next work should stay in coherent bundles rather than tiny one-off P
 
 Good next bundles:
 
-- **Resource query rehearsal**: create local and imported resource-metric runs, then document `runs resources list` lookup behavior and non-ranking boundaries.
+- **Resource query UX refinement**: only if repeated use shows a need for JSON output, source summaries, or richer filters.
 - **Bundle summary smoke automation**: extend Jetson smoke coverage only if repeated release rehearsals need one-command generated report checks.
 
 Avoid next bundles that jump straight into:

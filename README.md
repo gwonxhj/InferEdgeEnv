@@ -150,6 +150,7 @@ Start here:
 - [Sampler Adapter API Design](docs/sampler-adapter-api-design.md) — future sampler adapter lifecycle and metadata schema
 - [LocalRunner Sampler Wiring Design](docs/local-runner-sampler-wiring-design.md) — how LocalRunner should enable sampler lifecycle without breaking stdout metrics
 - [Sampler Metadata Artifact Policy](docs/sampler-metadata-artifact-policy.md) — where sampler metadata/raw artifacts belong
+- [Resource Query Rehearsal](docs/resource-query-rehearsal.md) — local and imported registry lookup proof for `runs resources list`
 - [Compare Workflow Guide](docs/compare-workflow-guide.md) — how to create two runs and judge comparability
 - [Export/Import Design](docs/export-import-design.md) — proposed portable evidence bundle contract
 
@@ -163,6 +164,7 @@ Design references:
 - [LocalRunner Sampler Wiring Design](docs/local-runner-sampler-wiring-design.md)
 - [Sampler Metadata Artifact Policy](docs/sampler-metadata-artifact-policy.md)
 - [Registry Resource Query Design](docs/registry-resource-query-design.md)
+- [Resource Query Rehearsal](docs/resource-query-rehearsal.md)
 
 ## Benchmark Config Example
 
