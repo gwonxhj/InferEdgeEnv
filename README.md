@@ -2,6 +2,29 @@
 
 EdgeEnv is a config-driven Edge AI inference benchmark runner, local result registry, and comparability checker.
 
+## Start Here for v0.1.2
+
+`v0.1.2` is the current MVP v1 baseline. Start with a deterministic fake run, then connect a local command, then compare only after EdgeEnv has checked whether the two runs are comparable.
+
+```bash
+python -m pip install -e ".[dev]"
+edgeenv doctor
+edgeenv bench run --target examples/profiles/local_fake.yaml --config examples/benches/yolov8n_fire.yaml
+edgeenv runs list
+```
+
+What is already validated:
+
+- local fake/local benchmark recording, artifacts, registry lookup, export/import, and compare
+- optional resource metrics and read-only bundle summary reports
+- Jetson `tegrastats` sampled evidence through local execution on the Jetson shell
+
+Useful next reads:
+
+- [EdgeEnv v0.1.2 Follow-up Note](docs/release-follow-up-v0.1.2.md) — what to trust after release and where to start
+- [Local Command Contract Guide](docs/local-command-contract.md) — how to connect your own benchmark command
+- [Jetson Measurement Operations Checklist](docs/jetson-operations-checklist.md) — how to repeat Jetson sampled measurements
+
 ## Problem
 
 Edge inference results are easy to record but hard to compare honestly. A latency number is only meaningful when model identity, input shape, precision, batch size, warmup/repeat protocol, and preprocess/postprocess boundaries are known.
