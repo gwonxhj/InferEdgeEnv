@@ -12,6 +12,7 @@ Jetson에서 InferEdgeEnv source snapshot을 안정적으로 실행하기 위한
 
 - `scripts/smoke_jetson_source_env.sh` — source snapshot + existing Python environment 기반 Jetson sampled smoke
 - `scripts/smoke_jetson_sampled_compare.sh` — two sampled Jetson runs plus protocol-first compare smoke
+- `scripts/smoke_jetson_sampled_conditional_compare.sh` — provider-difference sampled Jetson runs plus Conditional compare smoke
 - `examples/profiles/jetson_nano_sampled_local.yaml` — optional `jetson-tegrastats` sampler profile
 - `examples/benches/jetson_sampled_local.yaml` — deterministic sampled benchmark config
 - `docs/jetson-sampled-run-rehearsal.md` — 실제 `nano01` sampled run 관측 기록
@@ -121,6 +122,7 @@ For compare-specific validation, run:
 
 ```bash
 scripts/smoke_jetson_sampled_compare.sh --python /home/risenano01/miniconda3/envs/yolo_env/bin/python --keep-artifacts
+scripts/smoke_jetson_sampled_conditional_compare.sh --python /home/risenano01/miniconda3/envs/yolo_env/bin/python --keep-artifacts
 ```
 
 ## 4. HOW NOT — 피해야 할 함정
