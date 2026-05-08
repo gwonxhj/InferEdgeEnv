@@ -41,7 +41,22 @@ Expected:
 - `main` is aligned with `origin/main`
 - current release baseline tag exists
 
-Do not start a new measurement run from an unknown branch unless the goal is explicitly to validate that branch.
+Do not start a new measurement run from an unknown branch unless the goal is explicitly to validate that branch. If the rehearsal itself is being documented on a feature branch, compare that branch's base commit with `origin/main` instead of running a branch-local `git pull --ff-only`.
+
+When Jetson does not already have a current source snapshot, create and transfer one from the host:
+
+```bash
+git archive --format=tar --output=/tmp/inferedgeenv-v0.1.2-ops.tar HEAD
+scp /tmp/inferedgeenv-v0.1.2-ops.tar risenano01@nano01.local:/tmp/inferedgeenv-v0.1.2-ops.tar
+```
+
+Then unpack it into a fresh Jetson source directory:
+
+```bash
+mkdir -p /tmp/InferEdgeEnv-jetson-ops-source
+tar -xf /tmp/inferedgeenv-v0.1.2-ops.tar -C /tmp/InferEdgeEnv-jetson-ops-source
+cd /tmp/InferEdgeEnv-jetson-ops-source
+```
 
 ### 2. On Jetson, confirm the environment
 
@@ -64,6 +79,14 @@ Expected:
 - kernel is Jetson Linux, for example `5.15.148-tegra aarch64`
 - `tegrastats` is available
 - selected Python can import EdgeEnv runtime dependencies
+
+For source snapshot runs, prefer:
+
+```bash
+/home/risenano01/miniconda3/envs/yolo_env/bin/python -m inferedge_env.cli doctor
+```
+
+The `edgeenv` console script may not be on PATH in a non-interactive SSH command. The smoke scripts still check the selected Python environment and use `PYTHONPATH` so the source snapshot path remains deterministic.
 
 ### 3. Use a fresh operations root
 
@@ -129,13 +152,13 @@ Expected:
 Useful commands:
 
 ```bash
-python -m inferedge_env.cli runs list --edgeenv-root "$EDGEENV_OP_ROOT/source/.edgeenv"
-python -m inferedge_env.cli runs show <run_id> --edgeenv-root "$EDGEENV_OP_ROOT/source/.edgeenv"
-python -m inferedge_env.cli runs sampler show <run_id> --edgeenv-root "$EDGEENV_OP_ROOT/source/.edgeenv"
-python -m inferedge_env.cli runs resources list --metric memory_peak_mb --edgeenv-root "$EDGEENV_OP_ROOT/source/.edgeenv"
+python -m inferedge_env.cli runs list --edgeenv-root "$EDGEENV_OP_ROOT/handoff/source/.edgeenv"
+python -m inferedge_env.cli runs show <run_id> --edgeenv-root "$EDGEENV_OP_ROOT/handoff/source/.edgeenv"
+python -m inferedge_env.cli runs sampler show <run_id> --edgeenv-root "$EDGEENV_OP_ROOT/handoff/source/.edgeenv"
+python -m inferedge_env.cli runs resources list --metric memory_peak_mb --edgeenv-root "$EDGEENV_OP_ROOT/handoff/source/.edgeenv"
 ```
 
-Replace `source/.edgeenv` with either `single/source/.edgeenv` or `handoff/source/.edgeenv`, depending on the smoke path being inspected.
+Replace `handoff/source/.edgeenv` with `single/source/.edgeenv` when inspecting the single sampled run smoke.
 
 Record these in handoff notes:
 
@@ -193,9 +216,9 @@ Use this order:
 Useful diagnostic commands:
 
 ```bash
-python -m inferedge_env.cli failed-runs list --edgeenv-root "$EDGEENV_OP_ROOT/source/.edgeenv"
-python -m inferedge_env.cli failed-runs show <failed_run_id> --edgeenv-root "$EDGEENV_OP_ROOT/source/.edgeenv" --log-chars 200
-python -m inferedge_env.cli report compare <run_id_a> <run_id_b> --edgeenv-root "$EDGEENV_OP_ROOT/imported/.edgeenv"
+python -m inferedge_env.cli failed-runs list --edgeenv-root "$EDGEENV_OP_ROOT/handoff/source/.edgeenv"
+python -m inferedge_env.cli failed-runs show <failed_run_id> --edgeenv-root "$EDGEENV_OP_ROOT/handoff/source/.edgeenv" --log-chars 200
+python -m inferedge_env.cli report compare <run_id_a> <run_id_b> --edgeenv-root "$EDGEENV_OP_ROOT/handoff/imported/.edgeenv"
 python -m inferedge_env.cli report bundle-summary --help
 ```
 
@@ -228,3 +251,99 @@ This checklist keeps the operation local-first: the Jetson executes the benchmar
 ## 7. ⚠️ LEARNED CAUTIONS — 학습된 주의사항
 
 - Repeated Jetson measurements should use a fresh operation root and record source/imported/bundle/report paths together; otherwise evidence handoff becomes hard to audit later.
+- When documenting an operations rehearsal on a feature branch, do not run the checklist's `git pull --ff-only` literally on that branch; verify the branch is based on `origin/main` instead.
+- Non-interactive Jetson SSH sessions may not expose the `edgeenv` console script on PATH; use the selected Python with `python -m inferedge_env.cli` for manual inspection commands.
+
+## Validation Record — nano01
+
+Status: passed on `nano01`.
+
+Host baseline:
+
+```text
+local branch: docs/jetson-operations-rehearsal
+base commit: d2b5d5c36ced25a8ee930877a7dcf80c04385cde
+origin/main: d2b5d5c36ced25a8ee930877a7dcf80c04385cde
+release tag present: v0.1.2
+```
+
+Jetson environment:
+
+```text
+hostname: nano01
+platform: Linux 5.15.148-tegra aarch64
+tegrastats: /usr/bin/tegrastats
+python: /home/risenano01/miniconda3/envs/yolo_env/bin/python, Python 3.10.12
+runtime dependencies: OK
+```
+
+Source snapshot:
+
+```text
+/tmp/InferEdgeEnv-jetson-ops-source.YHI7Rg
+```
+
+Operation root:
+
+```text
+/tmp/InferEdgeEnv-jetson-ops.vT1m9R
+```
+
+Observed nuance:
+
+- `python -m inferedge_env.cli doctor` passed with `Version: 0.1.2`.
+- `edgeenv doctor` was not available through the non-interactive SSH PATH before the smoke script set up the selected source snapshot environment.
+
+Single sampled run smoke:
+
+```text
+status: passed
+run_id: run-20260508-070651-4d28f5d3
+edgeenv_root: /tmp/InferEdgeEnv-jetson-ops.vT1m9R/single/source/.edgeenv
+import_root: /tmp/InferEdgeEnv-jetson-ops.vT1m9R/single/imported/.edgeenv
+resource_metrics.source: jetson-tegrastats
+sample_count: 3
+raw_artifacts: sampler/tegrastats.log
+memory_peak_mb: 885.0
+power_peak_w: 4.515
+temperature_peak_c: 42.531
+```
+
+Sampled bundle handoff smoke:
+
+```text
+status: passed
+source root: /tmp/InferEdgeEnv-jetson-ops.vT1m9R/handoff/source/.edgeenv
+imported root: /tmp/InferEdgeEnv-jetson-ops.vT1m9R/handoff/imported/.edgeenv
+bundle dir: /tmp/InferEdgeEnv-jetson-ops.vT1m9R/handoff/bundles
+bundle summary: /tmp/InferEdgeEnv-jetson-ops.vT1m9R/reports/bundle-summary.md
+```
+
+Observed run pairs:
+
+```text
+same-condition:
+run-20260508-070711-03f7ca35
+run-20260508-070713-9498e0df
+
+runtime-conditional:
+run-20260508-070716-09c90867
+run-20260508-070719-08511b90
+
+target-conditional:
+run-20260508-070721-e1f9ded9
+run-20260508-070724-9dc2f2a6
+```
+
+Observed checks:
+
+- all six handoff runs stored `resource_metrics.source=jetson-tegrastats`
+- all six handoff runs had `sampler/metadata.json`
+- all six handoff runs had raw artifact `sampler/tegrastats.log`
+- exported bundles contained core files plus sampler metadata/raw log
+- imported registry rebuilt from `result.json`
+- same-condition imported compare printed `Metrics Delta`
+- runtime/target conditional imported compares suppressed `Metrics Delta`
+- generated bundle summary listed same-condition delta as `present` and conditional deltas as `absent`
+- `runs resources list --metric memory_peak_mb` showed six Jetson resource rows
+- `failed-runs list` reported no failed run artifacts
