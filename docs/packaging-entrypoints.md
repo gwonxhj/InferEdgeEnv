@@ -22,6 +22,7 @@ edgeenv doctor
 - `scripts/smoke_entrypoints.sh` — install/module/console entrypoint smoke
 - `scripts/smoke_jetson_source_env.sh` — Jetson source snapshot + `PYTHONPATH` sampled-run smoke
 - `scripts/smoke_jetson_sampled_compare.sh` — Jetson source snapshot + `PYTHONPATH` sampled compare smoke
+- `scripts/smoke_jetson_sampled_conditional_compare.sh` — Jetson source snapshot + `PYTHONPATH` sampled conditional compare smoke
 - `tests/test_entrypoints.py` — package metadata and entrypoint regression tests
 - `.github/workflows/readiness.yml` — PR/main automation for entrypoint smoke and pytest
 

@@ -74,6 +74,8 @@ Metrics Delta:
 
 For the same principle on real sampled Jetson evidence, see [Jetson Sampled Comparison Rehearsal](jetson-sampled-comparison-rehearsal.md). That flow confirms `sampler/metadata.json` and `resource_metrics` remain supplemental artifacts and do not become compare gates.
 
+For the conditional branch on real sampled Jetson evidence, see [Jetson Sampled Conditional Comparison Rehearsal](jetson-sampled-conditional-comparison-rehearsal.md). That flow changes only `execution_provider` and verifies `Metrics Delta` is suppressed.
+
 ### Reading outcomes
 
 | Output | Meaning | Next action |
@@ -97,6 +99,7 @@ For the same principle on real sampled Jetson evidence, see [Jetson Sampled Comp
 - **Local Runner Design**: compare workflow의 run 생성 단계가 local runner에 의존한다.
 - **Resource Metrics Design**: resource metrics는 compare gate가 아니라 secondary evidence다.
 - **Jetson Sampled Comparison Rehearsal**: validates the same rule on real `tegrastats` sampled runs.
+- **Jetson Sampled Conditional Comparison Rehearsal**: validates runtime/provider conditional mode and metric delta suppression on sampled runs.
 - **Registry Resource Query Design**: compare는 registry `result_path`를 통해 result artifact를 읽는다.
 
 ## 6. WHY — 배경 판단

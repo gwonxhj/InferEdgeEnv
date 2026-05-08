@@ -62,6 +62,7 @@ edgeenv report compare <run_id_a> <run_id_b> --edgeenv-root "$edgeenv_root"
 ## 5. WHERE — 다른 설계와의 관계
 
 - **Compare Workflow Guide**: this is the Jetson sampled version of the same-condition compare workflow.
+- **Jetson Sampled Conditional Comparison Rehearsal**: validates the provider-difference conditional branch.
 - **Jetson Environment Setup Hardening**: reuses the source snapshot + known Python environment pattern.
 - **Sampler Metadata Artifact Policy**: sampler metadata remains artifact evidence, not registry schema.
 - **Registry Resource Query Design**: resource metrics stay artifact-first until query use cases justify indexing.
