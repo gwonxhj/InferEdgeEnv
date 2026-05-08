@@ -18,10 +18,17 @@ Jetson에서 `target_type: local`과 `sampler: jetson-tegrastats`를 함께 사�
 - `inferedge_env/result/writer.py` — successful-run sampler metadata writer
 - `inferedge_env/result/exporter.py` — successful-run sampler artifact export/import
 - `inferedge_env/cli.py` — `runs sampler show`
+- `scripts/smoke_jetson_source_env.sh` — repeatable source snapshot smoke for Jetson sampled runs
 
 기술 스택: Jetson Linux, `tegrastats`, Python 3.10, EdgeEnv local runner, sampler artifact JSON
 
 ## 3. HOW — 리허설 절차
+
+For repeated source snapshot validation, run the hardened smoke script:
+
+```bash
+scripts/smoke_jetson_source_env.sh --python /home/risenano01/miniconda3/envs/yolo_env/bin/python --keep-artifacts
+```
 
 Run these commands on the Jetson from the repo root:
 
@@ -41,7 +48,8 @@ edgeenv runs sampler show <run_id> --edgeenv-root /tmp/InferEdgeEnv-jetson-sampl
 ```
 
 If the Jetson environment is using a source snapshot instead of an installed
-package, set `PYTHONPATH` to the repo root before invoking `edgeenv`:
+package, set `PYTHONPATH` to the repo root before invoking `edgeenv`, or use
+`scripts/smoke_jetson_source_env.sh` which does this automatically:
 
 ```bash
 export PYTHONPATH="$PWD"

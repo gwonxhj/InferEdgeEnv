@@ -56,3 +56,31 @@ def test_console_script_doctor_entrypoint_available_after_install():
     assert result.returncode == 0
     assert "EdgeEnv doctor: OK" in result.stdout
     assert f"Version: {__version__}" in result.stdout
+
+
+def test_jetson_source_env_smoke_script_help():
+    result = subprocess.run(
+        ["bash", "scripts/smoke_jetson_source_env.sh", "--help"],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0
+    assert "Usage: scripts/smoke_jetson_source_env.sh" in result.stdout
+    assert "PYTHONPATH" in result.stdout
+    assert "Jetson source-snapshot sampler smoke" in result.stdout
+
+
+def test_jetson_source_env_smoke_script_rejects_missing_option_value():
+    result = subprocess.run(
+        ["bash", "scripts/smoke_jetson_source_env.sh", "--python"],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 2
+    assert "Missing value for --python" in result.stderr
