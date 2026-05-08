@@ -197,12 +197,14 @@ For Jetson source snapshot validation:
 
 ```bash
 scripts/smoke_jetson_source_env.sh --python /home/risenano01/miniconda3/envs/yolo_env/bin/python --keep-artifacts
+scripts/smoke_jetson_sampled_compare.sh --python /home/risenano01/miniconda3/envs/yolo_env/bin/python --keep-artifacts
 ```
 
 Notes:
 
 - `scripts/smoke_entrypoints.sh` may need network access if build dependencies are not already available locally.
 - `scripts/smoke_jetson_source_env.sh` intentionally uses `PYTHONPATH` and an existing Jetson Python environment instead of requiring editable install.
+- `scripts/smoke_jetson_sampled_compare.sh` verifies that sampled resource evidence stays outside compare gates.
 - Tests should use `tmp_path` for `.edgeenv` data and must not pollute the repo root registry.
 - GitHub Actions repeats the core readiness contract on Python 3.10 and 3.11.
 - Before tagging a release, rerun or review [EdgeEnv MVP v1 Release Rehearsal](v1-release-rehearsal.md) and update the package version intentionally.
@@ -213,7 +215,7 @@ Recommended next work should stay in coherent bundles rather than tiny one-off P
 
 Good next bundles:
 
-- **Jetson sampled comparison rehearsal**: capture two sampled Jetson runs with the same protocol and verify `report compare` remains protocol-first while sampler evidence stays supplemental.
+- **Jetson sampled conditional comparison rehearsal**: capture sampled Jetson runs with a deliberate runtime/provider or target difference and verify compare reports `Conditional` without metric deltas.
 - **Registry resource query migration**: implement only after query/index use cases are clear, following [Registry Resource Query Design](registry-resource-query-design.md).
 
 Avoid next bundles that jump straight into:

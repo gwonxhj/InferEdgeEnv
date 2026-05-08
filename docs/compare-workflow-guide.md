@@ -72,6 +72,8 @@ Metrics Delta:
 
 `Metrics Delta` is supplemental evidence and appears only after `Comparable: Yes` with `Mode: same-condition`. Conditional or non-comparable reports suppress metric deltas because the CLI should not imply a direct regression comparison across runtime, provider, target, or protocol differences.
 
+For the same principle on real sampled Jetson evidence, see [Jetson Sampled Comparison Rehearsal](jetson-sampled-comparison-rehearsal.md). That flow confirms `sampler/metadata.json` and `resource_metrics` remain supplemental artifacts and do not become compare gates.
+
 ### Reading outcomes
 
 | Output | Meaning | Next action |
@@ -94,6 +96,7 @@ Metrics Delta:
 - **Local Command Contract Guide**: local run이 valid result artifact를 만들기 위한 입력 contract다.
 - **Local Runner Design**: compare workflow의 run 생성 단계가 local runner에 의존한다.
 - **Resource Metrics Design**: resource metrics는 compare gate가 아니라 secondary evidence다.
+- **Jetson Sampled Comparison Rehearsal**: validates the same rule on real `tegrastats` sampled runs.
 - **Registry Resource Query Design**: compare는 registry `result_path`를 통해 result artifact를 읽는다.
 
 ## 6. WHY — 배경 판단
