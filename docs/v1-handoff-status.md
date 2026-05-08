@@ -205,6 +205,7 @@ scripts/smoke_jetson_sampled_compare.sh --python /home/risenano01/miniconda3/env
 scripts/smoke_jetson_sampled_conditional_compare.sh --python /home/risenano01/miniconda3/envs/yolo_env/bin/python --keep-artifacts
 scripts/smoke_jetson_sampled_target_compare.sh --python /home/risenano01/miniconda3/envs/yolo_env/bin/python --keep-artifacts
 scripts/smoke_jetson_sampled_bundle_handoff.sh --python /home/risenano01/miniconda3/envs/yolo_env/bin/python --keep-artifacts
+scripts/smoke_jetson_sampled_bundle_handoff.sh --python /home/risenano01/miniconda3/envs/yolo_env/bin/python --bundle-summary-output /tmp/InferEdgeEnv-jetson-bundle-summary.md --keep-artifacts
 ```
 
 Notes:
@@ -214,7 +215,7 @@ Notes:
 - `scripts/smoke_jetson_sampled_compare.sh` verifies that sampled resource evidence stays outside compare gates.
 - `scripts/smoke_jetson_sampled_conditional_compare.sh` verifies runtime/provider Conditional mode and metric delta suppression with sampled evidence present.
 - `scripts/smoke_jetson_sampled_target_compare.sh` verifies target-comparison mode and metric delta suppression with sampled evidence present.
-- `scripts/smoke_jetson_sampled_bundle_handoff.sh` verifies sampled successful-run bundle export/import and imported compare outcomes for same-condition, runtime-conditional, and target-conditional paths.
+- `scripts/smoke_jetson_sampled_bundle_handoff.sh` verifies sampled successful-run bundle export/import and imported compare outcomes for same-condition, runtime-conditional, and target-conditional paths. Add `--bundle-summary-output <path>` when release rehearsal should also validate generated Markdown handoff output.
 - [Jetson Sampled Bundle Portability Review](jetson-sampled-bundle-portability-review.md) records the decision to use a short Markdown handoff report for human review while keeping manifests/result artifacts canonical.
 - [Bundle Report Generation Design](bundle-report-generation-design.md) defines and records the read-only `report bundle-summary` generator contract.
 - [Jetson Bundle Summary Rehearsal](jetson-bundle-summary-rehearsal.md) records generated Markdown output from real imported Jetson sampled bundle runs.
@@ -229,7 +230,7 @@ Recommended next work should stay in coherent bundles rather than tiny one-off P
 Good next bundles:
 
 - **Resource query UX refinement**: only if repeated use shows a need for JSON output, source summaries, or richer filters.
-- **Bundle summary smoke automation**: extend Jetson smoke coverage only if repeated release rehearsals need one-command generated report checks.
+- **Release rehearsal refresh**: rerun the v1 user-flow rehearsal when the next code feature changes CLI behavior or artifact layout.
 
 Avoid next bundles that jump straight into:
 

@@ -18,7 +18,7 @@
 
 - `inferedge_env/report/bundle_summary.py` — imported artifacts와 compare judgement를 읽어 Markdown을 생성하는 read-only generator
 - `inferedge_env/cli.py` — `report bundle-summary` command surface
-- `scripts/smoke_jetson_sampled_bundle_handoff.sh` — imported Jetson sampled bundle runs를 준비하고 compare까지 검증하는 smoke
+- `scripts/smoke_jetson_sampled_bundle_handoff.sh` — imported Jetson sampled bundle runs를 준비하고 compare와 optional bundle-summary까지 검증하는 smoke
 - `docs/bundle-report-generation-design.md` — generator input/output/failure contract
 - `docs/jetson-sampled-evidence-bundle-handoff.md` — successful-run bundle export/import validation record
 - `docs/jetson-sampled-bundle-portability-review.md` — human-readable handoff report template
@@ -49,6 +49,17 @@ python -m inferedge_env.cli report bundle-summary \
   --edgeenv-root /tmp/InferEdgeEnv-jetson-summary.jdrYbb/imported/.edgeenv \
   --output /tmp/InferEdgeEnv-jetson-summary.jdrYbb/bundle-summary.md
 ```
+
+Repeated release rehearsal can now do both steps in one smoke run:
+
+```bash
+scripts/smoke_jetson_sampled_bundle_handoff.sh \
+  --python /home/risenano01/miniconda3/envs/yolo_env/bin/python \
+  --bundle-summary-output /tmp/InferEdgeEnv-jetson-summary.md \
+  --keep-artifacts
+```
+
+The optional summary smoke validates that the generated Markdown contains the same-condition scenario row, conditional compare rows with `Metrics Delta` absent, and no ranking table or composite score fields.
 
 Expected behavior:
 
@@ -189,3 +200,58 @@ Conclusion:
 - Runtime/target conditional compares were summarized with metric delta absent.
 - Sampler metadata and raw `tegrastats` evidence were visible as supplemental evidence only.
 - The report did not mutate imported run artifacts or become part of the evidence bundle.
+
+## Automation Note
+
+`scripts/smoke_jetson_sampled_bundle_handoff.sh --bundle-summary-output <path>` automates this generated report check for repeated release rehearsal. The option remains opt-in because bundle-summary generation is a handoff convenience, not canonical evidence.
+
+## Automation Validation — nano01
+
+Status: passed on `nano01`.
+
+Command shape:
+
+```bash
+scripts/smoke_jetson_sampled_bundle_handoff.sh \
+  --python /home/risenano01/miniconda3/envs/yolo_env/bin/python \
+  --bundle-summary-output <workdir>/bundle-summary.md \
+  --bundle-summary-source-device nano01 \
+  --keep-artifacts
+```
+
+Generated report:
+
+```text
+/tmp/InferEdgeEnv-bundle-summary-smoke.f7ZwFk/bundle-summary.md
+```
+
+Observed run pairs:
+
+```text
+same-condition:
+run-20260508-054737-a14efcc2
+run-20260508-054740-12125d60
+
+runtime-conditional:
+run-20260508-054743-4e82bef2
+run-20260508-054745-0440b6fe
+
+target-conditional:
+run-20260508-054748-e529f75a
+run-20260508-054751-4c0ffafb
+```
+
+Observed generated compare summary:
+
+```text
+| same-condition | Yes | same-condition | present | yes |
+| runtime-conditional | Conditional | runtime-comparison | absent | yes |
+| target-conditional | Conditional | target-comparison | absent | yes |
+```
+
+Conclusion:
+
+- The Jetson sampled bundle handoff smoke generated and validated `bundle-summary.md` from the imported registry root.
+- Same-condition delta status remained `present`.
+- Runtime/target conditional delta status remained `absent`.
+- The smoke rejected ranking table or composite score fields while allowing non-goal notes that mention unsupported leaderboard semantics.
