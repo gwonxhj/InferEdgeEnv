@@ -36,6 +36,7 @@ docs/
 - **inferedge_env/result** — result JSON schema와 artifact writer -> [`inferedge_env/result/AGENTS.md`](inferedge_env/result/AGENTS.md)
 - **inferedge_env/registry** — local SQLite registry와 run 조회 -> [`inferedge_env/registry/AGENTS.md`](inferedge_env/registry/AGENTS.md)
 - **inferedge_env/compare** — comparability checker와 compare 출력 -> [`inferedge_env/compare/AGENTS.md`](inferedge_env/compare/AGENTS.md)
+- **inferedge_env/report** — read-only Markdown report generation -> [`inferedge_env/report/AGENTS.md`](inferedge_env/report/AGENTS.md)
 - **inferedge_env/utils** — hashing, system info 같은 작은 공통 유틸 -> [`inferedge_env/utils/AGENTS.md`](inferedge_env/utils/AGENTS.md)
 - **examples** — sample benchmark/profile YAML -> [`examples/AGENTS.md`](examples/AGENTS.md)
 - **tests** — pytest 기반 MVP 검증 -> [`tests/AGENTS.md`](tests/AGENTS.md)

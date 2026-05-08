@@ -2,9 +2,9 @@
 
 ## 1. WHAT — 이 문서가 정하는 것
 
-sampled evidence bundle handoff report를 사람이 직접 작성하지 않고 자동 생성할지, 생성한다면 어떤 입력과 출력 계약을 가져야 하는지 정한다.
+sampled evidence bundle handoff report를 사람이 직접 작성하지 않고 자동 생성할 때 어떤 입력과 출력 계약을 가져야 하는지 정한다.
 
-결정: 자동 생성은 유효한 다음 단계지만, v1에서는 설계만 고정한다. 구현은 `report bundle-summary` 형태의 read-only Markdown generator로 시작하는 것이 가장 안전하다. 이 generator는 imported run artifacts와 `report compare` 판단을 요약할 뿐, bundle validation이나 compare 판단을 대체하지 않는다.
+결정: `report bundle-summary` 형태의 read-only Markdown generator로 시작한다. 이 generator는 imported run artifacts와 `report compare` 판단을 요약할 뿐, bundle validation이나 compare 판단을 대체하지 않는다.
 
 ## 2. CONTENTS — 관련 파일과 기술 스택
 
@@ -14,7 +14,8 @@ sampled evidence bundle handoff report를 사람이 직접 작성하지 않고 �
 - `docs/jetson-sampled-evidence-bundle-handoff.md` — real Jetson sampled bundle export/import validation record
 - `docs/export-import-design.md` — successful-run bundle manifest/checksum/import contract
 - `docs/compare-workflow-guide.md` — `Comparable`, `Mode`, `Metrics Delta` interpretation
-- `inferedge_env/cli.py` — future `report bundle-summary` command surface
+- `inferedge_env/cli.py` — `report bundle-summary` command surface
+- `inferedge_env/report/bundle_summary.py` — read-only Markdown generator implementation
 - `inferedge_env/compare/comparability.py` — compare judgement source
 - `inferedge_env/result/exporter.py` — manifest validation source, not report source of truth
 
@@ -24,7 +25,7 @@ sampled evidence bundle handoff report를 사람이 직접 작성하지 않고 �
 
 ### Command shape
 
-Recommended first CLI shape:
+CLI shape:
 
 ```bash
 edgeenv report bundle-summary \
@@ -128,7 +129,7 @@ It cannot prove original zip checksum validation after the zip is no longer pres
 SHA-256/byte-size verification: previously validated during import
 ```
 
-If the future command accepts `--bundle-dir`, it may validate manifests directly and say:
+If a future `--bundle-dir` option is added, it may validate manifests directly and say:
 
 ```text
 SHA-256/byte-size verification: passed
@@ -166,7 +167,7 @@ Warn, but keep generating, when:
 
 Do not import bundles, export bundles, or write into `.edgeenv/runs/`.
 
-### Tests for first implementation
+### Tests
 
 Minimum tests:
 
@@ -196,7 +197,7 @@ Minimum tests:
 - **Export/Import Design**: bundle validation remains machine-verifiable and separate from report generation.
 - **Compare Workflow Guide**: compare interpretation and metric delta suppression rules are reused.
 - **Sampler Metadata Artifact Policy**: sampler evidence remains optional artifact evidence.
-- **V1 Handoff Status**: this design becomes the next implementation candidate only after manual report use proves repetitive.
+- **V1 Handoff Status**: this implementation closes the first generated report step and leaves richer bundle-dir validation as future work.
 
 ## 6. WHY — 배경 판단
 

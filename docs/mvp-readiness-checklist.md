@@ -64,6 +64,7 @@ edgeenv runs import edgeenv-run-<run_id>.zip
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_compare_a.yaml
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_compare_b.yaml
 edgeenv report compare <run_id_a> <run_id_b>
+edgeenv report bundle-summary --scenario same-condition:<run_id_a>:<run_id_b>
 ```
 
 ### Supported in this MVP
@@ -76,7 +77,7 @@ edgeenv report compare <run_id_a> <run_id_b>
 - Success artifacts under `.edgeenv/runs/<run_id>/`
 - Failed local run artifacts under `.edgeenv/failed-runs/<run_id>/`
 - SQLite local registry for successful runs
-- `runs list`, `runs show`, `runs export`, `runs import`, `failed-runs list`, `failed-runs show`, `failed-runs export`, `failed-runs import`, and `report compare`
+- `runs list`, `runs show`, `runs export`, `runs import`, `failed-runs list`, `failed-runs show`, `failed-runs export`, `failed-runs import`, `report compare`, and `report bundle-summary`
 - Same-condition, conditional, and non-comparable judgement
 - Deterministic examples and pytest coverage
 - Editable install and `edgeenv` console script smoke path

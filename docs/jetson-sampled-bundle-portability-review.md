@@ -4,7 +4,7 @@
 
 Jetson sampled evidence bundle handoff 이후, raw `manifest.json`과 smoke output만으로 충분한지 검토하고 사람이 읽기 쉬운 handoff report가 필요한 경우의 최소 형식을 정한다.
 
-결론: 짧은 human-readable handoff report는 필요하다. 다만 v1에서는 새 CLI command나 generated report artifact로 만들지 않고, PR/릴리스/외부 전달 문서에 붙일 수 있는 Markdown summary template으로 유지한다.
+결론: 짧은 human-readable handoff report는 필요하다. 수동 Markdown summary template을 먼저 고정했고, 현재는 `report bundle-summary`가 imported run artifact와 compare judgement에서 같은 형태의 Markdown summary를 생성한다.
 
 ## 2. CONTENTS — 관련 파일과 기술 스택
 
@@ -15,7 +15,7 @@ Jetson sampled evidence bundle handoff 이후, raw `manifest.json`과 smoke outp
 - `docs/export-import-design.md` — manifest/checksum/path-safety/source-of-truth contract
 - `docs/sampler-metadata-artifact-policy.md` — sampler metadata/raw artifact portability policy
 - `docs/compare-workflow-guide.md` — compare output interpretation rules
-- `docs/bundle-report-generation-design.md` — future read-only generator contract for this Markdown summary
+- `docs/bundle-report-generation-design.md` — read-only generator contract for this Markdown summary
 - `docs/v1-handoff-status.md` — next work snapshot
 
 기술 스택: Markdown, EdgeEnv successful-run zip manifest, `report compare` output
@@ -47,7 +47,7 @@ The smoke output is authoritative for validation, but it is intentionally verbos
 
 Use a short Markdown handoff report when sampled run bundles are shared outside the local workspace.
 
-Do not add a new CLI command in v1. The CLI already exports/imports bundles and reports compare results. A generated report command should wait until the report fields stabilize across at least Jetson sampled evidence and one non-Jetson local evidence flow.
+Use the template manually when editing PR/release notes directly, or use `edgeenv report bundle-summary` when the runs are already imported into a local registry root.
 
 ### Minimal handoff report template
 
@@ -153,9 +153,7 @@ Do not add a new CLI command in v1. The CLI already exports/imports bundles and 
 
 EdgeEnv evidence must be machine-verifiable, but project handoff also needs fast human scanning. A manifest is too low-level for reviewers, and full smoke logs are too noisy. A short Markdown report gives enough context to understand what was moved, what was verified, and how compare interpreted it, without creating a second source of truth.
 
-Deferring CLI generation keeps the MVP clean. If future users repeatedly need the same report, a later `runs export --report` or `report bundle-summary` design can generate this template from imported artifacts and compare output.
-
-That future generator contract is defined in [Bundle Report Generation Design](bundle-report-generation-design.md). It keeps the generated report outside zip bundles and reuses normal compare judgement.
+The generator contract is defined in [Bundle Report Generation Design](bundle-report-generation-design.md). It keeps the generated report outside zip bundles and reuses normal compare judgement.
 
 ## 7. ⚠️ LEARNED CAUTIONS — 학습된 주의사항
 
