@@ -13,13 +13,18 @@ Options:
   --edgeenv-root PATH  Source successful-run registry root (default: temp dir)
   --import-root PATH   Imported successful-run registry root (default: temp dir)
   --bundle-dir PATH    Exported zip bundle directory (default: temp dir)
+  --bundle-summary-output PATH
+                       Optional Markdown path for report bundle-summary smoke
+  --bundle-summary-source-device NAME
+                       Source device label for bundle-summary output (default: hostname)
   --keep-artifacts     Keep temp artifacts after the script exits
   -h, --help           Show this help
 
 This script uses PYTHONPATH instead of editable install. It creates sampled
 Jetson runs, exports every run as an evidence zip, imports the bundles into a
 fresh registry root, and verifies compare output still follows protocol-first
-rules after handoff.
+rules after handoff. If --bundle-summary-output is set, it also generates and
+validates a read-only Markdown bundle-summary from the imported registry.
 EOF
 }
 
@@ -27,6 +32,8 @@ python_bin="${EDGEENV_JETSON_PYTHON:-python3}"
 edgeenv_root=""
 import_root=""
 bundle_dir=""
+bundle_summary_output=""
+bundle_summary_source_device="$(hostname 2>/dev/null || printf 'jetson')"
 keep_artifacts=0
 edgeenv_root_is_temp=0
 import_root_is_temp=0
@@ -61,6 +68,16 @@ while [[ $# -gt 0 ]]; do
     --bundle-dir)
       require_value "$@"
       bundle_dir="$2"
+      shift 2
+      ;;
+    --bundle-summary-output)
+      require_value "$@"
+      bundle_summary_output="$2"
+      shift 2
+      ;;
+    --bundle-summary-source-device)
+      require_value "$@"
+      bundle_summary_source_device="$2"
       shift 2
       ;;
     --keep-artifacts)
@@ -393,5 +410,38 @@ assert_compare "runtime-conditional imported bundle compare" \
   "Different runtime or execution provider" "no"
 assert_compare "target-conditional imported bundle compare" \
   "$target_a" "$target_b" "Conditional" "target-comparison" "Different target" "no"
+
+if [[ -n "$bundle_summary_output" ]]; then
+  mkdir -p "$(dirname "$bundle_summary_output")"
+  run_cli report bundle-summary \
+    --scenario "same-condition:${same_a}:${same_b}" \
+    --scenario "runtime-conditional:${runtime_a}:${runtime_b}" \
+    --scenario "target-conditional:${target_a}:${target_b}" \
+    --source-device "$bundle_summary_source_device" \
+    --edgeenv-root "$import_root" \
+    --output "$bundle_summary_output"
+
+  if [[ ! -s "$bundle_summary_output" ]]; then
+    echo "bundle-summary output was not created: $bundle_summary_output" >&2
+    exit 1
+  fi
+  if ! grep -q "| same-condition | ${same_a} | ${same_b} |" "$bundle_summary_output"; then
+    echo "bundle-summary missing same-condition row" >&2
+    exit 1
+  fi
+  if ! grep -q "| runtime-conditional | Conditional | runtime-comparison | absent | yes |" "$bundle_summary_output"; then
+    echo "bundle-summary missing runtime-conditional imported compare row" >&2
+    exit 1
+  fi
+  if ! grep -q "| target-conditional | Conditional | target-comparison | absent | yes |" "$bundle_summary_output"; then
+    echo "bundle-summary missing target-conditional imported compare row" >&2
+    exit 1
+  fi
+  if grep -Eqi "composite score:|^\|[[:space:]]*rank[[:space:]]*\|" "$bundle_summary_output"; then
+    echo "bundle-summary output must not include ranking tables or composite score fields" >&2
+    exit 1
+  fi
+  echo "bundle_summary_output=$bundle_summary_output"
+fi
 
 echo "Jetson sampled evidence bundle handoff smoke passed"

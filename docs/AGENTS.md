@@ -23,7 +23,7 @@ README와 설계/운영 문서가 위치하는 영역이다. EdgeEnv가 무엇�
 - `docs/jetson-sampled-comparison-rehearsal.md` — sampled Jetson run 두 개로 compare가 protocol-first 판단을 유지하는지 검증하는 기록
 - `docs/jetson-sampled-conditional-comparison-rehearsal.md` — provider 차이가 있는 sampled Jetson run 비교에서 Conditional과 metric delta suppression을 검증하는 기록
 - `docs/jetson-sampled-target-comparison-rehearsal.md` — target profile 차이가 있는 sampled Jetson run 비교에서 target-comparison과 metric delta suppression을 검증하는 기록
-- `docs/jetson-sampled-evidence-bundle-handoff.md` — sampled Jetson run bundle export/import 후 imported compare가 같은 판단을 유지하는지 검증하는 기록
+- `docs/jetson-sampled-evidence-bundle-handoff.md` — sampled Jetson run bundle export/import 후 imported compare와 optional bundle-summary가 같은 판단을 유지하는지 검증하는 기록
 - `docs/jetson-sampled-bundle-portability-review.md` — sampled bundle handoff를 사람이 읽기 쉬운 report로 요약할지 결정하는 기록
 - `docs/bundle-report-generation-design.md` — imported artifacts와 compare output에서 Markdown handoff report를 자동 생성할지 정하는 설계
 - `docs/jetson-bundle-summary-rehearsal.md` — 실제 imported Jetson sampled bundle runs에서 `report bundle-summary` Markdown output을 검증하는 기록

@@ -16,7 +16,7 @@ Jetson sampled run evidence를 zip bundle로 export/import한 뒤에도 compare 
 
 관련 파일:
 
-- `scripts/smoke_jetson_sampled_bundle_handoff.sh` — same/runtime/target sampled runs를 export/import 후 imported compare까지 검증하는 Jetson smoke
+- `scripts/smoke_jetson_sampled_bundle_handoff.sh` — same/runtime/target sampled runs를 export/import 후 imported compare와 optional bundle-summary까지 검증하는 Jetson smoke
 - `scripts/smoke_jetson_source_env.sh` — single sampled run export/import smoke
 - `scripts/smoke_jetson_sampled_compare.sh` — same-condition sampled compare smoke
 - `scripts/smoke_jetson_sampled_conditional_compare.sh` — runtime/provider conditional sampled compare smoke
@@ -56,11 +56,21 @@ What the script checks:
 - imported same-condition compare still prints `Metrics Delta`
 - imported runtime/target conditional compares suppress `Metrics Delta`
 - imported compare output does not mention resource or sampler evidence as a judgement gate
+- optional `--bundle-summary-output` writes a Markdown handoff summary from imported runs and validates same/conditional rows
 
 By default the script uses temporary `/tmp/InferEdgeEnv-jetson-bundle-*`
 directories and deletes only those temporary directories on success. If you pass
 custom `--edgeenv-root`, `--import-root`, or `--bundle-dir` paths, they must not
 already exist and will not be deleted automatically.
+
+To include generated Markdown handoff smoke in the same run:
+
+```bash
+scripts/smoke_jetson_sampled_bundle_handoff.sh \
+  --python /home/risenano01/miniconda3/envs/yolo_env/bin/python \
+  --bundle-summary-output /tmp/InferEdgeEnv-jetson-bundle-summary.md \
+  --keep-artifacts
+```
 
 Manual equivalent:
 
@@ -207,3 +217,4 @@ Conclusion:
 Follow-up:
 
 - [Jetson Bundle Summary Rehearsal](jetson-bundle-summary-rehearsal.md) generated the Markdown handoff summary from imported sampled bundle runs and confirmed same-condition delta presence plus conditional delta suppression.
+- `scripts/smoke_jetson_sampled_bundle_handoff.sh --bundle-summary-output <path>` now automates that generated Markdown check for repeated release rehearsal.
