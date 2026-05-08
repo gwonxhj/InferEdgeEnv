@@ -15,6 +15,7 @@ Jetson sampled evidence bundle handoff 이후, raw `manifest.json`과 smoke outp
 - `docs/export-import-design.md` — manifest/checksum/path-safety/source-of-truth contract
 - `docs/sampler-metadata-artifact-policy.md` — sampler metadata/raw artifact portability policy
 - `docs/compare-workflow-guide.md` — compare output interpretation rules
+- `docs/bundle-report-generation-design.md` — future read-only generator contract for this Markdown summary
 - `docs/v1-handoff-status.md` — next work snapshot
 
 기술 스택: Markdown, EdgeEnv successful-run zip manifest, `report compare` output
@@ -153,6 +154,8 @@ Do not add a new CLI command in v1. The CLI already exports/imports bundles and 
 EdgeEnv evidence must be machine-verifiable, but project handoff also needs fast human scanning. A manifest is too low-level for reviewers, and full smoke logs are too noisy. A short Markdown report gives enough context to understand what was moved, what was verified, and how compare interpreted it, without creating a second source of truth.
 
 Deferring CLI generation keeps the MVP clean. If future users repeatedly need the same report, a later `runs export --report` or `report bundle-summary` design can generate this template from imported artifacts and compare output.
+
+That future generator contract is defined in [Bundle Report Generation Design](bundle-report-generation-design.md). It keeps the generated report outside zip bundles and reuses normal compare judgement.
 
 ## 7. ⚠️ LEARNED CAUTIONS — 학습된 주의사항
 
