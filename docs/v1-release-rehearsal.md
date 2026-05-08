@@ -16,18 +16,20 @@
 - `docs/compare-workflow-guide.md` — compare 사용자 흐름
 - `docs/failed-run-inspection.md` — failed-run diagnostic 흐름
 - `docs/export-import-design.md` — successful/failed evidence portability contract
+- `docs/resource-query-rehearsal.md` — source/imported registry resource lookup rehearsal
+- `docs/jetson-bundle-summary-rehearsal.md` — generated bundle-summary smoke record
 - `pyproject.toml` — package version and `edgeenv` console script
 
-기술 스택: Typer CLI, local filesystem artifacts, SQLite registry, zip export/import, pytest, GitHub Actions readiness workflow
+기술 스택: Typer CLI, local filesystem artifacts, SQLite registry, zip export/import, read-only Markdown reports, pytest, GitHub Actions readiness workflow
 
 ## 3. HOW — user-flow rehearsal
 
 ### Rehearsal environment
 
-Recorded on `main` after PR #29:
+Refreshed on `main` after PR #53:
 
 ```text
-6ca29af feat: add failed run portability
+c34325b Merge pull request #53 from gwonxhj/scripts/bundle-summary-smoke
 ```
 
 Use a temporary EdgeEnv root so the repo root stays clean:
@@ -39,7 +41,7 @@ mktemp -d /private/tmp/inferedge-env-v1-rehearsal.XXXXXX
 The recorded run used:
 
 ```text
-/private/tmp/inferedge-env-v1-rehearsal.RvDu3w/.edgeenv
+/private/tmp/inferedge-env-release-refresh.QLboSC/.edgeenv
 ```
 
 ### 1. Entrypoint smoke and validation
@@ -56,6 +58,7 @@ edgeenv bench validate examples/benches/yolov8n_fire.yaml
 Observed:
 
 - `EdgeEnv doctor: OK`
+- `Version: 0.1.2`
 - `Runner support: fake, local`
 - `Valid target profile: local-fake`
 - `Valid benchmark config: yolov8n-fire-fake`
@@ -70,6 +73,7 @@ edgeenv bench run --target examples/profiles/local.yaml --config examples/benche
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_runtime_adapter.yaml --edgeenv-root <tmp>/.edgeenv
 edgeenv runs list --edgeenv-root <tmp>/.edgeenv
 edgeenv runs show <run_id> --edgeenv-root <tmp>/.edgeenv
+edgeenv runs resources list --metric memory_peak_mb --min-value 500 --edgeenv-root <tmp>/.edgeenv
 ```
 
 Observed:
@@ -80,6 +84,8 @@ Observed:
 - resource metrics are reported as stored or omitted according to each example
 - `runs list` shows successful runs only
 - `runs show` returns registry metadata, metrics, model, protocol, runtime, target, and `result_path`
+- `runs resources list` shows normalized resource lookup rows such as `memory_peak_mb=512.0 mb`
+- resource lookup is a local index convenience, not a ranking or comparability gate
 
 ### 3. Compare workflow
 
@@ -119,6 +125,7 @@ Commands:
 edgeenv runs export <run_id> --output <tmp>/successful-run.zip --edgeenv-root <tmp>/.edgeenv
 edgeenv runs import <tmp>/successful-run.zip --edgeenv-root <tmp>/imported-success/.edgeenv
 edgeenv runs show <run_id> --edgeenv-root <tmp>/imported-success/.edgeenv
+edgeenv runs resources list --metric memory_peak_mb --min-value 500 --edgeenv-root <tmp>/imported-success/.edgeenv
 ```
 
 Observed:
@@ -128,6 +135,7 @@ Observed:
 - imported `runs show` succeeds
 - imported `result_path` points at the new `.edgeenv/runs/<run_id>/result.json`
 - registry row is rebuilt from `result.json`, not copied from the source `runs.db`
+- imported `runs resources list` returns the same run id, metric value, unit, and source after rebuilding `resource_metric_index`
 
 ### 5. Failed-run diagnostic loop
 
@@ -166,6 +174,35 @@ Observed:
 - failed-run import copies diagnostic evidence into `.edgeenv/failed-runs/<run_id>/`
 - failed-run import does not create or update `runs.db`
 
+### 7. Bundle summary report smoke
+
+Commands:
+
+```bash
+edgeenv report bundle-summary \
+  --scenario same-condition:<run_id_a>:<run_id_b> \
+  --edgeenv-root <tmp>/.edgeenv \
+  --output <tmp>/bundle-summary.md
+```
+
+For sampled Jetson evidence bundle handoff, the repeated release smoke can validate export/import, imported compare, and generated Markdown in one run:
+
+```bash
+scripts/smoke_jetson_sampled_bundle_handoff.sh \
+  --python /home/risenano01/miniconda3/envs/yolo_env/bin/python \
+  --bundle-summary-output /tmp/InferEdgeEnv-jetson-bundle-summary.md \
+  --bundle-summary-source-device nano01 \
+  --keep-artifacts
+```
+
+Observed on `nano01` during PR #53:
+
+- generated `bundle-summary.md` from imported sampled run artifacts
+- same-condition summary row had `Metrics Delta` status `present`
+- runtime/target conditional summary rows had `Metrics Delta` status `absent`
+- generated report did not mutate run artifacts or exported bundles
+- report remained human-readable handoff output, not canonical evidence
+
 ## 4. HOW NOT — release/tag 전에 피해야 할 함정
 
 - Do not tag if `python -m pytest -q` or GitHub Actions readiness fails.
@@ -174,15 +211,17 @@ Observed:
 - Do not tag if successful-run import copies `runs.db` instead of rebuilding from `result.json`.
 - Do not tag if failed-run import touches `runs.db`.
 - Do not tag if `report compare` prints metric deltas for conditional or non-comparable reports.
+- Do not tag if `runs resources list` fails to rebuild lookup rows after successful-run import.
+- Do not tag if `report bundle-summary` is written into `.edgeenv/runs/<run_id>/` or exported zip bundles by default.
 - Do not tag if any release note implies OS, VM, Docker, WSL, SSH, cloud, auth, dashboard, leaderboard, upload server, or composite ranking support.
-- Do not start Jetson/platform-native sampler adapter implementation as part of the v1 tag gate.
+- Do not start SSH/Docker/WSL/cloud target implementation as part of the v1 tag gate.
 
 ## 5. WHERE — v1 release/tag gate
 
-Recommended tag for the current package version:
+Recommended next tag for the current package version:
 
 ```text
-v0.1.0
+v0.1.2
 ```
 
 Recommended release title:
@@ -199,7 +238,9 @@ Tag only after all of these are true on `main`:
 - `edgeenv doctor` passes locally.
 - README quickstart user-flow rehearsal passes with a temporary `--edgeenv-root`.
 - Successful run export/import has been smoke-tested.
+- Resource query lookup before and after successful-run import has been smoke-tested.
 - Failed-run export/import has been smoke-tested.
+- `report bundle-summary` has been smoke-tested or Jetson bundle handoff smoke has been run with `--bundle-summary-output`.
 - GitHub Actions readiness passes on Python 3.10 and 3.11.
 - `git status --short --branch` reports clean `main...origin/main`.
 - Release notes explicitly preserve MVP non-goals.
@@ -209,35 +250,39 @@ Suggested tag commands after the gate is satisfied:
 ```bash
 git switch main
 git pull --ff-only
-git tag -a v0.1.0 -m "EdgeEnv MVP v1"
-git push origin v0.1.0
+git tag -a v0.1.2 -m "EdgeEnv MVP v1 refresh"
+git push origin v0.1.2
 ```
 
 Suggested release notes:
 
 ```text
 Summary
-- EdgeEnv MVP v1 provides config-driven fake/local benchmark runs, local artifact storage, SQLite registry lookup, comparability judgement, and portable evidence export/import.
+- EdgeEnv MVP v1 provides config-driven fake/local benchmark runs, local artifact storage, SQLite registry lookup, resource metric lookup, comparability judgement, read-only handoff summaries, and portable evidence export/import.
 - Successful runs are stored under .edgeenv/runs/<run_id>/ and failed diagnostics under .edgeenv/failed-runs/<run_id>/.
 - Compare reports prioritize comparability mode before optional metric deltas.
+- Resource metrics remain optional secondary evidence; result.json is canonical and resource_metric_index is rebuildable local lookup state.
+- Bundle summaries are human-readable handoff reports and do not replace result artifacts, manifests, sampler metadata, or raw logs.
 
 Validation
 - python -m pytest -q
 - python -m inferedge_env.cli doctor
 - edgeenv doctor
 - README user-flow rehearsal with temporary --edgeenv-root
+- runs resources list before and after successful-run import
+- report bundle-summary or Jetson sampled bundle handoff smoke with --bundle-summary-output
 - GitHub Actions readiness: python-3.10, python-3.11
 
 Non-goals
 - No OS, VM, Docker, WSL, SSH, cloud, auth, dashboard, leaderboard, upload server, or composite ranking support.
-- Jetson/platform-native sampler adapters remain future work.
+- No remote target execution semantics; Jetson validation runs execute locally on the Jetson.
 ```
 
 ## 6. WHY — 배경 판단
 
 MVP v1의 핵심은 "빠른 기능 추가"가 아니라 사용자가 신뢰할 수 있는 local evidence loop다. Release rehearsal은 이 loop가 실제 CLI command로 닫히는지 확인하고, tag 기준은 accidental scope creep 없이 같은 품질 기준을 반복할 수 있게 만든다.
 
-Jetson이나 platform-native sampler adapter는 다음 큰 단계다. v1 tag는 그 전까지 구현된 local-first capability를 고정하는 boundary로 사용한다.
+Jetson sampled validation is now part of the local-first evidence story when hardware is available, but it does not imply SSH or remote target execution. v1 tag gates should keep that boundary explicit.
 
 ## 7. ⚠️ LEARNED CAUTIONS — 학습된 주의사항
 
