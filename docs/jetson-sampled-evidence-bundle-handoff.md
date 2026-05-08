@@ -24,6 +24,7 @@ Jetson sampled run evidence를 zip bundle로 export/import한 뒤에도 compare 
 - `docs/export-import-design.md` — manifest/checksum/path-safety/source-of-truth contract
 - `docs/sampler-metadata-artifact-policy.md` — optional `sampler/metadata.json` and raw artifact portability rules
 - `docs/compare-workflow-guide.md` — compare output interpretation rules
+- `docs/jetson-sampled-bundle-portability-review.md` — human-readable summary format for sharing sampled evidence bundle outcomes
 
 기술 스택: Jetson Linux, `tegrastats`, EdgeEnv local runner, successful-run export/import zip, manifest SHA-256, SQLite registry rebuild, `report compare`
 
@@ -95,6 +96,7 @@ Repeat that flow for:
 - **Jetson Sampled Comparison Rehearsal**: this extends same-condition sampled compare through export/import.
 - **Jetson Sampled Conditional Comparison Rehearsal**: this extends runtime/provider conditional sampled compare through export/import.
 - **Jetson Sampled Target Comparison Rehearsal**: this extends target conditional sampled compare through export/import.
+- **Jetson Sampled Bundle Portability Review**: this decides how to summarize the raw manifest and smoke output for humans without creating a new source of truth.
 
 ## 6. WHY — 배경 판단
 

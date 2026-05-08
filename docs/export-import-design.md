@@ -23,6 +23,7 @@
 - `inferedge_env/result/exporter.py` — successful/failed run zip export/import, manifest/checksum generation, safe import validation
 - `inferedge_env/registry/db.py` — import registry insertion/rebuild path
 - `scripts/smoke_jetson_sampled_bundle_handoff.sh` — sampled Jetson same/runtime/target evidence bundle portability smoke
+- `docs/jetson-sampled-bundle-portability-review.md` — optional human-readable handoff report format
 
 기술 스택: zip archive, JSON manifest, SHA-256 checksums, existing Pydantic result schema, local filesystem
 
@@ -192,6 +193,8 @@ Detailed storage policy is defined in [Sampler Metadata Artifact Policy](sampler
 
 For real sampled Jetson evidence, [Jetson Sampled Evidence Bundle Handoff](jetson-sampled-evidence-bundle-handoff.md) exports and imports same-condition, runtime-conditional, and target-conditional run bundles, then compares the imported runs to confirm that bundle portability does not change comparability judgement.
 
+[Jetson Sampled Bundle Portability Review](jetson-sampled-bundle-portability-review.md) defines a short Markdown report for people reviewing those bundles. The report summarizes manifest and compare outcomes, but it is not required for import and is not canonical evidence.
+
 ## 4. HOW NOT — 피해야 할 함정
 
 - Do not export `runs.db` as the source of truth.
@@ -210,6 +213,7 @@ For real sampled Jetson evidence, [Jetson Sampled Evidence Bundle Handoff](jetso
 - **Registry**: `runs.db` remains a rebuildable local index.
 - **Compare Workflow**: imported runs can be compared only after normal comparability judgement.
 - **Jetson Sampled Evidence Bundle Handoff**: validates imported sampled bundles against same-condition, runtime-conditional, and target-conditional compare paths.
+- **Jetson Sampled Bundle Portability Review**: summarizes portable evidence for human handoff without replacing manifest validation.
 - **Failed Run Inspection**: failed-run artifacts stay diagnostic and portable, but out of the successful-run registry/compare path.
 - **Local Command Contract**: stdout/stderr/config/target/env files preserve evidence for later review.
 - **Sampler Metadata Artifact Policy**: sampler metadata stays in optional `sampler/metadata.json` extension evidence.
