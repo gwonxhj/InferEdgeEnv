@@ -137,6 +137,7 @@ Start here:
 - [Jetson Environment Setup Hardening](docs/jetson-env-setup-hardening.md) — source snapshot + conda/PYTHONPATH smoke for repeated Jetson validation
 - [Jetson Sampled Comparison Rehearsal](docs/jetson-sampled-comparison-rehearsal.md) — two sampled Jetson runs proving compare remains protocol-first
 - [Jetson Sampled Conditional Comparison Rehearsal](docs/jetson-sampled-conditional-comparison-rehearsal.md) — sampled Jetson provider difference proving Conditional compare suppresses metric deltas
+- [Jetson Sampled Target Comparison Rehearsal](docs/jetson-sampled-target-comparison-rehearsal.md) — sampled Jetson target difference proving target-comparison suppresses metric deltas
 - [Sampler Adapter API Design](docs/sampler-adapter-api-design.md) — future sampler adapter lifecycle and metadata schema
 - [LocalRunner Sampler Wiring Design](docs/local-runner-sampler-wiring-design.md) — how LocalRunner should enable sampler lifecycle without breaking stdout metrics
 - [Sampler Metadata Artifact Policy](docs/sampler-metadata-artifact-policy.md) — where sampler metadata/raw artifacts belong

@@ -69,6 +69,7 @@ edgeenv report compare <run_id_a> <run_id_b> --edgeenv-root "$edgeenv_root"
 
 - **Compare Workflow Guide**: this validates the conditional runtime/provider branch with real sampled evidence.
 - **Jetson Sampled Comparison Rehearsal**: this complements the same-condition sampled compare record.
+- **Jetson Sampled Target Comparison Rehearsal**: this complements the target conditional branch.
 - **Jetson Environment Setup Hardening**: reuses the source snapshot + known Python environment pattern.
 - **Sampler Metadata Artifact Policy**: sampler metadata remains artifact evidence, not a compare gate.
 
