@@ -139,6 +139,7 @@ Start here:
 - [Jetson Sampled Conditional Comparison Rehearsal](docs/jetson-sampled-conditional-comparison-rehearsal.md) — sampled Jetson provider difference proving Conditional compare suppresses metric deltas
 - [Jetson Sampled Target Comparison Rehearsal](docs/jetson-sampled-target-comparison-rehearsal.md) — sampled Jetson target difference proving target-comparison suppresses metric deltas
 - [Jetson Sampled Evidence Bundle Handoff](docs/jetson-sampled-evidence-bundle-handoff.md) — export/import sampled bundles proving imported compare keeps the same interpretation rules
+- [Jetson Sampled Bundle Portability Review](docs/jetson-sampled-bundle-portability-review.md) — short human-readable handoff report format for sampled evidence bundles
 - [Sampler Adapter API Design](docs/sampler-adapter-api-design.md) — future sampler adapter lifecycle and metadata schema
 - [LocalRunner Sampler Wiring Design](docs/local-runner-sampler-wiring-design.md) — how LocalRunner should enable sampler lifecycle without breaking stdout metrics
 - [Sampler Metadata Artifact Policy](docs/sampler-metadata-artifact-policy.md) — where sampler metadata/raw artifacts belong
