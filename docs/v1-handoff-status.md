@@ -79,6 +79,7 @@ Current policy:
 - missing resource metrics keeps a successful run valid
 - malformed resource metrics creates a failed-run artifact
 - resource metrics are not a comparability gate
+- resource metrics are indexed in a rebuildable `resource_metric_index` for local lookup
 
 Related docs:
 
@@ -114,6 +115,7 @@ edgeenv bench run --target examples/profiles/local.yaml --config examples/benche
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_compare_b.yaml
 edgeenv runs list
 edgeenv runs show <run_id>
+edgeenv runs resources list --metric memory_peak_mb
 edgeenv runs export <run_id> --output edgeenv-run-<run_id>.zip
 edgeenv runs import edgeenv-run-<run_id>.zip
 edgeenv report compare <run_id_a> <run_id_b>
@@ -162,6 +164,7 @@ Do not break these contracts without an explicit migration plan:
 - `.edgeenv/runs/<run_id>/` success artifact layout
 - `.edgeenv/failed-runs/<run_id>/` diagnostic artifact layout
 - `.edgeenv/runs.db` successful run registry semantics
+- `.edgeenv/runs.db` `resource_metric_index` remains a rebuildable local lookup index, not canonical evidence
 - `report compare` output labels: `Comparable`, `Mode`, `Reason`
 - `failed-runs show` and `failed-runs import` read/copy failed artifacts only and must not insert into `runs.db`
 - export/import must treat run artifacts as canonical evidence and `runs.db` as a rebuildable local index
@@ -224,8 +227,8 @@ Recommended next work should stay in coherent bundles rather than tiny one-off P
 
 Good next bundles:
 
+- **Resource query rehearsal**: create local and imported resource-metric runs, then document `runs resources list` lookup behavior and non-ranking boundaries.
 - **Bundle summary smoke automation**: extend Jetson smoke coverage only if repeated release rehearsals need one-command generated report checks.
-- **Registry resource query migration**: implement only after query/index use cases are clear, following [Registry Resource Query Design](registry-resource-query-design.md).
 
 Avoid next bundles that jump straight into:
 

@@ -54,6 +54,7 @@ edgeenv bench run --target examples/profiles/local.yaml --config examples/benche
 ```bash
 edgeenv runs list
 edgeenv runs show <run_id>
+edgeenv runs resources list --metric memory_peak_mb
 edgeenv runs export <run_id> --output edgeenv-run-<run_id>.zip
 edgeenv runs import edgeenv-run-<run_id>.zip
 ```
@@ -77,7 +78,8 @@ edgeenv report bundle-summary --scenario same-condition:<run_id_a>:<run_id_b>
 - Success artifacts under `.edgeenv/runs/<run_id>/`
 - Failed local run artifacts under `.edgeenv/failed-runs/<run_id>/`
 - SQLite local registry for successful runs
-- `runs list`, `runs show`, `runs export`, `runs import`, `failed-runs list`, `failed-runs show`, `failed-runs export`, `failed-runs import`, `report compare`, and `report bundle-summary`
+- Rebuildable `resource_metric_index` for `runs resources list`
+- `runs list`, `runs show`, `runs resources list`, `runs export`, `runs import`, `failed-runs list`, `failed-runs show`, `failed-runs export`, `failed-runs import`, `report compare`, and `report bundle-summary`
 - Same-condition, conditional, and non-comparable judgement
 - Deterministic examples and pytest coverage
 - Editable install and `edgeenv` console script smoke path
@@ -90,7 +92,7 @@ edgeenv report bundle-summary --scenario same-condition:<run_id_a>:<run_id_b>
 - Cloud DB, login/auth, web dashboard, public leaderboard
 - Model or dataset upload server
 - Single-score ranking across models
-- Registry indexing/querying for resource metrics columns
+- Resource metrics ranking or comparability gates
 - Platform-native sampler adapters beyond wrapper command examples
 
 ## 4. HOW NOT — 피해야 할 함정

@@ -65,7 +65,7 @@ edgeenv report compare <run_id_a> <run_id_b> --edgeenv-root "$edgeenv_root"
 - **Jetson Sampled Conditional Comparison Rehearsal**: validates the provider-difference conditional branch.
 - **Jetson Environment Setup Hardening**: reuses the source snapshot + known Python environment pattern.
 - **Sampler Metadata Artifact Policy**: sampler metadata remains artifact evidence, not registry schema.
-- **Registry Resource Query Design**: resource metrics stay artifact-first until query use cases justify indexing.
+- **Registry Resource Query Design**: resource metrics stay artifact-first even when a rebuildable lookup index exists.
 
 ## 6. WHY — 배경 판단
 

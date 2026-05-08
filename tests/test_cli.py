@@ -423,6 +423,24 @@ runtime_tags: [local]
     assert shown["resource_metrics"]["memory_peak_mb"] == 512.0
     assert shown["resource_metrics"]["power_mean_w"] == 8.2
     assert shown["resource_metrics"]["source"] == "benchmark-command"
+    resources_result = runner.invoke(
+        app,
+        [
+            "runs",
+            "resources",
+            "list",
+            "--metric",
+            "memory_peak_mb",
+            "--min-value",
+            "500",
+            "--edgeenv-root",
+            str(edgeenv_root),
+        ],
+    )
+    assert resources_result.exit_code == 0
+    assert payload["run_id"] in resources_result.output
+    assert "memory_peak_mb" in resources_result.output
+    assert "512.0" in resources_result.output
 
 
 def test_cli_runs_export_creates_evidence_zip(tmp_path, config_files):

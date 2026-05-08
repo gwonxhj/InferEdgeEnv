@@ -109,7 +109,7 @@ edgeenv runs show <run_id>
 - **Local Runner Design**: 이 문서는 local runner 설계를 사용자-facing contract로 옮긴다.
 - **Resource Metrics Design**: optional resource metrics의 field와 저장 정책을 따른다.
 - **Sampler Failure Policy**: sampler/resource evidence가 불확실하면 생략하고, 출력했다면 검증한다.
-- **Registry Resource Query Design**: resource metrics는 현재 DB column 없이 artifact에서 읽는다.
+- **Registry Resource Query Design**: resource metrics는 `result.json`이 source of truth이고, `runs resources list`는 rebuildable index를 조회한다.
 
 ## 6. WHY — 배경 판단
 
