@@ -12,6 +12,7 @@ sampled evidence bundle handoff report를 사람이 직접 작성하지 않고 �
 
 - `docs/jetson-sampled-bundle-portability-review.md` — 수동 Markdown handoff report template
 - `docs/jetson-sampled-evidence-bundle-handoff.md` — real Jetson sampled bundle export/import validation record
+- `docs/jetson-bundle-summary-rehearsal.md` — real imported Jetson sampled bundle summary generation record
 - `docs/export-import-design.md` — successful-run bundle manifest/checksum/import contract
 - `docs/compare-workflow-guide.md` — `Comparable`, `Mode`, `Metrics Delta` interpretation
 - `inferedge_env/cli.py` — `report bundle-summary` command surface
@@ -198,6 +199,7 @@ Minimum tests:
 - **Compare Workflow Guide**: compare interpretation and metric delta suppression rules are reused.
 - **Sampler Metadata Artifact Policy**: sampler evidence remains optional artifact evidence.
 - **V1 Handoff Status**: this implementation closes the first generated report step and leaves richer bundle-dir validation as future work.
+- **Jetson Bundle Summary Rehearsal**: confirms the generator output on real imported sampled Jetson evidence.
 
 ## 6. WHY — 배경 판단
 
