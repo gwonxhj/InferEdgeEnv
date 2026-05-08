@@ -76,6 +76,8 @@ For the same principle on real sampled Jetson evidence, see [Jetson Sampled Comp
 
 For the conditional branch on real sampled Jetson evidence, see [Jetson Sampled Conditional Comparison Rehearsal](jetson-sampled-conditional-comparison-rehearsal.md). That flow changes only `execution_provider` and verifies `Metrics Delta` is suppressed.
 
+For the target branch on real sampled Jetson evidence, see [Jetson Sampled Target Comparison Rehearsal](jetson-sampled-target-comparison-rehearsal.md). That flow changes only target profile metadata and verifies `Mode: target-comparison`.
+
 ### Reading outcomes
 
 | Output | Meaning | Next action |
@@ -100,6 +102,7 @@ For the conditional branch on real sampled Jetson evidence, see [Jetson Sampled 
 - **Resource Metrics Design**: resource metrics는 compare gate가 아니라 secondary evidence다.
 - **Jetson Sampled Comparison Rehearsal**: validates the same rule on real `tegrastats` sampled runs.
 - **Jetson Sampled Conditional Comparison Rehearsal**: validates runtime/provider conditional mode and metric delta suppression on sampled runs.
+- **Jetson Sampled Target Comparison Rehearsal**: validates target-comparison mode and metric delta suppression on sampled runs.
 - **Registry Resource Query Design**: compare는 registry `result_path`를 통해 result artifact를 읽는다.
 
 ## 6. WHY — 배경 판단

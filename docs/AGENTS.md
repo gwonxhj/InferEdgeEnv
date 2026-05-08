@@ -21,6 +21,7 @@ README와 설계/운영 문서가 위치하는 영역이다. EdgeEnv가 무엇�
 - `docs/jetson-env-setup-hardening.md` — Jetson source snapshot, conda Python, `PYTHONPATH` 기반 sampled smoke 기준
 - `docs/jetson-sampled-comparison-rehearsal.md` — sampled Jetson run 두 개로 compare가 protocol-first 판단을 유지하는지 검증하는 기록
 - `docs/jetson-sampled-conditional-comparison-rehearsal.md` — provider 차이가 있는 sampled Jetson run 비교에서 Conditional과 metric delta suppression을 검증하는 기록
+- `docs/jetson-sampled-target-comparison-rehearsal.md` — target profile 차이가 있는 sampled Jetson run 비교에서 target-comparison과 metric delta suppression을 검증하는 기록
 - `docs/compare-workflow-guide.md` — 두 local run 생성부터 `runs list/show/report compare`까지 이어지는 compare workflow guide
 - `docs/failed-run-inspection.md` — failed-run artifact를 `failed-runs list/show/export/import`로 안전하게 확인/이동하는 guide
 - `docs/export-import-design.md` — successful run evidence와 failed-run diagnostic bundle zip export/import contract

@@ -140,3 +140,31 @@ def test_jetson_sampled_conditional_compare_smoke_script_rejects_missing_value()
 
     assert result.returncode == 2
     assert "Missing value for --python" in result.stderr
+
+
+def test_jetson_sampled_target_compare_smoke_script_help():
+    result = subprocess.run(
+        ["bash", "scripts/smoke_jetson_sampled_target_compare.sh", "--help"],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0
+    assert "Usage: scripts/smoke_jetson_sampled_target_compare.sh" in result.stdout
+    assert "target-comparison output" in result.stdout
+    assert "PYTHONPATH" in result.stdout
+
+
+def test_jetson_sampled_target_compare_smoke_script_rejects_missing_value():
+    result = subprocess.run(
+        ["bash", "scripts/smoke_jetson_sampled_target_compare.sh", "--edgeenv-root"],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 2
+    assert "Missing value for --edgeenv-root" in result.stderr
