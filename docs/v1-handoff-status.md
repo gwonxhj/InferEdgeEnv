@@ -200,6 +200,7 @@ scripts/smoke_jetson_source_env.sh --python /home/risenano01/miniconda3/envs/yol
 scripts/smoke_jetson_sampled_compare.sh --python /home/risenano01/miniconda3/envs/yolo_env/bin/python --keep-artifacts
 scripts/smoke_jetson_sampled_conditional_compare.sh --python /home/risenano01/miniconda3/envs/yolo_env/bin/python --keep-artifacts
 scripts/smoke_jetson_sampled_target_compare.sh --python /home/risenano01/miniconda3/envs/yolo_env/bin/python --keep-artifacts
+scripts/smoke_jetson_sampled_bundle_handoff.sh --python /home/risenano01/miniconda3/envs/yolo_env/bin/python --keep-artifacts
 ```
 
 Notes:
@@ -209,6 +210,7 @@ Notes:
 - `scripts/smoke_jetson_sampled_compare.sh` verifies that sampled resource evidence stays outside compare gates.
 - `scripts/smoke_jetson_sampled_conditional_compare.sh` verifies runtime/provider Conditional mode and metric delta suppression with sampled evidence present.
 - `scripts/smoke_jetson_sampled_target_compare.sh` verifies target-comparison mode and metric delta suppression with sampled evidence present.
+- `scripts/smoke_jetson_sampled_bundle_handoff.sh` verifies sampled successful-run bundle export/import and imported compare outcomes for same-condition, runtime-conditional, and target-conditional paths.
 - Tests should use `tmp_path` for `.edgeenv` data and must not pollute the repo root registry.
 - GitHub Actions repeats the core readiness contract on Python 3.10 and 3.11.
 - Before tagging a release, rerun or review [EdgeEnv MVP v1 Release Rehearsal](v1-release-rehearsal.md) and update the package version intentionally.
@@ -219,7 +221,7 @@ Recommended next work should stay in coherent bundles rather than tiny one-off P
 
 Good next bundles:
 
-- **Jetson sampled evidence bundle handoff**: export the same-condition, runtime-conditional, and target-conditional sampled run bundles and record their manifest portability expectations.
+- **Jetson sampled bundle portability review**: after one or two more Jetson runs, review whether bundle summaries need a small human-readable handoff report format separate from raw manifests.
 - **Registry resource query migration**: implement only after query/index use cases are clear, following [Registry Resource Query Design](registry-resource-query-design.md).
 
 Avoid next bundles that jump straight into:

@@ -78,6 +78,8 @@ For the conditional branch on real sampled Jetson evidence, see [Jetson Sampled 
 
 For the target branch on real sampled Jetson evidence, see [Jetson Sampled Target Comparison Rehearsal](jetson-sampled-target-comparison-rehearsal.md). That flow changes only target profile metadata and verifies `Mode: target-comparison`.
 
+For portability across workspaces, see [Jetson Sampled Evidence Bundle Handoff](jetson-sampled-evidence-bundle-handoff.md). That flow exports/imports same-condition, runtime-conditional, and target-conditional sampled bundles, then compares the imported runs.
+
 ### Reading outcomes
 
 | Output | Meaning | Next action |
@@ -103,6 +105,7 @@ For the target branch on real sampled Jetson evidence, see [Jetson Sampled Targe
 - **Jetson Sampled Comparison Rehearsal**: validates the same rule on real `tegrastats` sampled runs.
 - **Jetson Sampled Conditional Comparison Rehearsal**: validates runtime/provider conditional mode and metric delta suppression on sampled runs.
 - **Jetson Sampled Target Comparison Rehearsal**: validates target-comparison mode and metric delta suppression on sampled runs.
+- **Jetson Sampled Evidence Bundle Handoff**: validates that imported sampled bundles keep the same compare judgement.
 - **Registry Resource Query Design**: compare는 registry `result_path`를 통해 result artifact를 읽는다.
 
 ## 6. WHY — 배경 판단
