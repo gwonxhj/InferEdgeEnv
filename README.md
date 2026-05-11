@@ -4,30 +4,23 @@ EdgeEnv is a config-driven Edge AI inference benchmark runner, local result regi
 
 ## Start Here for v0.1.2
 
-`v0.1.2` is the current MVP v1 baseline. Start with a deterministic fake run, then connect a local command, then compare only after EdgeEnv has checked whether the two runs are comparable.
+`v0.1.2` is the current MVP v1 baseline. The first path is:
 
-```bash
-python -m pip install -e ".[dev]"
-edgeenv doctor
-edgeenv bench run --target examples/profiles/local_fake.yaml --config examples/benches/yolov8n_fire.yaml
-edgeenv runs list
-```
+1. Install and run `doctor`.
+2. Record a deterministic fake run.
+3. Try a local command run.
+4. Compare only after EdgeEnv checks comparability.
+5. Use Jetson docs only when you are ready to run EdgeEnv locally on the Jetson shell.
 
-If install fails while pip is fetching build dependencies, check
-[Install And Quickstart Resilience](docs/install-quickstart-resilience.md)
-before treating it as an EdgeEnv runtime failure.
+Validated scope: fake/local benchmark recording, artifact storage, registry lookup, export/import, comparability reports, optional resource metrics, read-only bundle summaries, and Jetson `tegrastats` sampled evidence through local execution on Jetson.
 
-What is already validated:
+Start with [Quickstart](#quickstart). If install fails while pip is fetching build dependencies, check [Install And Quickstart Resilience](docs/install-quickstart-resilience.md) before treating it as an EdgeEnv runtime failure.
 
-- local fake/local benchmark recording, artifacts, registry lookup, export/import, and compare
-- optional resource metrics and read-only bundle summary reports
-- Jetson `tegrastats` sampled evidence through local execution on the Jetson shell
+After the first fake run, choose the next path:
 
-Useful next reads:
-
-- [EdgeEnv v0.1.2 Follow-up Note](docs/release-follow-up-v0.1.2.md) — what to trust after release and where to start
-- [Local Command Contract Guide](docs/local-command-contract.md) — how to connect your own benchmark command
-- [Jetson Measurement Operations Checklist](docs/jetson-operations-checklist.md) — how to repeat Jetson sampled measurements
+- Connect your command: [Local Command Contract Guide](docs/local-command-contract.md)
+- Compare two runs: [Compare Workflow Guide](docs/compare-workflow-guide.md)
+- Repeat Jetson measurements: [Jetson Measurement Operations Checklist](docs/jetson-operations-checklist.md)
 
 ## Problem
 
@@ -46,6 +39,8 @@ EdgeEnv is not:
 - A single-score ranking system for all models
 
 ## Quickstart
+
+Install and confirm both entrypoints:
 
 ```bash
 python -m pip install -e ".[dev]"
@@ -80,7 +75,20 @@ The local target executes `command` on the current machine and reads an explicit
 
 To connect your own benchmark command, start from `examples/scripts/local_benchmark_template.py`, then review the adapter pattern in [Local Real Benchmark Example Guide](docs/local-real-benchmark-example.md).
 
-### 3. Try Sampler Wrapper Cases
+### 3. Compare Two Runs
+
+Compare two registered runs after you have at least two successful run IDs. EdgeEnv prints the comparability judgement before any metric delta.
+
+```bash
+edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_compare_a.yaml
+edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_compare_b.yaml
+edgeenv runs list
+edgeenv report compare <run_id_a> <run_id_b>
+```
+
+For the full flow, see [Compare Workflow Guide](docs/compare-workflow-guide.md).
+
+### 4. Optional Resource And Sampler Evidence
 
 Sampler wrapper examples show the first integration boundary for optional resource evidence.
 
@@ -113,7 +121,7 @@ edgeenv failed-runs export <failed_run_id> --output edgeenv-failed-run-<failed_r
 edgeenv failed-runs import edgeenv-failed-run-<failed_run_id>.zip
 ```
 
-### 4. Inspect Evidence
+### 5. Inspect Evidence
 
 `runs show` reads the result artifact and includes resource evidence when the local command emits it:
 
@@ -136,19 +144,6 @@ edgeenv runs resources list --metric memory_peak_mb
 }
 ```
 
-### 5. Compare Runs
-
-Compare two registered runs after you have at least two successful run IDs:
-
-```bash
-edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_compare_a.yaml
-edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_compare_b.yaml
-edgeenv runs list
-edgeenv report compare <run_id_a> <run_id_b>
-```
-
-For the full flow, see [Compare Workflow Guide](docs/compare-workflow-guide.md).
-
 The fake target uses `FakeRunner`, so it does not execute a real model.
 Local benchmark configs may set `timeout_seconds`, `working_directory`, and uppercase `extra_env` keys for controlled command execution.
 The Python package is `inferedge_env`; the user-facing CLI command remains `edgeenv`.
@@ -157,11 +152,11 @@ The Python package is `inferedge_env`; the user-facing CLI command remains `edge
 
 Start here:
 
-- [MVP Readiness Checklist](docs/mvp-readiness-checklist.md) — what works in this MVP and what remains out of scope
-- [EdgeEnv v0.1.2 Follow-up Note](docs/release-follow-up-v0.1.2.md) — what to trust after the release and where to start
-- [README Quickstart Clean-room Rehearsal](docs/readme-quickstart-cleanroom-rehearsal.md) — fresh source archive and venv validation of the README path
 - [Install And Quickstart Resilience](docs/install-quickstart-resilience.md) — how to triage install, build dependency, and entrypoint failures
+- [README Quickstart Clean-room Rehearsal](docs/readme-quickstart-cleanroom-rehearsal.md) — fresh source archive and venv validation of the README path
+- [EdgeEnv v0.1.2 Follow-up Note](docs/release-follow-up-v0.1.2.md) — what to trust after the release and where to start
 - [EdgeEnv v0.1.3 Candidate Plan](docs/v0.1.3-candidate-plan.md) — ordered first-user polish candidates after v0.1.2
+- [MVP Readiness Checklist](docs/mvp-readiness-checklist.md) — what works in this MVP and what remains out of scope
 - [EdgeEnv MVP v1 Handoff Status](docs/v1-handoff-status.md) — current state, validation commands, and next work candidates
 - [EdgeEnv MVP v1 Release Rehearsal](docs/v1-release-rehearsal.md) — main-based user-flow rehearsal and v1 tag gate
 - [Packaging And Entrypoint Readiness](docs/packaging-entrypoints.md) — install, module entrypoint, and console script checks
