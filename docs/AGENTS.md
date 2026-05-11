@@ -29,6 +29,7 @@ README와 설계/운영 문서가 위치하는 영역이다. EdgeEnv가 무엇�
 - `docs/jetson-bundle-summary-rehearsal.md` — 실제 imported Jetson sampled bundle runs에서 `report bundle-summary` Markdown output을 검증하는 기록
 - `docs/jetson-operations-checklist.md` — `v0.1.2` 이후 Jetson 실측 반복 운영을 위한 사전 점검, evidence 보관, 실패 triage 체크리스트
 - `docs/release-follow-up-v0.1.2.md` — `v0.1.2` 이후 사용자가 무엇을 믿고 어디서 시작할지 정리한 짧은 follow-up note
+- `docs/release-follow-up-v0.1.3.md` — `v0.1.3` first-user polish release 이후 사용자가 무엇을 믿고 어디서 시작할지 정리한 짧은 follow-up note
 - `docs/readme-quickstart-cleanroom-rehearsal.md` — 깨끗한 source archive와 새 venv에서 README Quickstart를 검증한 기록
 - `docs/v0.1.3-candidate-plan.md` — `v0.1.3` first-user polish 후보 4단계와 순차 진행 기준
 - `docs/install-quickstart-resilience.md` — install/build dependency/entrypoint 실패를 구분하는 Quickstart troubleshooting 기준

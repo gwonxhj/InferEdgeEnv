@@ -16,6 +16,7 @@
 - `docs/readme-quickstart-cleanroom-rehearsal.md` — clean source archive + fresh venv 검증 기록
 - `docs/jetson-operations-checklist.md` — optional Jetson 반복 운영 절차
 - `docs/release-follow-up-v0.1.2.md` — release follow-up note 형식
+- `docs/release-follow-up-v0.1.3.md` — latest release follow-up note 형식
 - `docs/v0.1.3-candidate-plan.md` — v0.1.3 polish 작업 순서
 - `docs/v0.1.3-release-rehearsal.md` — 이 checklist 기준으로 수행한 v0.1.3 후보 리허설 기록
 
