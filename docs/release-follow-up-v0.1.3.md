@@ -12,6 +12,7 @@ Release baseline:
 
 - Version: `0.1.3`
 - Tag: `v0.1.3`
+- GitHub Release: [EdgeEnv v0.1.3](https://github.com/gwonxhj/InferEdgeEnv/releases/tag/v0.1.3)
 - Release theme: first-user polish release
 - Primary CLI: `edgeenv`
 - Module entrypoint: `python -m inferedge_env.cli`
