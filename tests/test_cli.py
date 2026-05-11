@@ -441,6 +441,79 @@ runtime_tags: [local]
     assert payload["run_id"] in resources_result.output
     assert "memory_peak_mb" in resources_result.output
     assert "512.0" in resources_result.output
+    assert "supplemental lookup evidence" in resources_result.output
+    assert "Sources: benchmark-command (1)" in resources_result.output
+    json_resources_result = runner.invoke(
+        app,
+        [
+            "runs",
+            "resources",
+            "list",
+            "--metric",
+            "memory_peak_mb",
+            "--min-value",
+            "500",
+            "--json",
+            "--edgeenv-root",
+            str(edgeenv_root),
+        ],
+    )
+    assert json_resources_result.exit_code == 0
+    resources_payload = json.loads(json_resources_result.output)
+    assert resources_payload["count"] == 1
+    assert "supplemental lookup evidence" in resources_payload["note"]
+    assert resources_payload["filters"]["metric"] == "memory_peak_mb"
+    assert resources_payload["sources"] == [
+        {"count": 1, "source": "benchmark-command"}
+    ]
+    assert resources_payload["results"][0]["run_id"] == payload["run_id"]
+    assert resources_payload["results"][0]["metric_value"] == 512.0
+    assert resources_payload["results"][0]["unit"] == "mb"
+
+    export_path = tmp_path / "exports" / "resource-run.zip"
+    imported_root = tmp_path / "imported" / ".edgeenv"
+    export_result = runner.invoke(
+        app,
+        [
+            "runs",
+            "export",
+            payload["run_id"],
+            "--output",
+            str(export_path),
+            "--edgeenv-root",
+            str(edgeenv_root),
+        ],
+    )
+    import_result = runner.invoke(
+        app,
+        [
+            "runs",
+            "import",
+            str(export_path),
+            "--edgeenv-root",
+            str(imported_root),
+        ],
+    )
+    imported_resources_result = runner.invoke(
+        app,
+        [
+            "runs",
+            "resources",
+            "list",
+            "--metric",
+            "memory_peak_mb",
+            "--json",
+            "--edgeenv-root",
+            str(imported_root),
+        ],
+    )
+    assert export_result.exit_code == 0
+    assert import_result.exit_code == 0
+    assert imported_resources_result.exit_code == 0
+    imported_resources_payload = json.loads(imported_resources_result.output)
+    assert imported_resources_payload["count"] == 1
+    assert imported_resources_payload["results"][0]["run_id"] == payload["run_id"]
+    assert imported_resources_payload["results"][0]["source"] == "benchmark-command"
 
 
 def test_cli_runs_export_creates_evidence_zip(tmp_path, config_files):

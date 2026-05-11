@@ -128,6 +128,7 @@ edgeenv failed-runs import edgeenv-failed-run-<failed_run_id>.zip
 ```bash
 edgeenv runs show <run_id>
 edgeenv runs resources list --metric memory_peak_mb
+edgeenv runs resources list --metric memory_peak_mb --json
 ```
 
 ```json
@@ -302,7 +303,7 @@ Reason:
 `runs.db` is a local SQLite index. The run directory remains the evidence bundle.
 Failed local runs are stored under `failed-runs/` for debugging and are not inserted into `runs.db`. Use `edgeenv failed-runs list` and `edgeenv failed-runs show <run_id>` to inspect failed-run artifacts safely.
 
-Resource metrics remain canonical in `result.json`. `runs.db` also keeps a rebuildable `resource_metric_index` so `edgeenv runs resources list --metric <name>` can find runs by normalized memory, power, energy, or temperature evidence without turning those values into rankings or comparability gates.
+Resource metrics remain canonical in `result.json`. `runs.db` also keeps a rebuildable `resource_metric_index` so `edgeenv runs resources list --metric <name>` can find runs by normalized memory, power, energy, or temperature evidence without turning those values into rankings or comparability gates. Add `--json` when scripts need the same supplemental lookup results with explicit filters, units, and source counts.
 
 Use `edgeenv runs export <run_id> --output edgeenv-run-<run_id>.zip` to create a portable successful-run evidence bundle. Use `edgeenv runs import edgeenv-run-<run_id>.zip` to validate the bundle, copy it into `.edgeenv/runs/`, and rebuild the local registry row.
 

@@ -48,6 +48,12 @@ python -m inferedge_env.cli runs resources list \
   --metric memory_peak_mb \
   --min-value 500 \
   --edgeenv-root "$work_root/source.edgeenv"
+
+python -m inferedge_env.cli runs resources list \
+  --metric memory_peak_mb \
+  --min-value 500 \
+  --json \
+  --edgeenv-root "$work_root/source.edgeenv"
 ```
 
 successful-run evidence bundle을 export/import한다.
@@ -68,6 +74,12 @@ python -m inferedge_env.cli runs resources list \
   --metric memory_peak_mb \
   --min-value 500 \
   --edgeenv-root "$work_root/imported.edgeenv"
+
+python -m inferedge_env.cli runs resources list \
+  --metric memory_peak_mb \
+  --min-value 500 \
+  --json \
+  --edgeenv-root "$work_root/imported.edgeenv"
 ```
 
 Expected behavior:
@@ -75,6 +87,7 @@ Expected behavior:
 - source lookup and imported lookup return the same `run_id`.
 - `memory_peak_mb=512.0 mb` remains visible in both registries.
 - `Source: example-script` remains visible in both registries.
+- JSON lookup returns the same supplemental rows with explicit `filters`, `unit`, and `sources`.
 - `runs show <run_id>` on imported root still reads `result.json` and shows the full `resource_metrics` object.
 - imported `runs.db` is rebuilt local index state, not zip evidence.
 
@@ -136,9 +149,41 @@ Source lookup output:
 
 ```text
 EdgeEnv Resource Metrics
+Resource metrics are supplemental lookup evidence; they do not affect comparability or ranking.
+Results: 1
+Sources: example-script (1)
 - Run ID: run-20260508-052016-46f39862
   Metric: memory_peak_mb=512.0 mb
   Source: example-script
+```
+
+Source JSON lookup output shape:
+
+```json
+{
+  "count": 1,
+  "filters": {
+    "max_value": null,
+    "metric": "memory_peak_mb",
+    "min_value": 500.0,
+    "source": null
+  },
+  "note": "Resource metrics are supplemental lookup evidence; they do not affect comparability or ranking.",
+  "results": [
+    {
+      "metric_name": "memory_peak_mb",
+      "metric_value": 512.0,
+      "source": "example-script",
+      "unit": "mb"
+    }
+  ],
+  "sources": [
+    {
+      "count": 1,
+      "source": "example-script"
+    }
+  ]
+}
 ```
 
 Export/import output:
@@ -157,6 +202,9 @@ Imported lookup output:
 
 ```text
 EdgeEnv Resource Metrics
+Resource metrics are supplemental lookup evidence; they do not affect comparability or ranking.
+Results: 1
+Sources: example-script (1)
 - Run ID: run-20260508-052016-46f39862
   Metric: memory_peak_mb=512.0 mb
   Source: example-script
@@ -166,6 +214,9 @@ Imported source-filtered lookup output:
 
 ```text
 EdgeEnv Resource Metrics
+Resource metrics are supplemental lookup evidence; they do not affect comparability or ranking.
+Results: 1
+Sources: example-script (1)
 - Run ID: run-20260508-052016-46f39862
   Metric: power_peak_w=11.4 w
   Source: example-script
@@ -191,5 +242,6 @@ Conclusion:
 
 - Source and imported registries returned the same run id for `memory_peak_mb >= 500`.
 - Imported registry returned the same resource source after index rebuild.
+- JSON output preserved the lookup boundary by exposing source/unit/filter metadata without adding ranking or compare semantics.
 - Full `resource_metrics` remained in imported `result.json`.
 - The query index was useful for lookup, but did not replace artifacts or imply ranking/comparability semantics.
