@@ -18,6 +18,7 @@
 - `docs/export-import-design.md` — successful/failed evidence portability contract
 - `docs/resource-query-rehearsal.md` — source/imported registry resource lookup rehearsal
 - `docs/jetson-bundle-summary-rehearsal.md` — generated bundle-summary smoke record
+- `docs/release-maintenance-checklist.md` — repeatable local, clean-room, optional Jetson, tag, and GitHub Release gate
 - `pyproject.toml` — package version and `edgeenv` console script
 
 기술 스택: Typer CLI, local filesystem artifacts, SQLite registry, zip export/import, read-only Markdown reports, pytest, GitHub Actions readiness workflow

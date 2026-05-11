@@ -19,6 +19,7 @@ EdgeEnv MVP가 현재 어떤 사용자 흐름을 지원하고, 어떤 범위를 
 - `docs/ci-readiness.md` — PR/main 자동 검증 기준
 - `docs/v1-handoff-status.md` — handoff snapshot과 next work candidates
 - `docs/v1-release-rehearsal.md` — main 기준 user-flow rehearsal과 release/tag gate
+- `docs/release-maintenance-checklist.md` — 반복 릴리스 운영 gate
 - `examples/` — 실행 가능한 deterministic fixtures
 - `tests/` — CLI, registry, writer, compare regression coverage
 

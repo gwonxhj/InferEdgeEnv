@@ -157,6 +157,7 @@ Start here:
 - [README Quickstart Clean-room Rehearsal](docs/readme-quickstart-cleanroom-rehearsal.md) — fresh source archive and venv validation of the README path
 - [EdgeEnv v0.1.2 Follow-up Note](docs/release-follow-up-v0.1.2.md) — what to trust after the release and where to start
 - [EdgeEnv v0.1.3 Candidate Plan](docs/v0.1.3-candidate-plan.md) — ordered first-user polish candidates after v0.1.2
+- [Release Maintenance Checklist](docs/release-maintenance-checklist.md) — repeatable local, clean-room, optional Jetson, tag, and GitHub Release gate
 - [MVP Readiness Checklist](docs/mvp-readiness-checklist.md) — what works in this MVP and what remains out of scope
 - [EdgeEnv MVP v1 Handoff Status](docs/v1-handoff-status.md) — current state, validation commands, and next work candidates
 - [EdgeEnv MVP v1 Release Rehearsal](docs/v1-release-rehearsal.md) — main-based user-flow rehearsal and v1 tag gate

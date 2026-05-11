@@ -32,6 +32,7 @@ README와 설계/운영 문서가 위치하는 영역이다. EdgeEnv가 무엇�
 - `docs/readme-quickstart-cleanroom-rehearsal.md` — 깨끗한 source archive와 새 venv에서 README Quickstart를 검증한 기록
 - `docs/v0.1.3-candidate-plan.md` — `v0.1.3` first-user polish 후보 4단계와 순차 진행 기준
 - `docs/install-quickstart-resilience.md` — install/build dependency/entrypoint 실패를 구분하는 Quickstart troubleshooting 기준
+- `docs/release-maintenance-checklist.md` — local tests, clean-room rehearsal, optional Jetson smoke, tag, GitHub Release를 반복 가능한 gate로 묶은 릴리스 체크리스트
 - `docs/compare-workflow-guide.md` — 두 local run 생성부터 `runs list/show/report compare`까지 이어지는 compare workflow guide
 - `docs/failed-run-inspection.md` — failed-run artifact를 `failed-runs list/show/export/import`로 안전하게 확인/이동하는 guide
 - `docs/export-import-design.md` — successful run evidence와 failed-run diagnostic bundle zip export/import contract
