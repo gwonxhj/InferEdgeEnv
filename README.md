@@ -16,6 +16,8 @@ Validated scope: fake/local benchmark recording, artifact storage, registry look
 
 Start with [Quickstart](#quickstart). If install fails while pip is fetching build dependencies, check [Install And Quickstart Resilience](docs/install-quickstart-resilience.md) before treating it as an EdgeEnv runtime failure.
 
+If the first path is confusing or blocked, open a [README Quickstart feedback issue](https://github.com/gwonxhj/InferEdgeEnv/issues/new?template=readme-quickstart-feedback.md) and use [EdgeEnv v0.1.3 User Feedback Backlog](docs/v0.1.3-user-feedback-backlog.md) to classify the first blocked step.
+
 After the first fake run, choose the next path:
 
 - Connect your command: [Local Command Contract Guide](docs/local-command-contract.md)
@@ -154,6 +156,7 @@ The Python package is `inferedge_env`; the user-facing CLI command remains `edge
 Start here:
 
 - [EdgeEnv v0.1.3 Follow-up Note](docs/release-follow-up-v0.1.3.md) — what changed in the polish release and where to start
+- [EdgeEnv v0.1.3 User Feedback Backlog](docs/v0.1.3-user-feedback-backlog.md) — how to collect first-user questions before adding new features
 - [Install And Quickstart Resilience](docs/install-quickstart-resilience.md) — how to triage install, build dependency, and entrypoint failures
 - [README Quickstart Clean-room Rehearsal](docs/readme-quickstart-cleanroom-rehearsal.md) — fresh source archive and venv validation of the README path
 - [MVP Readiness Checklist](docs/mvp-readiness-checklist.md) — what works in this MVP and what remains out of scope

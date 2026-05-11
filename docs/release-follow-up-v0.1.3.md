@@ -62,6 +62,11 @@ For release/review work:
 - Start with [Release Maintenance Checklist](release-maintenance-checklist.md).
 - See [EdgeEnv v0.1.3 Release Rehearsal](v0.1.3-release-rehearsal.md) for the local gate that passed before this release.
 
+For first-user feedback:
+
+- Start with [EdgeEnv v0.1.3 User Feedback Backlog](v0.1.3-user-feedback-backlog.md).
+- Capture the first blocked README path before proposing new feature work.
+
 ## 4. HOW NOT — 아직 하지 않는 것
 
 `v0.1.3` does not add:
@@ -81,11 +86,12 @@ Do not present Jetson validation as remote runner support. Jetson evidence is co
 Use this order when reviewing the release state:
 
 1. [README](../README.md) — quickstart and project scope
-2. [EdgeEnv v0.1.3 Release Rehearsal](v0.1.3-release-rehearsal.md) — checklist pass before version bump/tag
-3. [Release Maintenance Checklist](release-maintenance-checklist.md) — repeatable release gate
-4. [EdgeEnv v0.1.3 Candidate Plan](v0.1.3-candidate-plan.md) — completed first-user polish sequence
-5. [EdgeEnv MVP v1 Handoff Status](v1-handoff-status.md) — current capability snapshot
-6. [Jetson Measurement Operations Checklist](jetson-operations-checklist.md) — repeated hardware measurement procedure
+2. [EdgeEnv v0.1.3 User Feedback Backlog](v0.1.3-user-feedback-backlog.md) — first-user question intake before new feature work
+3. [EdgeEnv v0.1.3 Release Rehearsal](v0.1.3-release-rehearsal.md) — checklist pass before version bump/tag
+4. [Release Maintenance Checklist](release-maintenance-checklist.md) — repeatable release gate
+5. [EdgeEnv v0.1.3 Candidate Plan](v0.1.3-candidate-plan.md) — completed first-user polish sequence
+6. [EdgeEnv MVP v1 Handoff Status](v1-handoff-status.md) — current capability snapshot
+7. [Jetson Measurement Operations Checklist](jetson-operations-checklist.md) — repeated hardware measurement procedure
 
 ## 6. WHY — 배경 판단
 

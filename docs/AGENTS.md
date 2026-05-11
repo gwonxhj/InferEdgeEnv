@@ -31,6 +31,7 @@ README와 설계/운영 문서가 위치하는 영역이다. EdgeEnv가 무엇�
 - `docs/release-follow-up-v0.1.2.md` — `v0.1.2` 이후 사용자가 무엇을 믿고 어디서 시작할지 정리한 짧은 follow-up note
 - `docs/release-follow-up-v0.1.3.md` — `v0.1.3` first-user polish release 이후 사용자가 무엇을 믿고 어디서 시작할지 정리한 짧은 follow-up note
 - `docs/v0.1.3-post-release-sanity-sweep.md` — `v0.1.3` tag/GitHub Release 이후 README/release note의 첫 진입 문구를 점검한 기록
+- `docs/v0.1.3-user-feedback-backlog.md` — `v0.1.3` 이후 외부 사용자가 README 시작 경로를 따라가며 막히는 지점을 수집하는 기준
 - `docs/readme-quickstart-cleanroom-rehearsal.md` — 깨끗한 source archive와 새 venv에서 README Quickstart를 검증한 기록
 - `docs/v0.1.3-candidate-plan.md` — `v0.1.3` first-user polish 후보 4단계와 순차 진행 기준
 - `docs/install-quickstart-resilience.md` — install/build dependency/entrypoint 실패를 구분하는 Quickstart troubleshooting 기준
