@@ -14,7 +14,7 @@ from inferedge_env.compare.comparability import check_comparability
 from inferedge_env.config.bench_config import load_benchmark_config
 from inferedge_env.config.target_profile import TargetProfile, load_target_profile
 from inferedge_env.registry.db import RunRegistry
-from inferedge_env.registry.models import RegistryRecord
+from inferedge_env.registry.models import RegistryRecord, ResourceMetricRecord
 from inferedge_env.report.bundle_summary import (
     BundleSummaryError,
     BundleSummaryOptions,
@@ -53,6 +53,10 @@ runs_resources_app = typer.Typer(help="Resource metric index commands.")
 failed_runs_app = typer.Typer(help="Failed local run artifact commands.")
 report_app = typer.Typer(help="Report and comparison commands.")
 console = Console()
+_RESOURCE_LOOKUP_NOTE = (
+    "Resource metrics are supplemental lookup evidence; they do not affect "
+    "comparability or ranking."
+)
 
 app.add_typer(profile_app, name="profile")
 app.add_typer(bench_app, name="bench")
@@ -261,6 +265,11 @@ def list_run_resources(
         "--max-value",
         help="Optional inclusive upper bound for metric values.",
     ),
+    json_output: bool = typer.Option(
+        False,
+        "--json",
+        help="Print machine-readable lookup results as JSON.",
+    ),
     edgeenv_root: Path = typer.Option(
         Path(".edgeenv"),
         "--edgeenv-root",
@@ -277,10 +286,29 @@ def list_run_resources(
         )
     except ValueError as exc:
         _fail(str(exc))
+    if json_output:
+        console.print(
+            json.dumps(
+                _resource_metric_lookup_payload(
+                    records,
+                    metric=metric,
+                    source=source,
+                    min_value=min_value,
+                    max_value=max_value,
+                ),
+                indent=2,
+                sort_keys=True,
+            ),
+            soft_wrap=True,
+        )
+        return
     console.print("[bold]EdgeEnv Resource Metrics[/bold]")
+    console.print(_RESOURCE_LOOKUP_NOTE, soft_wrap=True)
+    console.print(f"Results: {len(records)}")
     if not records:
         console.print("No indexed resource metrics found.")
         return
+    console.print(f"Sources: {_format_resource_sources(records)}", soft_wrap=True)
     for record in records:
         console.print(f"- Run ID: {record.run_id}", soft_wrap=True)
         console.print(
@@ -676,6 +704,62 @@ def _resource_metrics_status(resource_metrics: ResourceMetrics | None) -> str:
     if measured_fields:
         return f"Resource metrics: stored (fields={', '.join(measured_fields)})"
     return "Resource metrics: stored"
+
+
+def _resource_metric_lookup_payload(
+    records: list[ResourceMetricRecord],
+    *,
+    metric: str | None,
+    source: str | None,
+    min_value: float | None,
+    max_value: float | None,
+) -> dict[str, Any]:
+    return {
+        "count": len(records),
+        "filters": {
+            "metric": metric,
+            "source": source,
+            "min_value": min_value,
+            "max_value": max_value,
+        },
+        "note": _RESOURCE_LOOKUP_NOTE,
+        "results": [
+            {
+                "run_id": record.run_id,
+                "created_at": record.created_at.isoformat(),
+                "target_name": record.target_name,
+                "model_name": record.model_name,
+                "metric_name": record.metric_name,
+                "metric_value": record.metric_value,
+                "unit": record.unit,
+                "source": record.source,
+            }
+            for record in records
+        ],
+        "sources": _resource_source_counts(records),
+    }
+
+
+def _resource_source_counts(
+    records: list[ResourceMetricRecord],
+) -> list[dict[str, Any]]:
+    counts: dict[str, int] = {}
+    for record in records:
+        source = record.source or "unspecified"
+        counts[source] = counts.get(source, 0) + 1
+    return [
+        {"source": source, "count": count}
+        for source, count in sorted(counts.items())
+    ]
+
+
+def _format_resource_sources(records: list[ResourceMetricRecord]) -> str:
+    counts = _resource_source_counts(records)
+    if not counts:
+        return "none"
+    return ", ".join(
+        f"{item['source']} ({item['count']})" for item in counts
+    )
 
 
 def _print_same_condition_metric_delta(a: RunResult, b: RunResult) -> None:

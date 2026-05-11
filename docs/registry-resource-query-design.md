@@ -61,9 +61,10 @@ Supported first command:
 edgeenv runs resources list
 edgeenv runs resources list --metric memory_peak_mb
 edgeenv runs resources list --metric power_peak_w --min-value 8 --source jetson-tegrastats
+edgeenv runs resources list --metric memory_peak_mb --json
 ```
 
-The output is inspection-oriented, not ranking-oriented. It lists run id, metric name, value, unit, and source. Full run context remains available through:
+The output is inspection-oriented, not ranking-oriented. Text output lists run id, metric name, value, unit, source, result count, and source summary. JSON output exposes the same lookup as `count`, `filters`, `sources`, and `results` so scripts can consume it without treating resource metrics as canonical evidence. Full run context remains available through:
 
 ```bash
 edgeenv runs show <run_id>
@@ -163,6 +164,7 @@ Validation:
 ```bash
 python -m pytest tests/test_registry.py tests/test_cli.py -q
 python -m inferedge_env.cli runs resources list --help
+python -m inferedge_env.cli runs resources list --metric memory_peak_mb --json
 ```
 
 See [Resource Query Rehearsal](resource-query-rehearsal.md) for the local source/imported registry flow that confirms lookup semantics survive export/import.
