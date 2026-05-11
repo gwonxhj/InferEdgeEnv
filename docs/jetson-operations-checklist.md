@@ -2,7 +2,7 @@
 
 ## 1. WHAT — 이 문서가 정하는 것
 
-`v0.1.2` 이후 Jetson에서 sampled benchmark를 반복 실행할 때 확인할 운영 체크리스트를 정한다. 목표는 매번 같은 기준으로 환경을 확인하고, evidence를 보관하고, 실패 시 어디서부터 triage할지 빠르게 판단하는 것이다.
+`v0.1.3` 이후 Jetson에서 sampled benchmark를 반복 실행할 때 확인할 운영 체크리스트를 정한다. 목표는 매번 같은 기준으로 환경을 확인하고, evidence를 보관하고, 실패 시 어디서부터 triage할지 빠르게 판단하는 것이다.
 
 이 문서는 새 기능 설계가 아니다. SSH target, remote runner, model server, dashboard, leaderboard를 추가하지 않는다. Jetson에 접속한 뒤 Jetson shell에서 InferEdgeEnv local runner와 optional `jetson-tegrastats` sampler를 실행하는 운영 기준이다.
 
@@ -32,7 +32,7 @@ Host-side checks:
 git switch main
 git pull --ff-only
 git status --short --branch
-git tag --list "v0.1.2"
+git tag --list "v0.1.3"
 ```
 
 Expected:
@@ -46,15 +46,15 @@ Do not start a new measurement run from an unknown branch unless the goal is exp
 When Jetson does not already have a current source snapshot, create and transfer one from the host:
 
 ```bash
-git archive --format=tar --output=/tmp/inferedgeenv-v0.1.2-ops.tar HEAD
-scp /tmp/inferedgeenv-v0.1.2-ops.tar risenano01@nano01.local:/tmp/inferedgeenv-v0.1.2-ops.tar
+git archive --format=tar --output=/tmp/inferedgeenv-v0.1.3-ops.tar HEAD
+scp /tmp/inferedgeenv-v0.1.3-ops.tar risenano01@nano01.local:/tmp/inferedgeenv-v0.1.3-ops.tar
 ```
 
 Then unpack it into a fresh Jetson source directory:
 
 ```bash
 mkdir -p /tmp/InferEdgeEnv-jetson-ops-source
-tar -xf /tmp/inferedgeenv-v0.1.2-ops.tar -C /tmp/InferEdgeEnv-jetson-ops-source
+tar -xf /tmp/inferedgeenv-v0.1.3-ops.tar -C /tmp/InferEdgeEnv-jetson-ops-source
 cd /tmp/InferEdgeEnv-jetson-ops-source
 ```
 
@@ -235,7 +235,7 @@ python -m inferedge_env.cli report bundle-summary --help
 
 ## 5. WHERE — 다른 문서와의 관계
 
-- **Release Rehearsal**: this checklist is the operational companion to the `v0.1.2` release gate.
+- **Release Rehearsal**: this checklist is the operational companion to the current `v0.1.3` release gate.
 - **Jetson Environment Setup Hardening**: use it when Python or `PYTHONPATH` setup is unclear.
 - **Jetson Sampled Run Rehearsal**: use it for single sampled run expectations and concrete observed output.
 - **Jetson Sampled Evidence Bundle Handoff**: use it for export/import and imported compare integrity.
@@ -244,7 +244,7 @@ python -m inferedge_env.cli report bundle-summary --help
 
 ## 6. WHY — 배경 판단
 
-After `v0.1.2`, the useful next improvement is not more scope but repeatability. Jetson evidence can be convincing only when the environment, run roots, exported bundles, imported registry, and handoff report are collected consistently.
+After `v0.1.3`, the useful next improvement is not more scope but repeatability. Jetson evidence can be convincing only when the environment, run roots, exported bundles, imported registry, and handoff report are collected consistently.
 
 This checklist keeps the operation local-first: the Jetson executes the benchmark locally, EdgeEnv records artifacts locally, and exported bundles move evidence without smuggling registry state or turning sampled resource data into a compare gate.
 
