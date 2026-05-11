@@ -157,6 +157,7 @@ Start here:
 
 - [EdgeEnv v0.1.3 Follow-up Note](docs/release-follow-up-v0.1.3.md) — what changed in the polish release and where to start
 - [EdgeEnv v0.1.3 User Feedback Backlog](docs/v0.1.3-user-feedback-backlog.md) — how to collect first-user questions before adding new features
+- [EdgeEnv v0.1.3 Feedback Template Rehearsal](docs/v0.1.3-feedback-template-rehearsal.md) — sample first-user feedback issues from a README replay
 - [Install And Quickstart Resilience](docs/install-quickstart-resilience.md) — how to triage install, build dependency, and entrypoint failures
 - [README Quickstart Clean-room Rehearsal](docs/readme-quickstart-cleanroom-rehearsal.md) — fresh source archive and venv validation of the README path
 - [MVP Readiness Checklist](docs/mvp-readiness-checklist.md) — what works in this MVP and what remains out of scope
