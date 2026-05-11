@@ -46,6 +46,11 @@ Expected package metadata:
 - console script: `edgeenv = inferedge_env.cli:main`
 - dev extra includes `pytest`
 
+If this fails while pip is installing build dependencies, check network/package
+index access before treating it as an EdgeEnv runtime issue. See
+[Install And Quickstart Resilience](install-quickstart-resilience.md) for the
+triage path.
+
 ### Module entrypoint
 
 ```bash
@@ -69,6 +74,19 @@ bash scripts/smoke_entrypoints.sh
 ```
 
 The script intentionally checks install, module entrypoint, console script entrypoint, and the full pytest suite. It should be run from the repository root.
+
+If it fails during `python -m pip install -e ".[dev]"`, rerun the install step
+manually with the active Python environment and check whether build dependencies
+can be downloaded or are already cached.
+
+### Troubleshooting quick table
+
+| Symptom | Likely cause | Next check |
+| --- | --- | --- |
+| `Installing build dependencies` fails | network/index unavailable or build dependencies not cached | `python -m pip install --upgrade pip setuptools wheel` |
+| `edgeenv: command not found` | venv not active or shell PATH points elsewhere | `python -m inferedge_env.cli doctor` |
+| module doctor works but console script does not | console script installed in another environment | `which edgeenv` and `python -m pip show inferedge-env` |
+| both doctor commands work | install path is healthy | run fake profile/config validation |
 
 ### CI workflow
 
@@ -102,6 +120,7 @@ metadata, and checks successful-run export/import preservation.
 - install smoke가 repo root `.edgeenv`를 만들도록 하지 않는다.
 - Jetson source snapshot smoke에서 editable install을 필수로 만들지 않는다.
 - packaging readiness 작업에 Docker/WSL/SSH/cloud release path를 섞지 않는다.
+- no-network pip failure를 EdgeEnv runtime failure처럼 기록하지 않는다.
 
 ## 5. WHERE — 다른 설계와의 관계
 
@@ -110,6 +129,7 @@ metadata, and checks successful-run export/import preservation.
 - **CLI**: `inferedge_env.cli:main`이 console script target이다.
 - **Tests**: metadata와 entrypoint behavior를 regression contract로 고정한다.
 - **Jetson Environment Setup Hardening**: source snapshot validation uses `PYTHONPATH` plus a known-good Python environment.
+- **Install And Quickstart Resilience**: explains user-facing install failure triage before benchmark commands run.
 
 ## 6. WHY — 배경 판단
 
@@ -117,4 +137,4 @@ EdgeEnv는 CLI-first tool이므로, 설치 직후 `doctor`가 안정적으로 �
 
 ## 7. ⚠️ LEARNED CAUTIONS — 학습된 주의사항
 
-_(아직 없음)_
+- Clean-room install failures caused by missing network access to build dependencies should be triaged as environment/setup issues before investigating EdgeEnv runtime behavior.

@@ -230,8 +230,11 @@ Recommended next work should stay in coherent bundles rather than tiny one-off P
 
 Good next bundles:
 
+- **Install / Quickstart Resilience**: first v0.1.3 candidate; make editable install and entrypoint failures easier to triage for clean venv users.
+- **README Quickstart Command Consistency**: second v0.1.3 candidate; reduce duplicated entry paths and clarify fake/local/compare/Jetson next steps.
 - **Jetson operations rehearsal refresh**: update the operations checklist when repeated hardware runs reveal a new preflight check, artifact naming convention, or triage step.
 - **Resource query UX refinement**: only if repeated use shows a need for JSON output, source summaries, or richer filters.
+- **Release maintenance checklist**: fourth v0.1.3 candidate; collect clean-room, optional Jetson, tag, and GitHub Release steps for repeatable release work.
 - **Release rehearsal refresh**: rerun the v1 user-flow rehearsal when the next code feature changes CLI behavior or artifact layout.
 
 Avoid next bundles that jump straight into:

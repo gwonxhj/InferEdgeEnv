@@ -13,6 +13,10 @@ edgeenv bench run --target examples/profiles/local_fake.yaml --config examples/b
 edgeenv runs list
 ```
 
+If install fails while pip is fetching build dependencies, check
+[Install And Quickstart Resilience](docs/install-quickstart-resilience.md)
+before treating it as an EdgeEnv runtime failure.
+
 What is already validated:
 
 - local fake/local benchmark recording, artifacts, registry lookup, export/import, and compare
@@ -156,6 +160,8 @@ Start here:
 - [MVP Readiness Checklist](docs/mvp-readiness-checklist.md) — what works in this MVP and what remains out of scope
 - [EdgeEnv v0.1.2 Follow-up Note](docs/release-follow-up-v0.1.2.md) — what to trust after the release and where to start
 - [README Quickstart Clean-room Rehearsal](docs/readme-quickstart-cleanroom-rehearsal.md) — fresh source archive and venv validation of the README path
+- [Install And Quickstart Resilience](docs/install-quickstart-resilience.md) — how to triage install, build dependency, and entrypoint failures
+- [EdgeEnv v0.1.3 Candidate Plan](docs/v0.1.3-candidate-plan.md) — ordered first-user polish candidates after v0.1.2
 - [EdgeEnv MVP v1 Handoff Status](docs/v1-handoff-status.md) — current state, validation commands, and next work candidates
 - [EdgeEnv MVP v1 Release Rehearsal](docs/v1-release-rehearsal.md) — main-based user-flow rehearsal and v1 tag gate
 - [Packaging And Entrypoint Readiness](docs/packaging-entrypoints.md) — install, module entrypoint, and console script checks
