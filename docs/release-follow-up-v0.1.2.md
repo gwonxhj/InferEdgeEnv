@@ -85,10 +85,11 @@ Use this order when reviewing the release state:
 
 1. [README](../README.md) — quickstart and project scope
 2. [EdgeEnv MVP v1 Release Rehearsal](v1-release-rehearsal.md) — release/tag gate
-3. [EdgeEnv MVP v1 Handoff Status](v1-handoff-status.md) — current capability snapshot
-4. [Jetson Measurement Operations Checklist](jetson-operations-checklist.md) — repeated hardware measurement procedure
-5. [Jetson Sampled Evidence Bundle Handoff](jetson-sampled-evidence-bundle-handoff.md) — real sampled bundle portability record
-6. [Jetson Bundle Summary Rehearsal](jetson-bundle-summary-rehearsal.md) — generated Markdown handoff summary record
+3. [Release Maintenance Checklist](release-maintenance-checklist.md) — repeatable local, clean-room, optional Jetson, tag, and GitHub Release gate
+4. [EdgeEnv MVP v1 Handoff Status](v1-handoff-status.md) — current capability snapshot
+5. [Jetson Measurement Operations Checklist](jetson-operations-checklist.md) — repeated hardware measurement procedure
+6. [Jetson Sampled Evidence Bundle Handoff](jetson-sampled-evidence-bundle-handoff.md) — real sampled bundle portability record
+7. [Jetson Bundle Summary Rehearsal](jetson-bundle-summary-rehearsal.md) — generated Markdown handoff summary record
 
 ## 6. WHY — 배경 판단
 
