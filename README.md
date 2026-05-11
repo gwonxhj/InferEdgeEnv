@@ -62,6 +62,8 @@ edgeenv runs list
 edgeenv runs show <run_id>
 ```
 
+Use the `Run ID` printed by `bench run`, or copy it from `edgeenv runs list`, when replacing `<run_id>`.
+
 ### 2. Record a Local Command Run
 
 Then try the local runner examples. These execute small deterministic Python commands on the current machine.
