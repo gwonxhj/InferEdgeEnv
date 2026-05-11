@@ -2,9 +2,9 @@
 
 EdgeEnv is a config-driven Edge AI inference benchmark runner, local result registry, and comparability checker.
 
-## Start Here for v0.1.2
+## Start Here for v0.1.3
 
-`v0.1.2` is the current MVP v1 baseline. The first path is:
+`v0.1.3` is the current first-user polish baseline. The first path is:
 
 1. Install and run `doctor`.
 2. Record a deterministic fake run.
@@ -155,6 +155,7 @@ Start here:
 
 - [Install And Quickstart Resilience](docs/install-quickstart-resilience.md) — how to triage install, build dependency, and entrypoint failures
 - [README Quickstart Clean-room Rehearsal](docs/readme-quickstart-cleanroom-rehearsal.md) — fresh source archive and venv validation of the README path
+- [EdgeEnv v0.1.3 Follow-up Note](docs/release-follow-up-v0.1.3.md) — what changed in the polish release and where to start
 - [EdgeEnv v0.1.2 Follow-up Note](docs/release-follow-up-v0.1.2.md) — what to trust after the release and where to start
 - [EdgeEnv v0.1.3 Candidate Plan](docs/v0.1.3-candidate-plan.md) — ordered first-user polish candidates after v0.1.2
 - [Release Maintenance Checklist](docs/release-maintenance-checklist.md) — repeatable local, clean-room, optional Jetson, tag, and GitHub Release gate
