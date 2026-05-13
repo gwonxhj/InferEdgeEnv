@@ -97,7 +97,7 @@ Use this order when reviewing the release state:
 
 The value of `v0.1.3` is first-run confidence. It tightens the install/quickstart path, makes resource query output easier to inspect or script, and leaves a repeatable release gate for future maintainers.
 
-The project boundary stays the same: EdgeEnv records local evidence and judges comparability. It does not become an OS layer, remote execution system, cloud service, or leaderboard.
+The project boundary stays the same: EdgeEnv records local run evidence and judges comparability. It does not become an OS layer, remote execution system, cloud service, validation/decision layer, or leaderboard.
 
 ## 7. ⚠️ LEARNED CAUTIONS — 학습된 주의사항
 

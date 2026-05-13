@@ -259,7 +259,7 @@ Suggested release notes:
 
 ```text
 Summary
-- EdgeEnv MVP v1 provides config-driven fake/local benchmark runs, local artifact storage, SQLite registry lookup, resource metric lookup, comparability judgement, read-only handoff summaries, and portable evidence export/import.
+- EdgeEnv MVP v1 provides a local-first run evidence registry: config-driven fake/local benchmark runs, local artifact storage, SQLite registry lookup, resource metric lookup, comparability judgement, read-only handoff summaries, and portable evidence export/import.
 - Successful runs are stored under .edgeenv/runs/<run_id>/ and failed diagnostics under .edgeenv/failed-runs/<run_id>/.
 - Compare reports prioritize comparability mode before optional metric deltas.
 - Resource metrics remain optional secondary evidence; result.json is canonical and resource_metric_index is rebuildable local lookup state.
