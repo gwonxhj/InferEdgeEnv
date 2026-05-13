@@ -9,7 +9,9 @@
 관련 파일:
 
 - `examples/benches/local_runtime_adapter.yaml` — local runtime adapter demo config
+- `examples/benches/local_adapter_template.yaml` — copyable adapter template config
 - `examples/scripts/local_runtime_adapter_demo.py` — runtime command wrapper demo
+- `examples/scripts/adapter_template.py` — minimal wrapper template to copy for a user-owned runtime command
 - `examples/profiles/local.yaml` — local target profile
 - `docs/local-command-contract.md` — required stdout contract
 - `docs/failed-run-inspection.md` — failed command debugging flow
@@ -18,7 +20,26 @@
 
 ## 3. HOW — 예제를 실행하고 바꾸는 방법
 
-Run the example:
+Run the copyable adapter template:
+
+```bash
+edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_adapter_template.yaml
+edgeenv runs list
+edgeenv runs show <run_id>
+```
+
+The template command has two layers:
+
+```text
+python examples/scripts/adapter_template.py [adapter args] -- python -c "print('adapter-template-runtime')"
+```
+
+- Left of `--`: EdgeEnv adapter options and deterministic placeholder metrics.
+- Right of `--`: the user-owned runtime command to replace.
+
+`adapter_template.py` is the file to copy when wiring a real command. It forwards wrapped stdout/stderr, preserves a nonzero wrapped command exit as a failed run, and emits EdgeEnv metrics only after the wrapped command succeeds.
+
+Run the richer demo:
 
 ```bash
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_runtime_adapter.yaml
