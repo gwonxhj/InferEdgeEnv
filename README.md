@@ -161,6 +161,7 @@ Start here:
 - [EdgeEnv v0.1.3 Follow-up Note](docs/release-follow-up-v0.1.3.md) — what changed in the polish release and where to start
 - [InferEdgeEnv Six-Month Quality Roadmap](docs/six-month-quality-roadmap.md) — staged quality plan for evidence conformance, adapter templates, schema policy, demo path, error polish, and release gates
 - [Evidence Contract Conformance Suite](docs/evidence-contract-conformance-suite.md) — public CLI tests for valid/corrupt evidence, failed-run artifacts, compare judgement, and export/import portability
+- [Schema Versioning And Migration Policy](docs/schema-versioning-migration-policy.md) — how result, sampler, failed-run, export, and registry schemas evolve without silent future-version imports
 - [EdgeEnv v0.1.3 User Feedback Backlog](docs/v0.1.3-user-feedback-backlog.md) — how to collect first-user questions before adding new features
 - [EdgeEnv v0.1.3 Feedback Template Rehearsal](docs/v0.1.3-feedback-template-rehearsal.md) — sample first-user feedback issues from a README replay
 - [EdgeEnv v0.1.3 Synthetic User Simulation](docs/v0.1.3-synthetic-user-simulation.md) — persona-based README review when real user feedback is not available yet

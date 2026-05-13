@@ -25,6 +25,7 @@
 - `scripts/smoke_jetson_sampled_bundle_handoff.sh` — sampled Jetson same/runtime/target evidence bundle portability smoke
 - `docs/jetson-sampled-bundle-portability-review.md` — optional human-readable handoff report format
 - `docs/bundle-report-generation-design.md` — read-only report generation contract
+- `docs/schema-versioning-migration-policy.md` — schema marker compatibility and unknown future-version rejection policy
 
 기술 스택: zip archive, JSON manifest, SHA-256 checksums, existing Pydantic result schema, local filesystem
 
@@ -198,6 +199,8 @@ For real sampled Jetson evidence, [Jetson Sampled Evidence Bundle Handoff](jetso
 
 [Bundle Report Generation Design](bundle-report-generation-design.md) describes how that Markdown summary is generated from imported artifacts and compare output without mutating bundles.
 
+[Schema Versioning And Migration Policy](schema-versioning-migration-policy.md) defines which artifact schema markers are accepted. Import rejects unknown future manifest, result, failed-run, or sampler metadata schema markers until a migration policy exists.
+
 ## 4. HOW NOT — 피해야 할 함정
 
 - Do not export `runs.db` as the source of truth.
@@ -221,6 +224,7 @@ For real sampled Jetson evidence, [Jetson Sampled Evidence Bundle Handoff](jetso
 - **Failed Run Inspection**: failed-run artifacts stay diagnostic and portable, but out of the successful-run registry/compare path.
 - **Local Command Contract**: stdout/stderr/config/target/env files preserve evidence for later review.
 - **Sampler Metadata Artifact Policy**: sampler metadata stays in optional `sampler/metadata.json` extension evidence.
+- **Schema Versioning And Migration Policy**: schema markers gate semantic compatibility after checksum and path validation.
 
 ## 6. WHY — 배경 판단
 
