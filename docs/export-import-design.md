@@ -226,7 +226,7 @@ For real sampled Jetson evidence, [Jetson Sampled Evidence Bundle Handoff](jetso
 
 EdgeEnv의 evidence는 local registry row가 아니라 artifact bundle이다. Export/import should move that evidence without making claims about trust, ranking, or environment equivalence. The safest first design is therefore artifact-first: verify bytes, validate schema, copy evidence, then rebuild the local index.
 
-This keeps the future implementation small and reversible while preserving the MVP boundary: local-first benchmark result recording and comparability judgement.
+This keeps the future implementation small and reversible while preserving the MVP boundary: local-first run evidence registry and comparability judgement.
 
 ## 7. ⚠️ LEARNED CAUTIONS — 학습된 주의사항
 

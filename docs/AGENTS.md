@@ -27,7 +27,7 @@ README와 설계/운영 문서가 위치하는 영역이다. EdgeEnv가 무엇�
 - `docs/jetson-sampled-bundle-portability-review.md` — sampled bundle handoff를 사람이 읽기 쉬운 report로 요약할지 결정하는 기록
 - `docs/bundle-report-generation-design.md` — imported artifacts와 compare output에서 Markdown handoff report를 자동 생성할지 정하는 설계
 - `docs/jetson-bundle-summary-rehearsal.md` — 실제 imported Jetson sampled bundle runs에서 `report bundle-summary` Markdown output을 검증하는 기록
-- `docs/jetson-operations-checklist.md` — `v0.1.2` 이후 Jetson 실측 반복 운영을 위한 사전 점검, evidence 보관, 실패 triage 체크리스트
+- `docs/jetson-operations-checklist.md` — `v0.1.3` 이후 Jetson 실측 반복 운영을 위한 사전 점검, evidence 보관, 실패 triage 체크리스트
 - `docs/release-follow-up-v0.1.2.md` — `v0.1.2` 이후 사용자가 무엇을 믿고 어디서 시작할지 정리한 짧은 follow-up note
 - `docs/release-follow-up-v0.1.3.md` — `v0.1.3` first-user polish release 이후 사용자가 무엇을 믿고 어디서 시작할지 정리한 짧은 follow-up note
 - `docs/v0.1.3-post-release-sanity-sweep.md` — `v0.1.3` tag/GitHub Release 이후 README/release note의 첫 진입 문구를 점검한 기록
@@ -70,7 +70,7 @@ README와 설계/운영 문서가 위치하는 영역이다. EdgeEnv가 무엇�
 - **경계 / 어댑터**: 구현 contract를 사람이 이해하는 product narrative로 바꾸는 boundary
 
 ## 6. WHY — 코드에 안 적힌 배경 지식
-EdgeEnv는 InferEdge의 validation evidence 철학을 더 작은 benchmark runner/registry 제품으로 분리한 프로젝트다. EdgeBench와 가까운 이름을 갖지만 public leaderboard가 아니라 local comparability checker에 초점을 둔다.
+EdgeEnv는 InferEdge의 실행/판단 파이프라인과 분리된 local-first run evidence registry이자 comparability checker다. InferEdgeLab이 validation/decision layer라면, EdgeEnv는 benchmark run evidence를 local artifact와 SQLite registry로 고정하고 비교 가능성을 판정하는 영역에 집중한다.
 
 _(이 영역의 비명백한 함정·배경 지식이 더 있다면 자유롭게 추가하세요. `learn` 스킬(`/learn` 또는 Codex의 `$learn`)로도 누적 가능합니다.)_
 

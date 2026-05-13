@@ -170,7 +170,7 @@ edgeenv failed-runs show <run_id>
 
 local runner에서 가장 위험한 선택은 "아무 command나 실행하고 로그를 적당히 읽어 latency를 알아낸다"는 방식이다. 그 방식은 처음에는 편해 보이지만, benchmark마다 로그 형식이 다르고 process startup overhead와 inference latency가 섞여 비교 가능성을 망친다.
 
-그래서 v1.1 local runner는 command가 EdgeEnv metrics contract를 명시적으로 출력하게 한다. EdgeEnv는 실행, capture, schema validation, artifact/registry persistence만 담당한다. 이 책임 분리가 EdgeEnv의 목표인 result recording and comparability judgement와 맞다.
+그래서 v1.1 local runner는 command가 EdgeEnv metrics contract를 명시적으로 출력하게 한다. EdgeEnv는 실행, capture, schema validation, artifact/registry persistence만 담당한다. 이 책임 분리가 EdgeEnv의 목표인 run evidence registry와 comparability judgement에 맞다.
 
 ## 7. ⚠️ LEARNED CAUTIONS — 학습된 주의사항
 

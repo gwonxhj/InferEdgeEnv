@@ -1,6 +1,6 @@
 # EdgeEnv
 
-EdgeEnv is a config-driven Edge AI inference benchmark runner, local result registry, and comparability checker.
+InferEdgeEnv is a local-first run evidence registry and comparability checker for Edge AI inference benchmark results. The user-facing CLI command is `edgeenv`.
 
 ## Start Here for v0.1.3
 
@@ -326,11 +326,13 @@ Use `edgeenv report bundle-summary --scenario <label>:<run_id_a>:<run_id_b>` to 
 
 ## Relation To InferEdge And EdgeBench
 
-InferEdge is a broader validation evidence workflow around build provenance, runtime execution, evaluation, comparison, optional diagnosis, and deployment decision reports.
+InferEdge validates whether a model is deployable across build provenance, runtime execution, evaluation, comparison, optional diagnosis, and deployment decision reports.
 
-EdgeEnv keeps a narrower scope: local benchmark execution metadata, result storage, and comparability judgement. It shares InferEdge's evidence-first philosophy but does not try to become the full InferEdge validation pipeline.
+In portfolio terms, InferEdgeLab is the validation / decision layer. InferEdgeEnv is the run evidence registry / comparability layer.
 
-EdgeBench is adjacent in benchmark motivation, but EdgeEnv is not a public leaderboard. It is a local-first tool for reproducible result recording and comparability checks.
+InferEdgeEnv records whether benchmark evidence can be trusted and compared. Its scope is narrower and separate: local run artifacts, SQLite registry rows, portable evidence bundles, and comparability judgement.
+
+EdgeBench is adjacent in benchmark motivation, but InferEdgeEnv is not a public leaderboard. It is a local-first run evidence registry and comparability checker, not a ranking surface.
 
 ## MVP Scope
 

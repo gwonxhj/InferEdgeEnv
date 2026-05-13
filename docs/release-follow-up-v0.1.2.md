@@ -93,7 +93,7 @@ Use this order when reviewing the release state:
 
 ## 6. WHY — 배경 판단
 
-The value of `v0.1.2` is not that it runs every possible edge runtime. The value is that it records local evidence consistently, preserves artifacts across export/import, and refuses to compare numbers without checking benchmark protocol compatibility first.
+The value of `v0.1.2` is not that it runs every possible edge runtime. The value is that it records local run evidence consistently, preserves artifacts across export/import, and refuses to compare numbers without checking benchmark protocol compatibility first.
 
 The Jetson work closes the first hardware-backed loop: sampled resource evidence can travel with run bundles and remain supplemental after import. That makes the evidence easier to hand off without turning EdgeEnv into a remote execution system or leaderboard.
 
