@@ -30,6 +30,7 @@ README와 설계/운영 문서가 위치하는 영역이다. EdgeEnv가 무엇�
 - `docs/jetson-operations-checklist.md` — `v0.1.3` 이후 Jetson 실측 반복 운영을 위한 사전 점검, evidence 보관, 실패 triage 체크리스트
 - `docs/release-follow-up-v0.1.2.md` — `v0.1.2` 이후 사용자가 무엇을 믿고 어디서 시작할지 정리한 짧은 follow-up note
 - `docs/release-follow-up-v0.1.3.md` — `v0.1.3` first-user polish release 이후 사용자가 무엇을 믿고 어디서 시작할지 정리한 짧은 follow-up note
+- `docs/six-month-quality-roadmap.md` — 제출 전 6개월 동안 Evidence Contract Conformance Suite, Real Command Adapter Templates, Schema Versioning, Portfolio Demo Path, CLI Error Polish, Release Quality Gate를 순차 수행하기 위한 agentic 7섹션 실행 가이드
 - `docs/v0.1.3-post-release-sanity-sweep.md` — `v0.1.3` tag/GitHub Release 이후 README/release note의 첫 진입 문구를 점검한 기록
 - `docs/v0.1.3-user-feedback-backlog.md` — `v0.1.3` 이후 외부 사용자가 README 시작 경로를 따라가며 막히는 지점을 수집하는 기준
 - `docs/v0.1.3-feedback-template-rehearsal.md` — README Quickstart를 새 사용자 관점으로 재현하고 feedback issue template 샘플을 점검한 기록
