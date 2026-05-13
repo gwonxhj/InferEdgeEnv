@@ -11,8 +11,9 @@ from pathlib import Path, PurePosixPath
 from typing import Any
 
 from inferedge_env import __version__
-from inferedge_env.result.schema import RunResult
+from inferedge_env.result.schema import FAILED_RUN_SCHEMA_VERSION, RunResult
 from inferedge_env.result.writer import SAMPLER_METADATA_REQUIRED_KEYS, load_result
+from inferedge_env.samplers.base import SAMPLER_METADATA_SCHEMA_VERSION
 from inferedge_env.utils.hashing import sha256_file
 
 
@@ -581,6 +582,8 @@ def _validate_sampler_metadata(
         raise error_cls(
             "Sampler metadata missing required keys: " + ", ".join(missing)
         )
+    if payload.get("schema_version") != SAMPLER_METADATA_SCHEMA_VERSION:
+        raise error_cls("Unsupported sampler metadata schema")
     if not isinstance(payload["raw_artifacts"], list):
         raise error_cls("Sampler metadata raw_artifacts must be a list")
 
@@ -636,7 +639,7 @@ def _validate_failure_payload(
 ) -> None:
     if not isinstance(payload, dict):
         raise error_cls("failure.json must be a JSON object")
-    if payload.get("schema_version") != "edgeenv.failed-run.v1":
+    if payload.get("schema_version") != FAILED_RUN_SCHEMA_VERSION:
         raise error_cls("Unsupported failed-run schema")
     run_id = payload.get("run_id")
     if not isinstance(run_id, str):

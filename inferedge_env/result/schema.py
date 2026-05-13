@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
+
+
+RESULT_SCHEMA_VERSION = "edgeenv.result.v1"
+FAILED_RUN_SCHEMA_VERSION = "edgeenv.failed-run.v1"
 
 
 class BenchmarkProtocol(BaseModel):
@@ -72,7 +76,7 @@ class ResourceMetrics(BaseModel):
 class RunResult(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: str = "edgeenv.result.v1"
+    schema_version: Literal[RESULT_SCHEMA_VERSION] = RESULT_SCHEMA_VERSION
     run_id: str
     created_at: datetime
     benchmark_name: str

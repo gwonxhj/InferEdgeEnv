@@ -61,6 +61,57 @@ def test_result_json_files_created(tmp_path, bench_config, target_profile, confi
     assert loaded.resource_metrics is None
 
 
+def test_load_result_defaults_missing_schema_version_for_legacy_v1_artifact(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    bench_path, profile_path = config_files
+    runner_result = FakeRunner().run(bench_config, target_profile)
+    result = make_result(bench_config, target_profile, run_id="run-legacy-result")
+    run_dir = ResultArtifactWriter(tmp_path / ".edgeenv").write(
+        result,
+        bench_path,
+        profile_path,
+        runner_result.stdout,
+        runner_result.stderr,
+    )
+    result_path = run_dir / "result.json"
+    payload = json.loads(result_path.read_text(encoding="utf-8"))
+    payload.pop("schema_version")
+    result_path.write_text(json.dumps(payload), encoding="utf-8")
+
+    loaded = load_result(result_path)
+
+    assert loaded.schema_version == "edgeenv.result.v1"
+
+
+def test_load_result_rejects_unknown_result_schema_version(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    bench_path, profile_path = config_files
+    runner_result = FakeRunner().run(bench_config, target_profile)
+    result = make_result(bench_config, target_profile, run_id="run-future-result")
+    run_dir = ResultArtifactWriter(tmp_path / ".edgeenv").write(
+        result,
+        bench_path,
+        profile_path,
+        runner_result.stdout,
+        runner_result.stderr,
+    )
+    result_path = run_dir / "result.json"
+    payload = json.loads(result_path.read_text(encoding="utf-8"))
+    payload["schema_version"] = "edgeenv.result.v2"
+    result_path.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="edgeenv.result.v1"):
+        load_result(result_path)
+
+
 def test_result_json_persists_resource_metrics(
     tmp_path,
     bench_config,
@@ -180,6 +231,24 @@ def test_write_sampler_artifacts_rejects_missing_required_metadata_key(tmp_path)
         SamplerArtifactError,
         match="Sampler metadata missing required keys: platform_tool",
     ):
+        write_sampler_artifacts(run_dir, summary)
+
+    assert not (run_dir / "sampler" / "metadata.json").exists()
+
+
+def test_write_sampler_artifacts_rejects_unknown_metadata_schema(tmp_path):
+    run_dir = tmp_path / ".edgeenv" / "runs" / "run-sampler-future-schema"
+    run_dir.mkdir(parents=True)
+    metadata = _sampler_metadata(raw_artifacts=[])
+    metadata["schema_version"] = "edgeenv.sampler-metadata.v2"
+    summary = SamplerSummary(
+        resource_metrics=None,
+        metadata=metadata,
+        raw_artifacts=[],
+        warnings=[],
+    )
+
+    with pytest.raises(SamplerArtifactError, match="Unsupported sampler metadata schema"):
         write_sampler_artifacts(run_dir, summary)
 
     assert not (run_dir / "sampler" / "metadata.json").exists()
@@ -533,6 +602,49 @@ def test_import_successful_run_rejects_sampler_raw_without_metadata(
         import_successful_run(broken, tmp_path / "imported-edgeenv")
 
 
+def test_import_successful_run_rejects_unknown_sampler_metadata_schema(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    run_dir = _write_export_fixture(
+        tmp_path,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="run-import-sampler-future-schema",
+    )
+    _write_sampler_fixture(run_dir)
+    archive_path = export_successful_run(
+        run_dir,
+        tmp_path / "run-import-sampler-future-schema.zip",
+    )
+    future = tmp_path / "sampler-future-schema.zip"
+    metadata_path = "run-import-sampler-future-schema/sampler/metadata.json"
+    manifest_path = "run-import-sampler-future-schema/manifest.json"
+    with zipfile.ZipFile(archive_path) as source:
+        metadata = json.loads(source.read(metadata_path))
+        metadata["schema_version"] = "edgeenv.sampler-metadata.v2"
+        metadata_bytes = json.dumps(metadata, indent=2, sort_keys=True).encode()
+        manifest = json.loads(source.read(manifest_path))
+        for entry in manifest["files"]:
+            if entry["path"] == "sampler/metadata.json":
+                entry["sha256"] = hashlib.sha256(metadata_bytes).hexdigest()
+                entry["bytes"] = len(metadata_bytes)
+        _copy_zip_with_replacements(
+            source,
+            future,
+            {
+                manifest_path: json.dumps(manifest, indent=2, sort_keys=True).encode(),
+                metadata_path: metadata_bytes,
+            },
+        )
+
+    with pytest.raises(RunImportError, match="Unsupported sampler metadata schema"):
+        import_successful_run(future, tmp_path / "imported-edgeenv")
+
+
 def test_import_successful_run_rejects_checksum_mismatch(
     tmp_path,
     bench_config,
@@ -558,6 +670,81 @@ def test_import_successful_run_rejects_checksum_mismatch(
     with pytest.raises(RunImportError, match="Checksum mismatch"):
         import_successful_run(tampered, tmp_path / "imported-edgeenv")
     assert not (tmp_path / "imported-edgeenv").exists()
+
+
+def test_import_successful_run_rejects_unknown_export_manifest_schema(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    run_dir = _write_export_fixture(
+        tmp_path,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="run-import-future-export",
+    )
+    archive_path = export_successful_run(
+        run_dir,
+        tmp_path / "run-import-future-export.zip",
+    )
+    future = tmp_path / "future-export.zip"
+    manifest_path = "run-import-future-export/manifest.json"
+    with zipfile.ZipFile(archive_path) as source:
+        manifest = json.loads(source.read(manifest_path))
+        manifest["schema_version"] = "edgeenv.export.v2"
+        _copy_zip_with_replacements(
+            source,
+            future,
+            {manifest_path: json.dumps(manifest, indent=2, sort_keys=True).encode()},
+        )
+
+    with pytest.raises(RunImportError, match="Unsupported run evidence export schema"):
+        import_successful_run(future, tmp_path / "imported-edgeenv")
+
+
+def test_import_successful_run_rejects_unknown_result_schema_version(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    run_dir = _write_export_fixture(
+        tmp_path,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="run-import-future-result",
+    )
+    archive_path = export_successful_run(
+        run_dir,
+        tmp_path / "run-import-future-result.zip",
+    )
+    future = tmp_path / "future-result.zip"
+    result_path = "run-import-future-result/result.json"
+    manifest_path = "run-import-future-result/manifest.json"
+    with zipfile.ZipFile(archive_path) as source:
+        result = json.loads(source.read(result_path))
+        result["schema_version"] = "edgeenv.result.v2"
+        result_bytes = json.dumps(result, indent=2, sort_keys=True).encode()
+        manifest = json.loads(source.read(manifest_path))
+        manifest["source_result_schema_version"] = "edgeenv.result.v2"
+        for entry in manifest["files"]:
+            if entry["path"] == "result.json":
+                entry["sha256"] = hashlib.sha256(result_bytes).hexdigest()
+                entry["bytes"] = len(result_bytes)
+        _copy_zip_with_replacements(
+            source,
+            future,
+            {
+                manifest_path: json.dumps(manifest, indent=2, sort_keys=True).encode(),
+                result_path: result_bytes,
+            },
+        )
+
+    with pytest.raises(RunImportError, match="Invalid result.json"):
+        import_successful_run(future, tmp_path / "imported-edgeenv")
 
 
 def test_import_successful_run_rejects_unsafe_archive_path(
@@ -791,6 +978,16 @@ def _write_sampler_fixture(run_dir) -> None:
         warnings=[],
     )
     write_sampler_artifacts(run_dir, summary)
+
+
+def _copy_zip_with_replacements(
+    source: zipfile.ZipFile,
+    destination,
+    replacements: dict[str, bytes],
+) -> None:
+    with zipfile.ZipFile(destination, "w") as dest:
+        for info in source.infolist():
+            dest.writestr(info, replacements.get(info.filename, source.read(info)))
 
 
 def _sampler_metadata(raw_artifacts: list[str]) -> dict:

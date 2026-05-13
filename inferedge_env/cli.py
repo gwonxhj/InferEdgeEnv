@@ -30,7 +30,11 @@ from inferedge_env.result.exporter import (
     import_successful_run,
     validate_successful_run_import,
 )
-from inferedge_env.result.schema import ResourceMetrics, RunResult
+from inferedge_env.result.schema import (
+    FAILED_RUN_SCHEMA_VERSION,
+    ResourceMetrics,
+    RunResult,
+)
 from inferedge_env.result.writer import (
     FailedRunArtifactWriter,
     ResultArtifactWriter,
@@ -668,7 +672,7 @@ def _read_failure_json(failed_dir: Path) -> dict[str, Any]:
         payload = json.loads(failure_path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
         raise ValueError(f"Invalid failed run artifact: {failure_path}") from exc
-    if payload.get("schema_version") != "edgeenv.failed-run.v1":
+    if payload.get("schema_version") != FAILED_RUN_SCHEMA_VERSION:
         raise ValueError(f"Unsupported failed run schema: {failure_path}")
     return payload
 

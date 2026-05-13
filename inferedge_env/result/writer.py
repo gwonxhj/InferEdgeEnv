@@ -11,13 +11,17 @@ from inferedge_env.config.target_profile import TargetProfile
 from inferedge_env.result.schema import (
     BenchmarkMetrics,
     BenchmarkProtocol,
+    FAILED_RUN_SCHEMA_VERSION,
     ModelIdentity,
     RunResult,
     RuntimeIdentity,
     TargetIdentity,
 )
 from inferedge_env.runners.base import RunnerResult
-from inferedge_env.samplers.base import SamplerSummary
+from inferedge_env.samplers.base import (
+    SAMPLER_METADATA_SCHEMA_VERSION,
+    SamplerSummary,
+)
 from inferedge_env.utils.hashing import stable_model_hash
 from inferedge_env.utils.system_info import collect_system_info
 
@@ -190,7 +194,7 @@ class FailedRunArtifactWriter:
         failed_dir.mkdir(parents=True, exist_ok=False)
 
         failure = {
-            "schema_version": "edgeenv.failed-run.v1",
+            "schema_version": FAILED_RUN_SCHEMA_VERSION,
             "run_id": failure_id,
             "created_at": datetime.now(timezone.utc).isoformat(),
             "benchmark_name": config.name,
@@ -243,6 +247,8 @@ def _validate_sampler_metadata(metadata: dict[str, Any], run_dir: Path) -> None:
         raise SamplerArtifactError(
             "Sampler metadata missing required keys: " + ", ".join(missing)
         )
+    if metadata.get("schema_version") != SAMPLER_METADATA_SCHEMA_VERSION:
+        raise SamplerArtifactError("Unsupported sampler metadata schema")
     raw_artifacts = metadata["raw_artifacts"]
     if not isinstance(raw_artifacts, list):
         raise SamplerArtifactError("Sampler metadata raw_artifacts must be a list")

@@ -16,6 +16,7 @@ future sampler adapter가 만든 metadata와 raw sampler output을 성공 run ar
 - `inferedge_env/samplers/jetson_tegrastats.py` — first adapter metadata/raw artifact producer
 - `docs/sampler-adapter-api-design.md` — adapter API and metadata schema
 - `docs/export-import-design.md` — portable evidence bundle contract
+- `docs/schema-versioning-migration-policy.md` — sampler metadata schema marker compatibility policy
 - `docs/jetson-sampled-evidence-bundle-handoff.md` — real sampled Jetson export/import validation record
 - `docs/resource-metrics-design.md` — optional resource metrics policy
 
@@ -104,6 +105,8 @@ Required keys:
 - `raw_artifacts`
 - `fields`
 - `warnings`
+
+The current supported `schema_version` is `edgeenv.sampler-metadata.v1`. Unknown future sampler metadata schemas are rejected by writer/export/import paths until a migration policy is defined.
 
 ### Writer behavior
 
