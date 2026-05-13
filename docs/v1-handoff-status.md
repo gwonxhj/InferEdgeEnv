@@ -53,6 +53,7 @@ Use this path when checking config/result/registry lifecycle without executing a
 
 ```bash
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_template.yaml
+edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_adapter_template.yaml
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_runtime_adapter.yaml
 ```
 
@@ -186,6 +187,7 @@ python -m inferedge_env.cli profile validate examples/profiles/local_fake.yaml
 python -m inferedge_env.cli profile validate examples/profiles/local.yaml
 python -m inferedge_env.cli bench validate examples/benches/yolov8n_fire.yaml
 python -m inferedge_env.cli bench validate examples/benches/local_template.yaml
+python -m inferedge_env.cli bench validate examples/benches/local_adapter_template.yaml
 python -m inferedge_env.cli bench validate examples/benches/local_runtime_adapter.yaml
 python -m inferedge_env.cli bench validate examples/benches/local_compare_a.yaml
 git diff --check

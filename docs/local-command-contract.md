@@ -11,6 +11,8 @@ EdgeEnv는 모델을 대신 실행하거나 benchmark log를 추측하지 않는
 관련 파일:
 
 - `inferedge_env/runners/local.py` — local command 실행과 stdout contract parser
+- `examples/scripts/adapter_template.py` — 사용자 소유 runtime command를 감싸기 위한 copyable adapter template
+- `examples/benches/local_adapter_template.yaml` — adapter template을 실행하는 benchmark config
 - `examples/scripts/local_benchmark_template.py` — 사용자가 복사해 시작할 수 있는 최소 benchmark template
 - `examples/benches/local_template.yaml` — template script를 실행하는 benchmark config
 - `examples/scripts/local_runtime_adapter_demo.py` — runtime command adapter pattern 예시
@@ -65,6 +67,23 @@ edgeenv runs show <run_id>
 - optional resource metrics JSON line 출력
 
 ### Runtime adapter flow
+
+Start with the copyable adapter template when you already have a benchmark command to wrap:
+
+```bash
+edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_adapter_template.yaml
+edgeenv runs show <run_id>
+```
+
+`examples/scripts/adapter_template.py` runs the command after `--`, forwards diagnostic stdout/stderr, exits with the wrapped command code on failure, and only emits `EDGEENV_METRICS_JSON=` after the wrapped command succeeds. Copy this file when wiring a real user-owned runtime command.
+
+The deterministic demo keeps the command tiny:
+
+```text
+python examples/scripts/adapter_template.py [adapter args] -- python -c "print('adapter-template-runtime')"
+```
+
+Use the richer demo when you want a more opinionated example with protocol arguments:
 
 ```bash
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_runtime_adapter.yaml

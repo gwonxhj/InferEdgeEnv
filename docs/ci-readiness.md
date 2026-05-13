@@ -43,6 +43,7 @@ edgeenv profile validate examples/profiles/local_fake.yaml
 edgeenv profile validate examples/profiles/local.yaml
 edgeenv bench validate examples/benches/yolov8n_fire.yaml
 edgeenv bench validate examples/benches/local_template.yaml
+edgeenv bench validate examples/benches/local_adapter_template.yaml
 edgeenv bench validate examples/benches/local_runtime_adapter.yaml
 edgeenv bench validate examples/benches/local_compare_a.yaml
 python -m pytest -q

@@ -47,6 +47,7 @@ edgeenv bench run --target examples/profiles/local_fake.yaml --config examples/b
 
 ```bash
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_template.yaml
+edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_adapter_template.yaml
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_runtime_adapter.yaml
 ```
 

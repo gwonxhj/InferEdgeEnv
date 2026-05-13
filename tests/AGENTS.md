@@ -5,6 +5,7 @@ EdgeEnv MVP의 pytest 검증을 담당한다. config validation, FakeRunner dete
 
 ## 2. CONTENTS — 파일/디렉토리와 기술 스택
 - `tests/test_config_validation.py` — schema success/failure
+- `tests/test_adapter_templates.py` — copyable local adapter template success/failure CLI contract
 - `tests/test_evidence_contract_conformance.py` — valid/corrupt evidence stdout contract, failed-run artifact, compare judgement, export/import portability
 - `tests/test_fake_runner.py` — deterministic runner output
 - `tests/test_result_writer.py` — artifact files

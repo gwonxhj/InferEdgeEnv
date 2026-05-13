@@ -72,12 +72,13 @@ Then try the local runner examples. These execute small deterministic Python com
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_echo_metrics.yaml
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_resource_metrics.yaml
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_template.yaml
+edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_adapter_template.yaml
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_runtime_adapter.yaml
 ```
 
 The local target executes `command` on the current machine and reads an explicit `EDGEENV_METRICS_JSON=` line from stdout. Local commands may also emit an optional `EDGEENV_RESOURCE_METRICS_JSON=` line for memory, power, energy, or temperature evidence. `bench run` reports whether resource metrics were stored or omitted.
 
-To connect your own benchmark command, start from `examples/scripts/local_benchmark_template.py`, then review the adapter pattern in [Local Real Benchmark Example Guide](docs/local-real-benchmark-example.md).
+To connect your own benchmark command, start from `examples/scripts/adapter_template.py` when wrapping an existing command, or `examples/scripts/local_benchmark_template.py` when writing the benchmark loop directly. Then review the adapter pattern in [Local Real Benchmark Example Guide](docs/local-real-benchmark-example.md).
 
 ### 3. Compare Two Runs
 

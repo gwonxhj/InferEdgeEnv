@@ -16,10 +16,12 @@
 - `tests/test_local_runner.py` — command contract, failure handling, stdout/stderr capture 검증
 - `examples/benches/local_echo_metrics.yaml` — local runner smoke용 작은 예시
 - `examples/benches/local_template.yaml` — real command 연결을 위한 최소 template config
+- `examples/benches/local_adapter_template.yaml` — 사용자 소유 runtime command를 감싸는 copyable adapter template config
 - `examples/benches/local_runtime_adapter.yaml` — user-owned runtime command adapter pattern 예시
 - `examples/profiles/local.yaml` — local target profile 예시
 - `examples/scripts/emit_local_metrics.py` — local runner smoke command fixture
 - `examples/scripts/local_benchmark_template.py` — 사용자가 복사해 시작할 수 있는 benchmark command template
+- `examples/scripts/adapter_template.py` — wrapped runtime command failure/success를 보존하는 adapter template
 - `examples/scripts/local_runtime_adapter_demo.py` — runtime command wrapper demo
 - `docs/local-command-contract.md` — 사용자-facing stdout/config/troubleshooting guide
 - `docs/local-real-benchmark-example.md` — runtime adapter example walkthrough
