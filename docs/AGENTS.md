@@ -36,6 +36,7 @@ README와 설계/운영 문서가 위치하는 영역이다. EdgeEnv가 무엇�
 - `docs/schema-versioning-migration-policy.md` — result/sampler/export/registry schema가 v1 호환성을 유지하고 미래 schema를 명시적으로 거절하는 기준
 - `docs/portfolio-demo-path.md` — fake/local/compare/export-import/bundle-summary와 optional Jetson lane을 묶은 리뷰어용 canonical demo path
 - `docs/cli-error-message-polish.md` — config/local metrics/import/export 실패 시 CLI가 `Error:`와 `Hint:`로 안내해야 하는 기준
+- `docs/v0.1.4-post-release-sanity-sweep.md` — `v0.1.4` tag/GitHub Release 이후 README/release note의 첫 진입 문구를 점검한 기록
 - `docs/v0.1.3-post-release-sanity-sweep.md` — `v0.1.3` tag/GitHub Release 이후 README/release note의 첫 진입 문구를 점검한 기록
 - `docs/v0.1.3-user-feedback-backlog.md` — `v0.1.3` 이후 외부 사용자가 README 시작 경로를 따라가며 막히는 지점을 수집하는 기준
 - `docs/v0.1.3-feedback-template-rehearsal.md` — README Quickstart를 새 사용자 관점으로 재현하고 feedback issue template 샘플을 점검한 기록
