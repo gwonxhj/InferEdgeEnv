@@ -16,7 +16,8 @@
 - `docs/readme-quickstart-cleanroom-rehearsal.md` — clean source archive + fresh venv 검증 기록
 - `docs/jetson-operations-checklist.md` — optional Jetson 반복 운영 절차
 - `docs/release-follow-up-v0.1.2.md` — release follow-up note 형식
-- `docs/release-follow-up-v0.1.3.md` — latest release follow-up note 형식
+- `docs/release-follow-up-v0.1.4.md` — latest release follow-up note 형식
+- `docs/release-follow-up-v0.1.3.md` — previous release follow-up note 형식
 - `docs/v0.1.3-candidate-plan.md` — v0.1.3 polish 작업 순서
 - `docs/v0.1.3-release-rehearsal.md` — 이 checklist 기준으로 수행한 v0.1.3 후보 리허설 기록
 - `docs/release-quality-gate-refresh.md` — six-month quality roadmap 이후 반복 가능한 local/optional Jetson gate 기준
@@ -234,7 +235,7 @@ Non-goals
 
 EdgeEnv 릴리스는 기능 수를 늘리는 행위가 아니라, local-first evidence loop를 믿을 수 있는 기준선으로 고정하는 행위다. 체크리스트가 짧아야 반복되고, 반복돼야 release note가 과장 없이 유지된다.
 
-이 문서는 `v0.1.3` 이후에도 재사용할 수 있게 version-specific output보다 gate와 판단 기준을 중심으로 쓴다.
+이 문서는 `v0.1.4` 이후에도 재사용할 수 있게 version-specific output보다 gate와 판단 기준을 중심으로 쓴다.
 
 ## 7. ⚠️ LEARNED CAUTIONS — 학습된 주의사항
 
