@@ -1,5 +1,7 @@
 # tests 작업 가이드
 
+> Language: [English overview](../docs/language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 모듈은 무엇을 하는가
 EdgeEnv MVP의 pytest 검증을 담당한다. config validation, FakeRunner determinism, result artifact, registry, comparability, CLI smoke를 고정한다.
 

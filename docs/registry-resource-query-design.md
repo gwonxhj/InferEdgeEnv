@@ -1,5 +1,7 @@
 # Registry Resource Query Design
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 문서가 정하는 것
 
 Resource metrics를 SQLite registry에서 어떻게 조회할지, 그리고 `result.json` artifact source-of-truth를 어떻게 유지할지 기준을 정한다.

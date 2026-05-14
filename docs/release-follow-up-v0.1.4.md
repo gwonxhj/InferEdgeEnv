@@ -1,12 +1,14 @@
 # EdgeEnv v0.1.4 Follow-up Note
 
-## 1. WHAT — 이 문서가 정하는 것
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
 
-`v0.1.4` 릴리스 이후 사용자가 무엇을 믿고 어디서 시작하면 되는지 짧게 정리한다.
+## 1. WHAT — What This Document Defines
 
-`v0.1.4`는 새 target이나 leaderboard 릴리스가 아니다. `v0.1.3` first-user polish baseline 위에 evidence contract, real-command adapter template, schema policy, portfolio demo path, CLI error guidance, release quality gate를 묶은 release quality baseline이다.
+This note summarizes what users can trust after the `v0.1.4` release and where they should start.
 
-## 2. CONTENTS — 현재 믿을 수 있는 기준
+`v0.1.4` is not a new target or leaderboard release. It is a release quality baseline on top of the `v0.1.3` first-user polish baseline, bundling the evidence contract, real-command adapter template, schema policy, portfolio demo path, CLI error guidance, and release quality gate.
+
+## 2. CONTENTS — Trusted Baseline
 
 Release baseline:
 
@@ -33,7 +35,7 @@ Validated capability:
 - schema versioning policy for result, sampler, failed-run, export, and registry artifacts
 - repeatable local release quality smoke
 
-## 3. HOW — 어디서 시작하면 되는가
+## 3. HOW — Where To Start
 
 For a first local run:
 
@@ -64,7 +66,7 @@ For release/review work:
 - See [EdgeEnv v0.1.4 Release Rehearsal](v0.1.4-release-rehearsal.md) for the local quality gate that passed before this release.
 - Use [Release Quality Gate Refresh](release-quality-gate-refresh.md) to understand what `scripts/smoke_release_quality_gate.sh` covers.
 
-## 4. HOW NOT — 아직 하지 않는 것
+## 4. HOW NOT — What This Release Does Not Add
 
 `v0.1.4` does not add:
 
@@ -79,7 +81,7 @@ For release/review work:
 
 Do not present Jetson validation as remote runner support. Jetson evidence is collected by running EdgeEnv locally on the Jetson.
 
-## 5. WHERE — 검증된 문서 흐름
+## 5. WHERE — Verified Documentation Path
 
 Use this order when reviewing the release state:
 
@@ -91,12 +93,12 @@ Use this order when reviewing the release state:
 6. [Release Maintenance Checklist](release-maintenance-checklist.md) — repeatable release gate
 7. [Jetson Measurement Operations Checklist](jetson-operations-checklist.md) — repeated hardware measurement procedure
 
-## 6. WHY — 배경 판단
+## 6. WHY — Background Judgment
 
 The value of `v0.1.4` is release confidence. It turns the six-month quality roadmap into a repeatable gate: record evidence, reject corrupt evidence, preserve diagnostics, compare honestly, move bundles safely, and summarize handoff output without ranking.
 
 The project boundary stays the same: EdgeEnv records local run evidence and judges comparability. It does not become an OS layer, remote execution system, cloud service, validation/decision layer, or leaderboard.
 
-## 7. ⚠️ LEARNED CAUTIONS — 학습된 주의사항
+## 7. ⚠️ LEARNED CAUTIONS — Learned Cautions
 
 - Release quality baseline notes should emphasize evidence portability and gate repeatability without implying new execution target support.

@@ -1,5 +1,7 @@
 # Portfolio Demo Path
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 문서가 정하는 것
 
 InferEdgeEnv를 포트폴리오, 리뷰, 인터뷰에서 짧고 반복 가능하게 보여주기 위한 canonical demo path를 정한다.

@@ -1,5 +1,7 @@
 # EdgeEnv
 
+> Language: English | [한국어](docs/ko/README.md)
+
 InferEdgeEnv is a local-first run evidence registry and comparability checker for Edge AI inference benchmark results. The user-facing CLI command is `edgeenv`.
 
 ## Start Here for v0.1.4
@@ -158,6 +160,7 @@ The Python package is `inferedge_env`; the user-facing CLI command remains `edge
 
 Start here:
 
+- [Documentation Language Guide](docs/language.md) — choose the English representative path or Korean entry path
 - [EdgeEnv v0.1.4 Follow-up Note](docs/release-follow-up-v0.1.4.md) — what changed in the release quality baseline and where to start
 - [EdgeEnv v0.1.3 Follow-up Note](docs/release-follow-up-v0.1.3.md) — what changed in the polish release and where to start
 - [InferEdgeEnv Six-Month Quality Roadmap](docs/six-month-quality-roadmap.md) — staged quality plan for evidence conformance, adapter templates, schema policy, demo path, error polish, and release gates

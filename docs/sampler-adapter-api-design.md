@@ -1,5 +1,7 @@
 # Sampler Adapter API Design
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 문서가 정하는 것
 
 `inferedge_env/samplers/`에 future platform sampler adapter를 추가할 때 사용할 최소 API, lifecycle, metadata schema, failure taxonomy를 정한다.

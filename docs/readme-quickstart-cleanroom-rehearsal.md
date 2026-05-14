@@ -1,5 +1,7 @@
 # README Quickstart Clean-room Rehearsal
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 문서가 정하는 것
 
 외부 사용자를 기다리지 않고, 깨끗한 임시 source snapshot과 새 Python virtual environment에서 README Quickstart를 그대로 실행한 결과를 기록한다.

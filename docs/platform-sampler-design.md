@@ -1,5 +1,7 @@
 # Platform Sampler Design
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 문서가 정하는 것
 
 Platform sampler는 Jetson `tegrastats`, macOS `powermetrics`, Windows counters, external power meter처럼 platform-specific resource data를 수집하는 adapter다.

@@ -1,5 +1,7 @@
 # Sampler Failure Policy
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 문서가 정하는 것
 
 Wrapper command나 future sampler adapter에서 resource sampling이 실패했을 때, benchmark run 전체를 실패로 볼지 아니면 resource metrics 없이 성공 run으로 저장할지 기준을 정한다.

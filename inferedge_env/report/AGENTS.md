@@ -1,5 +1,7 @@
 # inferedge_env/report 작업 가이드
 
+> Language: [English overview](../../docs/language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 모듈은 무엇을 하는가
 
 human-readable report 생성 로직을 담당한다. 현재는 imported successful run artifact와 기존 comparability checker 결과를 읽어 Markdown bundle handoff summary를 생성한다.

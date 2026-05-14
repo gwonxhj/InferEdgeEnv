@@ -1,5 +1,7 @@
 # Compare Workflow Guide
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 문서가 정하는 것
 
 두 benchmark run을 만든 뒤 `runs list`, `runs show`, `report compare`로 비교 가능성을 확인하는 end-to-end 흐름을 정리한다.

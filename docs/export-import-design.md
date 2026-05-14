@@ -1,5 +1,7 @@
 # Export/Import Design
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 문서가 정하는 것
 
 성공 run evidence bundle인 `.edgeenv/runs/<run_id>/`와 실패 run diagnostic evidence bundle인 `.edgeenv/failed-runs/<run_id>/`를 zip으로 내보내고, 다른 workspace에서 검증 가능한 evidence로 다시 들여오기 위한 v1.1 설계 기준을 정한다.

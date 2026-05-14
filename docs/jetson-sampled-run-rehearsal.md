@@ -1,5 +1,7 @@
 # Jetson Sampled Run Rehearsal
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 문서가 정하는 것
 
 Jetson에서 `target_type: local`과 `sampler: jetson-tegrastats`를 함께 사용해 실제 sampled run을 만들고, `edgeenv runs sampler show <run_id>`로 sampler evidence를 확인하는 리허설 절차와 관측 결과를 기록한다.

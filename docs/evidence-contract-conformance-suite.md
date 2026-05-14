@@ -1,5 +1,7 @@
 # Evidence Contract Conformance Suite
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 This guide explains the first six-month roadmap phase: executable tests that prove InferEdgeEnv accepts valid evidence, rejects corrupt evidence, preserves failed-run artifacts, and keeps comparability judgement stable across export/import.
 
 ## Scope

@@ -1,5 +1,7 @@
 # EdgeEnv MVP v1 Handoff Status
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 문서가 정하는 것
 
 EdgeEnv MVP v1 기반의 현재 상태, 검증 방법, 남은 future work, 다음 개발자가 어디서 시작해야 하는지를 한 장으로 정리한다.

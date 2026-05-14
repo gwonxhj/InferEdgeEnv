@@ -1,5 +1,7 @@
 # Bundle Report Generation Design
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 문서가 정하는 것
 
 sampled evidence bundle handoff report를 사람이 직접 작성하지 않고 자동 생성할 때 어떤 입력과 출력 계약을 가져야 하는지 정한다.

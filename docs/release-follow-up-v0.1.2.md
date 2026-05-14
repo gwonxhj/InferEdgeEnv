@@ -1,5 +1,7 @@
 # EdgeEnv v0.1.2 Follow-up Note
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 문서가 정하는 것
 
 `v0.1.2` 릴리스 이후 사용자가 무엇을 믿고 어디서 시작하면 되는지 짧게 정리한다.

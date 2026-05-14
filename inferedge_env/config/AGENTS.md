@@ -1,5 +1,7 @@
 # inferedge_env/config 작업 가이드
 
+> Language: [English overview](../../docs/language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 모듈은 무엇을 하는가
 benchmark config와 target profile의 Pydantic schema를 소유한다. EdgeEnv가 어떤 run을 같은 조건으로 볼 수 있는지 판단하는 원천 입력을 검증한다.
 

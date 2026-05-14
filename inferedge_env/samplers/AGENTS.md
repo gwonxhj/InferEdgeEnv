@@ -1,5 +1,7 @@
 # inferedge_env/samplers 작업 가이드
 
+> Language: [English overview](../../docs/language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 모듈은 무엇을 하는가
 
 platform-specific resource sampler adapter의 독립 lifecycle과 parser를 담당한다. 현재는 `LocalRunner`에 연결하지 않고, start/stop/summary contract와 Jetson `tegrastats` parser/adapter를 테스트로 검증한다.

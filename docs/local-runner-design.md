@@ -1,5 +1,7 @@
 # Local Runner Design
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — local runner가 하는 일
 
 `LocalRunner`는 `target_type: local` profile을 대상으로 현재 머신에서 benchmark command를 실행하고, command가 명시적으로 내보낸 metrics JSON을 EdgeEnv `RunnerResult`로 변환한다.

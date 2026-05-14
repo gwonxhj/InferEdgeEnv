@@ -1,5 +1,7 @@
 # inferedge_env/result 작업 가이드
 
+> Language: [English overview](../../docs/language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 모듈은 무엇을 하는가
 run result schema와 `.edgeenv/runs/<run_id>/` artifact writer를 담당한다. `result.json`, config/profile/env/log 파일을 함께 보존해 run 재현성과 조회 가능성을 만든다.
 

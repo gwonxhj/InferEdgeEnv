@@ -1,5 +1,7 @@
 # Install And Quickstart Resilience
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 문서가 정하는 것
 
 README Quickstart의 첫 명령인 `python -m pip install -e ".[dev]"`가 실패했을 때, 사용자가 제품 오류와 환경/setup 오류를 구분할 수 있게 하는 troubleshooting 기준을 정한다.

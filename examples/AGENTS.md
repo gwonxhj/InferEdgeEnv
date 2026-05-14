@@ -1,5 +1,7 @@
 # examples 작업 가이드
 
+> Language: [English overview](../docs/language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 모듈은 무엇을 하는가
 README와 CLI smoke에 쓰이는 sample benchmark config와 target profile을 보관한다. 사용자가 EdgeEnv MVP를 바로 실행해볼 수 있는 최소 입력이다.
 

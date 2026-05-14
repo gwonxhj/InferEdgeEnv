@@ -1,5 +1,7 @@
 # CLI Error Message Polish
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 문서가 정하는 것
 
 first-user가 README Quickstart나 Portfolio Demo Path를 따라가다 실패했을 때, CLI가 어떤 방식으로 실패 원인과 다음 행동을 알려야 하는지 정한다.

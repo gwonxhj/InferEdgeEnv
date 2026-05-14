@@ -1,5 +1,7 @@
 # LocalRunner Sampler Wiring Design
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 문서가 정하는 것
 
 `LocalRunner`가 future sampler adapter lifecycle을 어떻게 연결할지 결정한다. 목표는 platform sampler를 붙이더라도 기존 local command contract인 `EDGEENV_METRICS_JSON=`와 `EDGEENV_RESOURCE_METRICS_JSON=`를 깨뜨리지 않는 것이다.

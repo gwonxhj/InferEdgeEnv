@@ -1,5 +1,7 @@
 # inferedge_env/registry 작업 가이드
 
+> Language: [English overview](../../docs/language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 모듈은 무엇을 하는가
 `.inferedge_env/runs.db` SQLite registry를 담당한다. run_id, created_at, target/model/runtime/protocol/metrics/result_path를 저장하고 `runs list/show` 조회를 지원한다.
 

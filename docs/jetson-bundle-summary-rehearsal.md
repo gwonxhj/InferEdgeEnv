@@ -1,5 +1,7 @@
 # Jetson Bundle Summary Rehearsal
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 문서가 정하는 것
 
 실제 imported Jetson sampled evidence bundle runs를 대상으로 `edgeenv report bundle-summary`를 실행하고, 생성된 Markdown handoff summary가 기대한 compare 철학을 유지하는지 기록한다.

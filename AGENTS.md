@@ -1,5 +1,7 @@
 # InferEdgeEnv - Codex/Cursor/Antigravity 작업 지침
 
+> Language: [English overview](docs/language.md#english-overview) | [한국어/원문](#)
+
 > 이 파일은 map 역할을 한다. 작업 시 해당 영역의 `AGENTS.md`를 먼저 읽고 진행한다.
 >
 > root에 모든 가이드를 몰아넣지 않고 영역별로 분리한 이유는 토큰 효율과 컨텍스트 정확도다.

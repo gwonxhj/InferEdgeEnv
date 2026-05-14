@@ -1,5 +1,7 @@
 # Failed Run Inspection Guide
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 문서가 정하는 것
 
 실패한 local benchmark run을 `.edgeenv/failed-runs/<run_id>/` artifact에서 안전하게 찾고 확인하는 CLI 흐름을 정리한다.

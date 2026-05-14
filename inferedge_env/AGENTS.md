@@ -1,5 +1,7 @@
 # inferedge_env 작업 가이드
 
+> Language: [English overview](../docs/language.md#english-overview) | [한국어/원문](#)
+
 > 이 가이드는 에이전트가 CLI와 패키지 루트에서 코드를 건드리기 전에 반드시 알아야 할 컨텍스트를 담는다.
 
 ## 1. WHAT — 이 모듈은 무엇을 하는가
