@@ -48,6 +48,46 @@ def test_cli_bench_run_with_fake_profile(tmp_path, config_files):
     assert (run_dirs[0] / "result.json").is_file()
 
 
+def test_cli_bench_validate_failure_prints_actionable_hint(tmp_path):
+    runner = CliRunner()
+    bench_path = tmp_path / "invalid_bench.yaml"
+    bench_path.write_text(
+        """
+name: missing-required-fields
+command: python missing.py
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(app, ["bench", "validate", str(bench_path)])
+
+    assert result.exit_code == 1
+    assert "Invalid benchmark config" in result.output
+    assert "Hint:" in result.output
+    assert "Check required benchmark YAML fields" in result.output
+
+
+def test_cli_profile_validate_failure_prints_actionable_hint(tmp_path):
+    runner = CliRunner()
+    profile_path = tmp_path / "invalid_profile.yaml"
+    profile_path.write_text(
+        """
+target_name: bad-profile
+target_type: ssh
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(app, ["profile", "validate", str(profile_path)])
+
+    assert result.exit_code == 1
+    assert "Invalid target profile" in result.output
+    assert "Hint:" in result.output
+    assert "v1 target_type values are fake and local" in result.output
+
+
 def test_cli_bench_run_with_local_profile(tmp_path):
     runner = CliRunner()
     script = tmp_path / "local_bench.py"
@@ -126,6 +166,74 @@ runtime_tags: [local]
     assert len(run_dirs) == 1
     assert (run_dirs[0] / "stdout.log").read_text(encoding="utf-8").startswith(
         "local cli smoke"
+    )
+
+
+def test_cli_local_missing_metrics_failure_prints_contract_hint(tmp_path):
+    runner = CliRunner()
+    script = tmp_path / "local_no_metrics.py"
+    script.write_text("print('no metrics here')\n", encoding="utf-8")
+    bench_path = tmp_path / "bench.yaml"
+    profile_path = tmp_path / "profile.yaml"
+    bench_path.write_text(
+        f"""
+name: local-cli-no-metrics
+command: {shlex.quote(sys.executable)} {shlex.quote(str(script))}
+model_name: local-model
+model_version: "1.0"
+model_format: onnx
+model_path: models/local.onnx
+task: object-detection
+input_shape: [1, 3, 224, 224]
+input_dtype: float32
+runtime: local-python
+execution_provider: cpu
+precision: fp32
+batch_size: 1
+warmup_runs: 1
+repeat_runs: 3
+include_preprocess: true
+include_postprocess: true
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
+    profile_path.write_text(
+        """
+target_name: local-machine
+target_type: local
+board_name: local-dev-machine
+os: test-os
+runtime_tags: [local]
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
+    edgeenv_root = tmp_path / ".edgeenv"
+
+    result = runner.invoke(
+        app,
+        [
+            "bench",
+            "run",
+            "--target",
+            str(profile_path),
+            "--config",
+            str(bench_path),
+            "--edgeenv-root",
+            str(edgeenv_root),
+        ],
+    )
+
+    assert result.exit_code == 1
+    assert "Missing EDGEENV_METRICS_JSON=<json> line in stdout" in result.output
+    assert "Hint:" in result.output
+    assert "Emit one stdout line that starts with EDGEENV_METRICS_JSON=" in result.output
+    assert "edgeenv failed-runs show" in result.output
+    failed_dirs = list((edgeenv_root / "failed-runs").iterdir())
+    assert len(failed_dirs) == 1
+    assert (failed_dirs[0] / "stdout.log").read_text(encoding="utf-8") == (
+        "no metrics here\n"
     )
 
 
@@ -694,6 +802,8 @@ def test_cli_runs_import_rejects_duplicate_run_id(tmp_path, config_files):
 
     assert import_result.exit_code == 1
     assert f"Run already exists in registry: {payload['run_id']}" in import_result.output
+    assert "Hint:" in import_result.output
+    assert "Import never overwrites existing evidence" in import_result.output
 
 
 def test_cli_resource_metrics_example_run_and_show(tmp_path):
@@ -1097,6 +1207,9 @@ def test_cli_malformed_sampler_resource_metrics_writes_failed_run_artifact(tmp_p
     assert "Failed run artifact:" in result.output
     assert "Registry: not updated" in result.output
     assert "Invalid EDGEENV_RESOURCE_METRICS_JSON JSON" in result.output
+    assert "Hint:" in result.output
+    assert "Resource metrics are optional" in result.output
+    assert "edgeenv failed-runs show" in result.output
     assert not (edgeenv_root / "runs.db").exists()
     failed_dirs = list((edgeenv_root / "failed-runs").iterdir())
     assert len(failed_dirs) == 1
@@ -1181,6 +1294,8 @@ runtime_tags: [local]
     assert result.exit_code == 1
     assert "Failed run artifact:" in result.output
     assert "Registry: not updated" in result.output
+    assert "Hint:" in result.output
+    assert "Inspect stdout/stderr with: edgeenv failed-runs show" in result.output
     assert not (edgeenv_root / "runs.db").exists()
     failed_dirs = list((edgeenv_root / "failed-runs").iterdir())
     assert len(failed_dirs) == 1
@@ -1303,6 +1418,8 @@ runtime_tags: [local]
     assert imported_payload["stderr"] == "failure details\n"
     assert duplicate_import.exit_code == 1
     assert "Failed-run artifact already exists" in duplicate_import.output
+    assert "Hint:" in duplicate_import.output
+    assert "Import never overwrites existing evidence" in duplicate_import.output
 
 
 def test_cli_failed_runs_show_rejects_path_like_id(tmp_path):

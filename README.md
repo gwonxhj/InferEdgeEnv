@@ -163,6 +163,7 @@ Start here:
 - [Evidence Contract Conformance Suite](docs/evidence-contract-conformance-suite.md) — public CLI tests for valid/corrupt evidence, failed-run artifacts, compare judgement, and export/import portability
 - [Schema Versioning And Migration Policy](docs/schema-versioning-migration-policy.md) — how result, sampler, failed-run, export, and registry schemas evolve without silent future-version imports
 - [Portfolio Demo Path](docs/portfolio-demo-path.md) — reviewer-facing fake/local/compare/export-import/bundle-summary path, with Jetson as an optional lane
+- [CLI Error Message Polish](docs/cli-error-message-polish.md) — how common config, metrics, command, export, and import failures guide users with actionable hints
 - [EdgeEnv v0.1.3 User Feedback Backlog](docs/v0.1.3-user-feedback-backlog.md) — how to collect first-user questions before adding new features
 - [EdgeEnv v0.1.3 Feedback Template Rehearsal](docs/v0.1.3-feedback-template-rehearsal.md) — sample first-user feedback issues from a README replay
 - [EdgeEnv v0.1.3 Synthetic User Simulation](docs/v0.1.3-synthetic-user-simulation.md) — persona-based README review when real user feedback is not available yet
