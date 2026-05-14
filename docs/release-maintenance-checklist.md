@@ -20,6 +20,7 @@
 - `docs/v0.1.3-candidate-plan.md` — v0.1.3 polish 작업 순서
 - `docs/v0.1.3-release-rehearsal.md` — 이 checklist 기준으로 수행한 v0.1.3 후보 리허설 기록
 - `docs/release-quality-gate-refresh.md` — six-month quality roadmap 이후 반복 가능한 local/optional Jetson gate 기준
+- `docs/v0.1.4-release-rehearsal.md` — release quality gate 기준으로 수행한 v0.1.4 후보 리허설 기록
 - `scripts/smoke_release_quality_gate.sh` — local-only release quality smoke
 
 기술 스택: Markdown, pytest, Typer CLI, GitHub Actions, GitHub Release

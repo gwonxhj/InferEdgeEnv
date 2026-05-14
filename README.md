@@ -197,6 +197,7 @@ Release and maintenance:
 
 - [Release Maintenance Checklist](docs/release-maintenance-checklist.md) — repeatable local, clean-room, optional Jetson, tag, and GitHub Release gate
 - [Release Quality Gate Refresh](docs/release-quality-gate-refresh.md) — local release smoke script and optional Jetson gate after the six-month quality roadmap
+- [EdgeEnv v0.1.4 Release Rehearsal](docs/v0.1.4-release-rehearsal.md) — release quality gate run before the v0.1.4 candidate
 - [EdgeEnv v0.1.3 Release Rehearsal](docs/v0.1.3-release-rehearsal.md) — release maintenance checklist run before the v0.1.3 tag
 - [EdgeEnv v0.1.3 Candidate Plan](docs/v0.1.3-candidate-plan.md) — completed first-user polish sequence
 - [EdgeEnv v0.1.2 Follow-up Note](docs/release-follow-up-v0.1.2.md) — previous MVP v1 baseline note
