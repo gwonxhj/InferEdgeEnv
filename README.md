@@ -318,11 +318,11 @@ Use `edgeenv report bundle-summary --scenario <label>:<run_id_a>:<run_id_b>` to 
 
 InferEdge validates whether a model is deployable across build provenance, runtime execution, evaluation, comparison, optional diagnosis, and deployment decision reports.
 
-In portfolio terms, InferEdgeLab is the validation / decision layer. InferEdgeEnv is the run evidence registry / comparability layer.
+In portfolio terms, InferEdgeLab is the validation / decision layer. InferEdgeEnv is the v0.1.5 v1-complete experiment hygiene / comparability layer.
 
 InferEdgeEnv records whether benchmark evidence can be trusted and compared. Its scope is narrower and separate: local run artifacts, SQLite registry rows, portable evidence bundles, and comparability judgement.
 
-The top-level InferEdge repository may list InferEdgeEnv as a supporting or extended repository because Env is not part of the pinned Core 4 validation path. In Env documentation, that support role should be described precisely as local-first run evidence registry and comparability checking, not as a generic environment helper.
+In the top-level InferEdge ecosystem map, InferEdgeEnv is the v0.1.5 v1-complete experiment hygiene / comparability layer. It is not part of the pinned Core 4 validation path, but it has a completed role: preserving benchmark evidence and judging same-condition, conditional, or non-comparable runs before any metric delta is discussed.
 
 InferEdgeOrchestrator is also separate: it is the post-deployment operation-control layer for scheduling, load shedding, telemetry, and runtime coordination after a model is already deployed. InferEdgeEnv does not control live inference operations; it records benchmark evidence and preserves honest comparison boundaries before or around review handoff.
 

@@ -49,7 +49,7 @@ InferEdgeEnv records whether benchmark evidence can be trusted and compared.
 Adjacent roles:
 
 - InferEdgeLab is the validation / decision layer.
-- InferEdgeEnv is the run evidence registry / comparability layer.
+- InferEdgeEnv is the v0.1.5 v1-complete experiment hygiene / comparability layer.
 - InferEdgeOrchestrator is the post-deployment runtime operation-control layer.
 
 ## What To Show First
