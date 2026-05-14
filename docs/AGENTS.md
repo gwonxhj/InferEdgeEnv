@@ -27,8 +27,9 @@ README와 설계/운영 문서가 위치하는 영역이다. EdgeEnv가 무엇�
 - `docs/jetson-sampled-bundle-portability-review.md` — sampled bundle handoff를 사람이 읽기 쉬운 report로 요약할지 결정하는 기록
 - `docs/bundle-report-generation-design.md` — imported artifacts와 compare output에서 Markdown handoff report를 자동 생성할지 정하는 설계
 - `docs/jetson-bundle-summary-rehearsal.md` — 실제 imported Jetson sampled bundle runs에서 `report bundle-summary` Markdown output을 검증하는 기록
-- `docs/jetson-operations-checklist.md` — `v0.1.3` 이후 Jetson 실측 반복 운영을 위한 사전 점검, evidence 보관, 실패 triage 체크리스트
+- `docs/jetson-operations-checklist.md` — `v0.1.4` 이후 Jetson 실측 반복 운영을 위한 사전 점검, evidence 보관, 실패 triage 체크리스트
 - `docs/release-follow-up-v0.1.2.md` — `v0.1.2` 이후 사용자가 무엇을 믿고 어디서 시작할지 정리한 짧은 follow-up note
+- `docs/release-follow-up-v0.1.4.md` — `v0.1.4` release quality baseline 이후 사용자가 무엇을 믿고 어디서 시작할지 정리한 짧은 follow-up note
 - `docs/release-follow-up-v0.1.3.md` — `v0.1.3` first-user polish release 이후 사용자가 무엇을 믿고 어디서 시작할지 정리한 짧은 follow-up note
 - `docs/six-month-quality-roadmap.md` — 제출 전 6개월 동안 Evidence Contract Conformance Suite, Real Command Adapter Templates, Schema Versioning, Portfolio Demo Path, CLI Error Polish, Release Quality Gate를 순차 수행하기 위한 agentic 7섹션 실행 가이드
 - `docs/evidence-contract-conformance-suite.md` — valid/corrupt evidence stdout contract, failed-run artifact, compare judgement, export/import portability를 public CLI 기준으로 고정하는 테스트 묶음 설명
