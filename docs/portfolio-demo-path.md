@@ -1,12 +1,12 @@
 # Portfolio Demo Path
 
-> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+> Language: English | [한국어/원문](language.md#korean-overview)
 
-## 1. WHAT — 이 문서가 정하는 것
+## 1. WHAT — What This Document Defines
 
-InferEdgeEnv를 포트폴리오, 리뷰, 인터뷰에서 짧고 반복 가능하게 보여주기 위한 canonical demo path를 정한다.
+This document defines a short, repeatable demo path for presenting InferEdgeEnv in a portfolio, review, or interview.
 
-핵심 메시지:
+Core message:
 
 ```text
 InferEdge validates whether a model is deployable.
@@ -15,9 +15,9 @@ InferEdgeEnv records whether benchmark evidence can be trusted and compared.
 
 InferEdgeEnv is a local-first run evidence registry and comparability checker for Edge AI inference benchmark results. This demo shows evidence recording, comparability judgement, artifact portability, and optional Jetson sampled evidence without turning the project into a runner leaderboard or deployment decision layer.
 
-## 2. CONTENTS — 관련 파일과 기술 스택
+## 2. CONTENTS — Files And Stack
 
-관련 파일:
+Related files:
 
 - `README.md` — first-user Quickstart and Guide Map
 - `examples/profiles/local_fake.yaml` — deterministic fake target
@@ -35,15 +35,15 @@ InferEdgeEnv is a local-first run evidence registry and comparability checker fo
 - `docs/jetson-sampled-evidence-bundle-handoff.md` — real Jetson sampled bundle validation record
 - `docs/bundle-report-generation-design.md` — read-only Markdown handoff summary contract
 
-기술 스택: Typer CLI, Rich output, Pydantic schemas, local filesystem artifacts, SQLite registry, zip export/import, optional Jetson `tegrastats`
+Stack: Typer CLI, Rich output, Pydantic schemas, local filesystem artifacts, SQLite registry, zip export/import, optional Jetson `tegrastats`
 
-## 3. HOW — demo path
+## 3. HOW — Demo Path
 
-### Lane A: local-only reviewer demo
+### Lane A: Local-Only Reviewer Demo
 
 Use this lane first. It does not require Jetson hardware or real model files.
 
-#### 0. Install and choose an isolated demo root
+#### 0. Install And Choose An Isolated Demo Root
 
 ```bash
 python -m pip install -e ".[dev]"
@@ -54,7 +54,7 @@ rm -rf "$EDGEENV_DEMO_ROOT"
 mkdir -p "$EDGEENV_DEMO_ROOT"
 ```
 
-#### 1. Record deterministic fake evidence
+#### 1. Record Deterministic Fake Evidence
 
 ```bash
 edgeenv profile validate examples/profiles/local_fake.yaml
@@ -86,7 +86,7 @@ $EDGEENV_DEMO_ROOT/.edgeenv/
     stderr.log
 ```
 
-#### 2. Show the real-command adapter boundary
+#### 2. Show The Real-Command Adapter Boundary
 
 ```bash
 edgeenv bench run \
@@ -101,7 +101,7 @@ What this demonstrates:
 - A user-owned command can be wrapped as long as it emits `EDGEENV_METRICS_JSON=...`.
 - Optional resource metrics stay supplemental and do not become compare gates.
 
-#### 3. Create two same-condition local runs
+#### 3. Create Two Same-Condition Local Runs
 
 ```bash
 edgeenv bench run \
@@ -122,7 +122,7 @@ export RUN_A=<local_compare_a_run_id>
 export RUN_B=<local_compare_b_run_id>
 ```
 
-#### 4. Compare only after comparability judgement
+#### 4. Compare Only After The Comparability Judgement
 
 ```bash
 edgeenv runs show "$RUN_A" --edgeenv-root "$EDGEENV_DEMO_ROOT/.edgeenv"
@@ -150,7 +150,7 @@ Metrics Delta:
 ...
 ```
 
-#### 5. Export/import the evidence bundle
+#### 5. Export/import The Evidence Bundle
 
 ```bash
 mkdir -p "$EDGEENV_DEMO_ROOT/bundles"
@@ -176,7 +176,7 @@ What this demonstrates:
 - Import validates manifest/checksum/path safety and rebuilds the registry from `result.json`.
 - Compare interpretation survives handoff into a fresh registry root.
 
-#### 6. Generate a read-only handoff summary
+#### 6. Generate A Read-Only Handoff Summary
 
 ```bash
 edgeenv report bundle-summary \
@@ -191,7 +191,7 @@ What this demonstrates:
 - It does not replace `result.json`, sampler artifacts, manifest validation, or `report compare`.
 - It must not introduce ranking or composite-score language.
 
-### Lane B: optional Jetson sampled evidence
+### Lane B: Optional Jetson Sampled Evidence
 
 Use this lane only when a Jetson shell is available and the repo is already on the Jetson filesystem. It is optional; the portfolio demo must remain understandable without hardware.
 
@@ -222,7 +222,7 @@ What this demonstrates:
 - Runtime/target conditional sampled compares suppress metric delta.
 - Sampler/resource evidence remains supplemental and does not change compare mode.
 
-## 4. HOW NOT — 피해야 할 함정
+## 4. HOW NOT — What To Avoid
 
 - Do not require Jetson for the main demo path.
 - Do not claim EdgeEnv validates deployment readiness. That belongs to InferEdgeLab.
@@ -232,7 +232,7 @@ What this demonstrates:
 - Do not export `runs.db` or treat SQLite rows as canonical evidence.
 - Do not add leaderboard, ranking, composite score, cloud sync, auth, dashboard, Docker, WSL, SSH target, model upload, or dataset upload semantics to the demo.
 
-## 5. WHERE — 다른 설계와의 관계
+## 5. WHERE — Related Design Boundaries
 
 - **Local Command Contract Guide**: explains the stdout metrics contract used by local adapter examples.
 - **Compare Workflow Guide**: defines same-condition, runtime-comparison, target-comparison, and no-comparison interpretation.
@@ -241,7 +241,7 @@ What this demonstrates:
 - **Jetson Sampled Evidence Bundle Handoff**: validates the optional hardware lane on real sampled Jetson evidence.
 - **Bundle Report Generation Design**: defines `report bundle-summary` as a read-only human summary.
 
-## 6. WHY — 배경 판단
+## 6. WHY — Background Judgment
 
 Portfolio reviewers need a short route from thesis to proof.
 
@@ -254,6 +254,6 @@ This path demonstrates the InferEdgeEnv boundary:
 
 That is distinct from InferEdgeLab, which is the validation/decision layer. InferEdgeEnv does not decide deployment readiness; it records whether benchmark evidence can be trusted and compared.
 
-## 7. ⚠️ LEARNED CAUTIONS — 학습된 주의사항
+## 7. LEARNED CAUTIONS — Learned Cautions
 
-_(아직 없음)_
+_(None yet)_
