@@ -171,6 +171,7 @@ English representative path:
 
 Operational records:
 
+- [EdgeEnv v0.1.4 Bilingual Docs Sanity Sweep](docs/v0.1.4-bilingual-docs-sanity-sweep.md) — README, Korean README, and representative docs reading-path check
 - [EdgeEnv v0.1.4 Release Rehearsal](docs/v0.1.4-release-rehearsal.md) — release quality gate run before the v0.1.4 candidate
 - [EdgeEnv v0.1.4 Post-release Sanity Sweep](docs/v0.1.4-post-release-sanity-sweep.md) — post-release check of README, follow-up note, and GitHub Release wording
 - [Release Quality Gate Refresh](docs/release-quality-gate-refresh.md) — local release smoke script and optional Jetson gate after the six-month quality roadmap
