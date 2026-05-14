@@ -72,9 +72,9 @@ EdgeEnv는 다음을 구현하지 않는다.
 
 ## InferEdge 계열에서의 위치
 
-InferEdgeLab은 validation / decision layer이고, InferEdgeEnv는 run evidence registry / comparability layer다.
+InferEdgeLab은 validation / decision layer이고, InferEdgeEnv는 `v0.1.5` v1-complete experiment hygiene / comparability layer다.
 
-InferEdgeEnv는 benchmark evidence를 local artifact, SQLite registry, portable bundle로 고정하고 두 결과를 직접 비교해도 되는지 판정한다. 상위 InferEdge 문서에서 Env가 supporting 또는 extended repository로 분류되더라도, Env의 정확한 역할은 generic environment helper가 아니라 local-first run evidence registry and comparability checker다.
+InferEdgeEnv는 benchmark evidence를 local artifact, SQLite registry, portable bundle로 고정하고 두 결과를 직접 비교해도 되는지 판정한다. 상위 InferEdge ecosystem에서 Env의 정확한 역할은 generic environment helper가 아니라 local-first run evidence registry and comparability checker다.
 
 InferEdgeOrchestrator도 별도 영역이다. Orchestrator는 배포 이후 scheduling, load shedding, telemetry, runtime coordination을 다루는 post-deployment operation-control layer이고, Env는 live inference operation을 제어하지 않는다.
 
