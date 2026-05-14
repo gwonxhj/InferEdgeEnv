@@ -15,7 +15,7 @@ Use this page when a document links here from its language selector:
 Representative English documents:
 
 - [README](../README.md) — product definition, scope, Quickstart, Guide Map
-- [EdgeEnv v0.1.4 Follow-up Note](release-follow-up-v0.1.4.md) — current release baseline and trusted starting path
+- [EdgeEnv v0.1.5 Follow-up Note](release-follow-up-v0.1.5.md) — current v1-complete release baseline and trusted starting path
 - [Portfolio Demo Path](portfolio-demo-path.md) — reviewer-facing demo route
 - [Local Command Contract Guide](local-command-contract.md) — how to connect a benchmark command
 - [Compare Workflow Guide](compare-workflow-guide.md) — how to judge comparability before reading metric deltas
@@ -39,7 +39,7 @@ EdgeEnv 문서는 영어 대표 경로와 한국어/혼합 언어 작업 기록�
 대표 영어 문서:
 
 - [README](../README.md) — 프로젝트 정의, 범위, Quickstart, Guide Map
-- [EdgeEnv v0.1.4 Follow-up Note](release-follow-up-v0.1.4.md) — 현재 release baseline과 시작 경로
+- [EdgeEnv v0.1.5 Follow-up Note](release-follow-up-v0.1.5.md) — 현재 v1-complete release baseline과 시작 경로
 - [Portfolio Demo Path](portfolio-demo-path.md) — 리뷰어용 데모 경로
 - [Local Command Contract Guide](local-command-contract.md) — benchmark command 연결 계약
 - [Compare Workflow Guide](compare-workflow-guide.md) — metric delta보다 먼저 comparability를 확인하는 흐름

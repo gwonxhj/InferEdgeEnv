@@ -17,9 +17,10 @@ Related files:
 - `docs/v1-release-rehearsal.md` — full release/tag gate and user-flow rehearsal
 - `docs/readme-quickstart-cleanroom-rehearsal.md` — clean source archive + fresh venv validation record
 - `docs/jetson-operations-checklist.md` — optional repeated Jetson operation procedure
-- `docs/release-follow-up-v0.1.2.md` — previous release follow-up note format
-- `docs/release-follow-up-v0.1.4.md` — latest release follow-up note format
+- `docs/release-follow-up-v0.1.5.md` — latest v1-complete release follow-up note format
+- `docs/release-follow-up-v0.1.4.md` — previous release follow-up note format
 - `docs/release-follow-up-v0.1.3.md` — previous release follow-up note format
+- `docs/release-follow-up-v0.1.2.md` — previous release follow-up note format
 - `docs/v0.1.3-candidate-plan.md` — v0.1.3 polish sequence
 - `docs/v0.1.3-release-rehearsal.md` — v0.1.3 release rehearsal record
 - `docs/release-quality-gate-refresh.md` — repeatable local/optional Jetson gate after the six-month quality roadmap
@@ -237,7 +238,7 @@ Non-goals
 
 An EdgeEnv release is not a race to add features. It freezes a trustworthy local-first evidence loop. The checklist must stay short enough to repeat, because repeatability is what keeps release notes accurate and unexaggerated.
 
-This document is reusable after `v0.1.4` because it focuses on gates and judgement criteria rather than version-specific output.
+This document is reusable after `v0.1.5` because it focuses on gates and judgement criteria rather than version-specific output.
 
 ## 7. LEARNED CAUTIONS — Learned Cautions
 
