@@ -70,6 +70,14 @@ EdgeEnv는 다음을 구현하지 않는다.
 - model upload server, dataset upload server
 - 모든 모델을 하나의 점수로 줄 세우는 ranking system
 
+## InferEdge 계열에서의 위치
+
+InferEdgeLab은 validation / decision layer이고, InferEdgeEnv는 run evidence registry / comparability layer다.
+
+InferEdgeEnv는 benchmark evidence를 local artifact, SQLite registry, portable bundle로 고정하고 두 결과를 직접 비교해도 되는지 판정한다. 상위 InferEdge 문서에서 Env가 supporting 또는 extended repository로 분류되더라도, Env의 정확한 역할은 generic environment helper가 아니라 local-first run evidence registry and comparability checker다.
+
+InferEdgeOrchestrator도 별도 영역이다. Orchestrator는 배포 이후 scheduling, load shedding, telemetry, runtime coordination을 다루는 post-deployment operation-control layer이고, Env는 live inference operation을 제어하지 않는다.
+
 ## Guide Map
 
 한국어 README는 빠른 진입과 프로젝트 경계 확인을 돕기 위한 요약이다. 세부 설계와 최신 release evidence는 영어 대표 문서를 기준으로 확인한다.
@@ -102,6 +110,7 @@ EdgeEnv는 다음을 구현하지 않는다.
 설계 참고 문서:
 
 - [InferEdgeEnv Six-Month Quality Roadmap](../six-month-quality-roadmap.md)
+- [Cross-Repo Positioning Review](../cross-repo-positioning-review.md)
 - [Evidence Contract Conformance Suite](../evidence-contract-conformance-suite.md)
 - [CLI Error Message Polish](../cli-error-message-polish.md)
 - [Local Real Benchmark Example Guide](../local-real-benchmark-example.md)

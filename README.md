@@ -319,6 +319,10 @@ In portfolio terms, InferEdgeLab is the validation / decision layer. InferEdgeEn
 
 InferEdgeEnv records whether benchmark evidence can be trusted and compared. Its scope is narrower and separate: local run artifacts, SQLite registry rows, portable evidence bundles, and comparability judgement.
 
+The top-level InferEdge repository may list InferEdgeEnv as a supporting or extended repository because Env is not part of the pinned Core 4 validation path. In Env documentation, that support role should be described precisely as local-first run evidence registry and comparability checking, not as a generic environment helper.
+
+InferEdgeOrchestrator is also separate: it is the post-deployment operation-control layer for scheduling, load shedding, telemetry, and runtime coordination after a model is already deployed. InferEdgeEnv does not control live inference operations; it records benchmark evidence and preserves honest comparison boundaries before or around review handoff.
+
 EdgeBench is adjacent in benchmark motivation, but InferEdgeEnv is not a public leaderboard. It is a local-first run evidence registry and comparability checker, not a ranking surface.
 
 ## MVP Scope
