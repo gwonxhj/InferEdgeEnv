@@ -4,9 +4,9 @@
 
 InferEdgeEnv는 Edge AI inference benchmark 결과를 local artifact와 SQLite registry로 고정하고, 결과 간 비교 가능성을 판정하는 local-first run evidence registry and comparability checker다. 사용자-facing CLI 명령은 `edgeenv`다.
 
-## v0.1.4에서 시작하기
+## v0.1.5에서 시작하기
 
-`v0.1.4`는 현재 release quality baseline이다. 첫 사용 경로는 다음 순서가 가장 안전하다.
+`v0.1.5`는 현재 v1-complete release baseline이다. InferEdgeEnv v1은 local-first run evidence registry와 comparability checker로 완성 상태이며, 이후 작업은 MVP 미완성이 아니라 v1.1+ 확장으로 분리한다. 첫 사용 경로는 다음 순서가 가장 안전하다.
 
 1. 설치 후 `doctor`를 실행한다.
 2. deterministic fake run을 기록한다.
@@ -87,7 +87,7 @@ InferEdgeOrchestrator도 별도 영역이다. Orchestrator는 배포 이후 sche
 - [README](../../README.md) — 전체 Quickstart와 프로젝트 범위
 - [InferEdgeEnv Portfolio Summary](../portfolio_summary.md) — 이 레포의 30초 역할 요약과 reviewer path
 - [Documentation Language Guide](../language.md) — 영어 대표 경로와 한국어 진입 경로
-- [EdgeEnv v0.1.4 Follow-up Note](../release-follow-up-v0.1.4.md) — 현재 릴리스 기준선과 시작 경로
+- [EdgeEnv v0.1.5 Follow-up Note](../release-follow-up-v0.1.5.md) — 현재 v1-complete 릴리스 기준선과 시작 경로
 - [Portfolio Demo Path](../portfolio-demo-path.md) — 리뷰어용 fake/local/compare/export-import/bundle-summary 데모 경로
 - [Local Command Contract Guide](../local-command-contract.md) — 사용자 benchmark command 연결 방식
 - [Compare Workflow Guide](../compare-workflow-guide.md) — metric delta보다 먼저 comparability를 확인하는 흐름
@@ -98,6 +98,7 @@ InferEdgeOrchestrator도 별도 영역이다. Orchestrator는 배포 이후 sche
 운영 기록:
 
 - [EdgeEnv v0.1.5 Release Rehearsal](../v0.1.5-release-rehearsal.md) — clean-room source archive release gate와 patch 후보 판단
+- [EdgeEnv v0.1.4 Follow-up Note](../release-follow-up-v0.1.4.md) — 이전 release quality baseline
 - [EdgeEnv v0.1.4 Bilingual Docs Sanity Sweep](../v0.1.4-bilingual-docs-sanity-sweep.md) — README, 한국어 README, 대표 문서 읽기 흐름 점검
 - [EdgeEnv v0.1.4 Release Rehearsal](../v0.1.4-release-rehearsal.md) — v0.1.4 후보 전 release quality gate 기록
 - [EdgeEnv v0.1.4 Post-release Sanity Sweep](../v0.1.4-post-release-sanity-sweep.md) — README, follow-up note, GitHub Release 문구 점검 기록

@@ -35,6 +35,7 @@ README와 설계/운영 문서가 위치하는 영역이다. EdgeEnv가 무엇�
 - `docs/release-follow-up-v0.1.2.md` — `v0.1.2` 이후 사용자가 무엇을 믿고 어디서 시작할지 정리한 짧은 follow-up note
 - `docs/release-follow-up-v0.1.4.md` — `v0.1.4` release quality baseline 이후 사용자가 무엇을 믿고 어디서 시작할지 정리한 짧은 follow-up note
 - `docs/release-follow-up-v0.1.3.md` — `v0.1.3` first-user polish release 이후 사용자가 무엇을 믿고 어디서 시작할지 정리한 짧은 follow-up note
+- `docs/release-follow-up-v0.1.5.md` — `v0.1.5` v1-complete release baseline 이후 사용자가 무엇을 믿고 어디서 시작할지 정리한 짧은 follow-up note
 - `docs/six-month-quality-roadmap.md` — 제출 전 6개월 동안 Evidence Contract Conformance Suite, Real Command Adapter Templates, Schema Versioning, Portfolio Demo Path, CLI Error Polish, Release Quality Gate를 순차 수행하기 위한 agentic 7섹션 실행 가이드
 - `docs/portfolio_summary.md` — InferEdgeEnv 단독 레포 기준 30초 포트폴리오 요약, 역할 경계, reviewer path
 - `docs/cross-repo-positioning-review.md` — 다른 InferEdge 계열 README/설계 문서와 Env 포지셔닝을 대조하고 Env에 반영한 경계 정리
