@@ -1,16 +1,16 @@
 # Export/Import Design
 
-> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+> Language: English | [한국어/원문](language.md#korean-overview)
 
-## 1. WHAT — 이 문서가 정하는 것
+## 1. WHAT — What This Document Defines
 
-성공 run evidence bundle인 `.edgeenv/runs/<run_id>/`와 실패 run diagnostic evidence bundle인 `.edgeenv/failed-runs/<run_id>/`를 zip으로 내보내고, 다른 workspace에서 검증 가능한 evidence로 다시 들여오기 위한 v1.1 설계 기준을 정한다.
+This document defines the v1.1 design contract for exporting a successful run evidence bundle from `.edgeenv/runs/<run_id>/`, exporting a failed-run diagnostic bundle from `.edgeenv/failed-runs/<run_id>/`, and importing those bundles into another workspace as verifiable evidence.
 
-현재 구현은 successful run export/import, optional sampler artifact export/import, failed-run export/import를 제공한다. Replace/alias import policy와 detached signatures는 future work다.
+The current implementation supports successful-run export/import, optional sampler artifact export/import, and failed-run export/import. Replace/alias import policy and detached signatures remain future work.
 
-## 2. CONTENTS — 관련 파일과 기술 스택
+## 2. CONTENTS — Files And Stack
 
-관련 파일:
+Related files:
 
 - `.edgeenv/runs/<run_id>/result.json` — canonical successful run result
 - `.edgeenv/runs/<run_id>/config.yaml` — original benchmark config evidence
@@ -29,17 +29,19 @@
 - `docs/bundle-report-generation-design.md` — read-only report generation contract
 - `docs/schema-versioning-migration-policy.md` — schema marker compatibility and unknown future-version rejection policy
 
-기술 스택: zip archive, JSON manifest, SHA-256 checksums, existing Pydantic result schema, local filesystem
+Stack: zip archive, JSON manifest, SHA-256 checksums, Pydantic result schema, local filesystem artifacts
 
-## 3. HOW — export/import contract
+## 3. HOW — Export/Import Contract
 
-### Export scope
+### Export Scope
 
 Export one successful run at a time:
 
 ```bash
 edgeenv runs export <run_id> --output edgeenv-run-<run_id>.zip
 ```
+
+Source artifact layout:
 
 ```text
 .edgeenv/runs/<run_id>/
@@ -51,7 +53,7 @@ edgeenv runs export <run_id> --output edgeenv-run-<run_id>.zip
   stderr.log
 ```
 
-The exported zip should contain a single top-level directory named with the run id:
+The exported zip contains a single top-level directory named with the run id:
 
 ```text
 edgeenv-run-<run_id>.zip
@@ -65,11 +67,11 @@ edgeenv-run-<run_id>.zip
     stderr.log
 ```
 
-`manifest.json` is added by export and is not part of the current run artifact layout.
+`manifest.json` is generated during export and is not part of the normal run artifact layout.
 
-### Manifest shape
+### Manifest Shape
 
-Proposed `manifest.json`:
+`manifest.json` uses this shape:
 
 ```json
 {
@@ -95,11 +97,11 @@ Proposed `manifest.json`:
 }
 ```
 
-Every file in the archive except `manifest.json` must appear in `files`. Import must verify SHA-256 and byte size before trusting `result.json`.
+Every archived file except `manifest.json` must appear in `files`. Import verifies SHA-256 and byte size before trusting `result.json`.
 
-### Required files
+### Required Files
 
-Required files for successful-run export/import:
+Successful-run export/import requires:
 
 - `result.json`
 - `config.yaml`
@@ -108,9 +110,9 @@ Required files for successful-run export/import:
 - `stdout.log`
 - `stderr.log`
 
-Import must reject bundles that are missing any required file.
+Import rejects bundles that are missing any required file.
 
-### Import command
+### Import Command
 
 Import a successful run evidence bundle:
 
@@ -120,41 +122,41 @@ edgeenv runs import edgeenv-run-<run_id>.zip
 
 The command validates the zip bundle, copies required files into `.edgeenv/runs/<run_id>/`, and rebuilds the local registry row from `result.json`.
 
-### Import validation order
+### Import Validation Order
 
 Import validates in this order:
 
-1. Open zip without extracting outside the destination root.
+1. Open the zip without extracting outside the destination root.
 2. Require exactly one top-level run directory.
 3. Read and validate `manifest.json`.
 4. Reject unsupported `schema_version`.
-5. Reject `bundle_type` values other than `successful-run` for this design.
+5. Reject `bundle_type` values other than `successful-run` for successful-run import.
 6. Reject path traversal, absolute paths, symlinks, and duplicate archive entries.
 7. Verify each required file exists.
 8. Verify each file checksum and byte size.
 9. Validate `result.json` against `RunResult`.
 10. Require `manifest.run_id == result.run_id`.
-11. Require archive directory name to match `run_id`.
+11. Require the archive directory name to match `run_id`.
 12. Copy files into `.edgeenv/runs/<run_id>/` only if the destination does not already exist.
 13. Insert or rebuild the local registry row from `result.json`, with `result_path` pointing at the imported artifact.
 
-### Registry policy
+### Registry Policy
 
-`runs.db` should not be exported as canonical evidence. It is a local index.
+`runs.db` is a local index and should not be exported as canonical evidence.
 
-Import should rebuild the registry row from `result.json` rather than trusting an exported SQLite row. This keeps portability independent of local paths, SQLite versions, and registry migration state.
+Import rebuilds the registry row from `result.json` rather than trusting an exported SQLite row. This keeps portability independent of local paths, SQLite versions, and registry migration state.
 
 If a run id already exists locally, import fails with a clear message. A future `--replace` or `--alias-run-id` policy needs a separate design because changing `run_id` affects compare references and artifact identity.
 
-### Checksum policy
+### Checksum Policy
 
 Use SHA-256 for every exported file. The checksum covers exact bytes in the archive, including log files.
 
 The manifest itself is not self-checksummed in v1.1. If tamper-evidence beyond accidental corruption is needed later, use a detached signature design rather than overloading this manifest.
 
-### Failed-run export/import
+### Failed-Run Export/Import
 
-Failed-run artifacts use a different schema marker and stay diagnostic rather than successful benchmark evidence. Export/import uses `bundle_type: failed-run` and requires:
+Failed-run artifacts use a different schema marker and remain diagnostic rather than successful benchmark evidence. Export/import uses `bundle_type: failed-run` and requires:
 
 - `failure.json`
 - `config.yaml`
@@ -172,7 +174,7 @@ edgeenv failed-runs import edgeenv-failed-run-<run_id>.zip
 
 Import validates the manifest, checksums, byte sizes, top-level run id, and `failure.json` schema marker before copying files into `.edgeenv/failed-runs/<run_id>/`. It does not insert or rebuild any `runs.db` row.
 
-### Sampler artifact extension
+### Sampler Artifact Extension
 
 Sampler metadata and raw sampler logs are optional extension evidence, not required successful-run files.
 
@@ -190,7 +192,7 @@ Rules:
 - `sampler/metadata.json` is optional and must never be required for older bundles.
 - If `sampler/metadata.json` exists, it must be listed in `manifest.files` with checksum and byte size.
 - Every path listed in `sampler/metadata.json.raw_artifacts` must be present in the archive and manifest.
-- Import must apply the same path traversal, symlink, duplicate entry, checksum, and byte-size validation to sampler files.
+- Import applies the same path traversal, symlink, duplicate entry, checksum, and byte-size validation to sampler files.
 - Registry rebuild still uses `result.json`; sampler metadata must not become a registry source of truth.
 
 Detailed storage policy is defined in [Sampler Metadata Artifact Policy](sampler-metadata-artifact-policy.md).
@@ -203,10 +205,10 @@ For real sampled Jetson evidence, [Jetson Sampled Evidence Bundle Handoff](jetso
 
 [Schema Versioning And Migration Policy](schema-versioning-migration-policy.md) defines which artifact schema markers are accepted. Import rejects unknown future manifest, result, failed-run, or sampler metadata schema markers until a migration policy exists.
 
-## 4. HOW NOT — 피해야 할 함정
+## 4. HOW NOT — What To Avoid
 
 - Do not export `runs.db` as the source of truth.
-- Do not import directly into registry without validating and copying the artifact bundle.
+- Do not import directly into the registry without validating and copying the artifact bundle.
 - Do not accept zip entries with absolute paths, `..`, symlinks, or duplicate names.
 - Do not silently overwrite an existing `.edgeenv/runs/<run_id>/`.
 - Do not include model or dataset blobs by default. `model_path` and `model_hash` are identity evidence, not artifact upload semantics.
@@ -215,9 +217,9 @@ For real sampled Jetson evidence, [Jetson Sampled Evidence Bundle Handoff](jetso
 - Do not import failed-run artifacts into `runs.db` or allow `report compare` to compare them.
 - Do not make optional sampler artifacts required for successful-run import.
 
-## 5. WHERE — 다른 설계와의 관계
+## 5. WHERE — Related Design Boundaries
 
-- **Result schema**: `result.json` remains the canonical successful-run data.
+- **Result Schema**: `result.json` remains the canonical successful-run data.
 - **Registry**: `runs.db` remains a rebuildable local index.
 - **Compare Workflow**: imported runs can be compared only after normal comparability judgement.
 - **Jetson Sampled Evidence Bundle Handoff**: validates imported sampled bundles against same-condition, runtime-conditional, and target-conditional compare paths.
@@ -228,12 +230,12 @@ For real sampled Jetson evidence, [Jetson Sampled Evidence Bundle Handoff](jetso
 - **Sampler Metadata Artifact Policy**: sampler metadata stays in optional `sampler/metadata.json` extension evidence.
 - **Schema Versioning And Migration Policy**: schema markers gate semantic compatibility after checksum and path validation.
 
-## 6. WHY — 배경 판단
+## 6. WHY — Background Judgment
 
-EdgeEnv의 evidence는 local registry row가 아니라 artifact bundle이다. Export/import should move that evidence without making claims about trust, ranking, or environment equivalence. The safest first design is therefore artifact-first: verify bytes, validate schema, copy evidence, then rebuild the local index.
+EdgeEnv evidence is the artifact bundle, not the local registry row. Export/import should move that evidence without making claims about trust, ranking, or environment equivalence. The safest design is artifact-first: verify bytes, validate schema, copy evidence, then rebuild the local index.
 
-This keeps the future implementation small and reversible while preserving the MVP boundary: local-first run evidence registry and comparability judgement.
+This keeps the implementation small and reversible while preserving the project boundary: local-first run evidence registry and comparability judgement.
 
-## 7. ⚠️ LEARNED CAUTIONS — 학습된 주의사항
+## 7. LEARNED CAUTIONS — Learned Cautions
 
-_(아직 없음)_
+_(None yet)_

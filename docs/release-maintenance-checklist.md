@@ -1,45 +1,45 @@
 # EdgeEnv Release Maintenance Checklist
 
-> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+> Language: English | [한국어/원문](language.md#korean-overview)
 
-## 1. WHAT — 이 문서가 정하는 것
+## 1. WHAT — What This Document Defines
 
-반복 릴리스 작업자가 `main`을 다음 tag로 고정하기 전에 확인해야 할 최소 절차를 한 장으로 정리한다.
+This checklist defines the minimum release procedure before pinning `main` as the next tag.
 
-이 문서는 새 기능 설계나 자동화 spec이 아니다. `docs/v1-release-rehearsal.md`의 gate를 운영 체크리스트로 압축해, local tests, clean-room rehearsal, optional Jetson smoke, tag, GitHub Release 작성 순서를 반복 가능하게 만든다.
+It is not a feature design or automation spec. It compresses the release gate from `docs/v1-release-rehearsal.md` into a repeatable checklist covering local tests, optional clean-room rehearsal, optional Jetson smoke, tag creation, and GitHub Release publication.
 
-## 2. CONTENTS — 관련 파일과 기술 스택
+## 2. CONTENTS — Files And Stack
 
-관련 파일:
+Related files:
 
-- `README.md` — 사용자-facing quickstart와 guide map
+- `README.md` — user-facing Quickstart and Guide Map
 - `pyproject.toml` — package version
-- `docs/v1-release-rehearsal.md` — full release/tag gate와 user-flow rehearsal
-- `docs/readme-quickstart-cleanroom-rehearsal.md` — clean source archive + fresh venv 검증 기록
-- `docs/jetson-operations-checklist.md` — optional Jetson 반복 운영 절차
-- `docs/release-follow-up-v0.1.2.md` — release follow-up note 형식
-- `docs/release-follow-up-v0.1.4.md` — latest release follow-up note 형식
-- `docs/release-follow-up-v0.1.3.md` — previous release follow-up note 형식
-- `docs/v0.1.3-candidate-plan.md` — v0.1.3 polish 작업 순서
-- `docs/v0.1.3-release-rehearsal.md` — 이 checklist 기준으로 수행한 v0.1.3 후보 리허설 기록
-- `docs/release-quality-gate-refresh.md` — six-month quality roadmap 이후 반복 가능한 local/optional Jetson gate 기준
-- `docs/v0.1.4-release-rehearsal.md` — release quality gate 기준으로 수행한 v0.1.4 후보 리허설 기록
+- `docs/v1-release-rehearsal.md` — full release/tag gate and user-flow rehearsal
+- `docs/readme-quickstart-cleanroom-rehearsal.md` — clean source archive + fresh venv validation record
+- `docs/jetson-operations-checklist.md` — optional repeated Jetson operation procedure
+- `docs/release-follow-up-v0.1.2.md` — previous release follow-up note format
+- `docs/release-follow-up-v0.1.4.md` — latest release follow-up note format
+- `docs/release-follow-up-v0.1.3.md` — previous release follow-up note format
+- `docs/v0.1.3-candidate-plan.md` — v0.1.3 polish sequence
+- `docs/v0.1.3-release-rehearsal.md` — v0.1.3 release rehearsal record
+- `docs/release-quality-gate-refresh.md` — repeatable local/optional Jetson gate after the six-month quality roadmap
+- `docs/v0.1.4-release-rehearsal.md` — v0.1.4 release quality gate rehearsal record
 - `scripts/smoke_release_quality_gate.sh` — local-only release quality smoke
 
-기술 스택: Markdown, pytest, Typer CLI, GitHub Actions, GitHub Release
+Stack: Markdown, pytest, Typer CLI, GitHub Actions, GitHub Release
 
-## 3. HOW — 릴리스 반복 절차
+## 3. HOW — Repeatable Release Procedure
 
 ### 1. Scope Freeze
 
-- `main`에 포함할 PR이 모두 merge됐는지 확인한다.
-- 다음 tag에 들어가지 않을 작업은 새 브랜치에 남겨 둔다.
-- release note에 넣을 사용자-facing 변화만 짧게 적는다.
-- non-goals를 다시 확인한다: OS/VM/Docker/WSL/SSH/cloud/auth/dashboard/leaderboard/upload/composite ranking은 여전히 제외한다.
+- Confirm every PR intended for the tag has been merged into `main`.
+- Leave work that should not be included in the tag on a separate branch.
+- List only user-facing changes for the release note.
+- Re-check non-goals: OS/VM/Docker/WSL/SSH/cloud/auth/dashboard/leaderboard/upload/composite ranking remain out of scope.
 
 ### 2. Local Gate
 
-`main` 기준으로 최신 상태를 맞춘다.
+Align local `main`:
 
 ```bash
 git switch main
@@ -47,7 +47,7 @@ git pull --ff-only
 git status --short --branch
 ```
 
-필수 검증:
+Required validation:
 
 ```bash
 python -m pytest -q
@@ -56,31 +56,31 @@ python -m inferedge_env.cli doctor
 edgeenv doctor
 ```
 
-반복 가능한 local smoke로는 다음을 실행한다.
+Run the repeatable local smoke:
 
 ```bash
 scripts/smoke_release_quality_gate.sh
 ```
 
-이미 같은 후보 환경에서 `python -m pytest -q`가 통과했고 CLI 흐름만 재확인하는 경우에만 다음을 쓴다.
+Use the skip option only when `python -m pytest -q` already passed for the same candidate environment and only CLI flow needs to be rechecked:
 
 ```bash
 scripts/smoke_release_quality_gate.sh --skip-pytest
 ```
 
-성공 기준:
+Success criteria:
 
-- pytest가 모두 통과한다.
-- whitespace diff 문제가 없다.
-- module entrypoint와 console script가 모두 동작한다.
-- release quality smoke가 fake/local/resource/export-import/compare/bundle-summary/failed-run portability 흐름을 모두 통과한다.
-- `git status --short --branch`가 clean `main...origin/main` 상태다.
+- pytest passes.
+- whitespace diff check passes.
+- module entrypoint and console script both work.
+- release quality smoke passes fake/local/resource/export-import/compare/bundle-summary/failed-run portability flows.
+- `git status --short --branch` is clean and aligned with `main...origin/main`.
 
 ### 3. README Quickstart Smoke
 
-`scripts/smoke_release_quality_gate.sh`가 이 섹션의 local fake/resource/export-import 흐름을 자동으로 실행한다. 수동으로 단계별 관찰이 필요하면 아래 명령을 사용한다.
+`scripts/smoke_release_quality_gate.sh` automatically runs the local fake/resource/export-import path from this section. Use the manual commands only when step-by-step observation is needed.
 
-임시 root를 사용해 repo를 더럽히지 않는다.
+Use a temporary root so the repo stays clean:
 
 ```bash
 work_root=$(mktemp -d /private/tmp/inferedge-release-smoke.XXXXXX)
@@ -89,7 +89,7 @@ edgeenv runs list --edgeenv-root "$work_root/.edgeenv"
 edgeenv runs show <run_id> --edgeenv-root "$work_root/.edgeenv"
 ```
 
-Resource query와 export/import 경계도 확인한다.
+Check the resource query and export/import boundary:
 
 ```bash
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_resource_metrics.yaml --edgeenv-root "$work_root/.edgeenv"
@@ -99,15 +99,15 @@ edgeenv runs import "$work_root/run.zip" --edgeenv-root "$work_root/imported.edg
 edgeenv runs resources list --metric memory_peak_mb --json --edgeenv-root "$work_root/imported.edgeenv"
 ```
 
-성공 기준:
+Success criteria:
 
-- successful run은 `.edgeenv/runs/<run_id>/`에 저장된다.
-- imported registry는 `result.json`에서 rebuild된다.
-- resource query JSON은 `filters`, `sources`, `unit`, `source`를 보여주지만 ranking이나 comparability gate를 만들지 않는다.
+- Successful runs are stored under `.edgeenv/runs/<run_id>/`.
+- Imported registry rows are rebuilt from `result.json`.
+- Resource query JSON shows `filters`, `sources`, `unit`, and `source` without creating ranking or comparability gates.
 
 ### 4. Compare And Report Smoke
 
-`scripts/smoke_release_quality_gate.sh`가 이 섹션의 same-condition compare와 bundle-summary 흐름을 자동으로 실행한다. 수동으로 출력 문구를 확인해야 할 때 아래 명령을 사용한다.
+`scripts/smoke_release_quality_gate.sh` automatically runs same-condition compare and bundle-summary flow. Use these commands when output wording needs manual review:
 
 ```bash
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_compare_a.yaml --edgeenv-root "$work_root/.edgeenv"
@@ -116,15 +116,15 @@ edgeenv report compare <run_id_a> <run_id_b> --edgeenv-root "$work_root/.edgeenv
 edgeenv report bundle-summary --scenario same-condition:<run_id_a>:<run_id_b> --edgeenv-root "$work_root/.edgeenv" --output "$work_root/bundle-summary.md"
 ```
 
-성공 기준:
+Success criteria:
 
-- compare output은 `Comparable`, `Mode`, `Reason`을 먼저 보여준다.
-- metric delta는 `Comparable: Yes` + `Mode: same-condition`에서만 보조 정보로 나온다.
-- bundle summary는 read-only Markdown output이고 run artifact나 exported zip을 수정하지 않는다.
+- compare output starts with `Comparable`, `Mode`, and `Reason`.
+- metric deltas appear only for `Comparable: Yes` with `Mode: same-condition`.
+- bundle summary is read-only Markdown output and does not mutate run artifacts or exported zips.
 
-### 5. Failed-run Portability Smoke
+### 5. Failed-Run Portability Smoke
 
-`scripts/smoke_release_quality_gate.sh`가 malformed resource metrics failed-run artifact, export/import, imported failed-run inspection까지 자동으로 실행한다. 수동 triage가 필요하면 아래 명령을 사용한다.
+`scripts/smoke_release_quality_gate.sh` automatically runs malformed resource metrics failed-run artifact, export/import, and imported failed-run inspection. Use these commands for manual triage:
 
 ```bash
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_sampler_malformed_resource.yaml --edgeenv-root "$work_root/.edgeenv"
@@ -135,14 +135,14 @@ edgeenv failed-runs import "$work_root/failed-run.zip" --edgeenv-root "$work_roo
 edgeenv failed-runs show <failed_run_id> --edgeenv-root "$work_root/imported-failed.edgeenv" --log-chars 0
 ```
 
-성공 기준:
+Success criteria:
 
-- malformed resource metrics는 failed-run artifact로 보존된다.
-- failed-run import는 `.edgeenv/failed-runs/<run_id>/`만 채우고 `runs.db`를 만들거나 수정하지 않는다.
+- Malformed resource metrics are preserved as failed-run artifacts.
+- Failed-run import only fills `.edgeenv/failed-runs/<run_id>/` and does not create or modify `runs.db`.
 
-### 6. Optional Clean-room Gate
+### 6. Optional Clean-Room Gate
 
-릴리스 직전 README 신뢰도를 다시 확인해야 하면 `docs/readme-quickstart-cleanroom-rehearsal.md` 방식으로 source archive + fresh venv에서 다음을 확인한다.
+When package metadata or README Quickstart changed, treat the clean-room gate as effectively required. Follow `docs/readme-quickstart-cleanroom-rehearsal.md` using a source archive and fresh venv, then confirm:
 
 ```bash
 python -m pip install -e ".[dev]"
@@ -150,13 +150,11 @@ edgeenv doctor
 edgeenv bench run --target examples/profiles/local_fake.yaml --config examples/benches/yolov8n_fire.yaml
 ```
 
-이 단계는 package metadata나 README Quickstart를 바꾼 릴리스에서는 사실상 필수로 본다.
-
 ### 7. Optional Jetson Gate
 
-Jetson sampled evidence나 sampler 관련 변경이 포함됐거나, hardware-backed evidence baseline을 새로 고정하려면 nano01 같은 실제 장비에서 `docs/jetson-operations-checklist.md`를 따른다.
+Run this gate when sampler/Jetson behavior changed or a new hardware-backed evidence baseline is needed. On a Jetson such as `nano01`, follow `docs/jetson-operations-checklist.md`.
 
-최소 확인:
+Minimum check:
 
 ```bash
 scripts/smoke_jetson_sampled_bundle_handoff.sh \
@@ -166,33 +164,33 @@ scripts/smoke_jetson_sampled_bundle_handoff.sh \
   --keep-artifacts
 ```
 
-성공 기준:
+Success criteria:
 
-- Jetson에서 EdgeEnv가 local execution으로 실행된다.
-- sampled runs는 optional resource/sampler evidence를 보존한다.
-- exported/imported bundle compare와 bundle summary가 protocol-first 판단을 유지한다.
-- 이 결과를 SSH target support로 표현하지 않는다.
+- EdgeEnv runs through local execution on the Jetson.
+- sampled runs preserve optional resource/sampler evidence.
+- exported/imported bundle compare and bundle summary preserve protocol-first judgement.
+- The result is not described as SSH target support.
 
 ### 8. GitHub Gate
 
-- PR checks가 Python 3.10과 3.11에서 통과했는지 확인한다.
-- failed check, pending required check, unreviewed high-risk diff가 있으면 tag를 만들지 않는다.
-- release branch가 아니라 `main`의 commit을 tag한다.
+- Confirm PR checks pass on Python 3.10 and 3.11.
+- Do not tag if any check failed, required check is pending, or high-risk diff is unreviewed.
+- Tag the `main` commit, not an unmerged release branch.
 
 ### 9. Tag And Release
 
-`pyproject.toml` version과 tag 이름이 일치하는지 확인한 뒤 tag를 만든다.
+Confirm `pyproject.toml` version and tag name match, then tag:
 
 ```bash
 git tag -a vX.Y.Z -m "EdgeEnv vX.Y.Z"
 git push origin vX.Y.Z
 ```
 
-GitHub Release 본문에는 다음 네 구역을 유지한다.
+Keep these sections in the GitHub Release body:
 
 ```text
 Summary
-- 사용자-facing 변화만 적는다.
+- List only user-facing changes.
 
 Validation
 - python -m pytest -q
@@ -203,42 +201,42 @@ Validation
 - optional Jetson smoke, if run
 
 Impact
-- local evidence loop에 어떤 신뢰도가 추가됐는지 적는다.
+- Explain what confidence was added to the local evidence loop.
 
 Non-goals
-- OS/VM/Docker/WSL/SSH/cloud/auth/dashboard/leaderboard/upload/composite ranking은 제외한다.
+- OS/VM/Docker/WSL/SSH/cloud/auth/dashboard/leaderboard/upload/composite ranking remain out of scope.
 ```
 
-### 10. Post-release Follow-up
+### 10. Post-Release Follow-Up
 
-- README 상단이나 follow-up note가 새 tag를 가리키는지 확인한다.
-- `docs/v1-handoff-status.md` 또는 새 release follow-up note에 다음 작업 후보를 짧게 남긴다.
-- 릴리스 후 바로 새 기능을 시작하지 말고 README Quickstart를 외부 사용자 관점으로 한 번 더 읽는다.
+- Confirm the README top section and follow-up note point to the new tag.
+- Leave a short next-work candidate in `docs/v1-handoff-status.md` or a new release follow-up note.
+- After release, read the README Quickstart once from an external user's perspective before starting new feature work.
 
-## 4. HOW NOT — 피해야 할 함정
+## 4. HOW NOT — What To Avoid
 
-- 테스트 실패, pending CI, dirty working tree 상태에서 tag를 만들지 않는다.
-- generated `.edgeenv/`, zip bundle, model, engine, dataset, stdout/stderr artifact를 commit하지 않는다.
-- release note에 future work를 현재 지원 기능처럼 쓰지 않는다.
-- Jetson local execution 검증을 SSH/remote target 지원처럼 설명하지 않는다.
-- resource metrics나 bundle summary를 canonical evidence 또는 ranking surface처럼 설명하지 않는다.
-- `report compare`의 protocol-first 판단보다 metric delta를 앞세우지 않는다.
+- Do not tag with failing tests, pending CI, or a dirty working tree.
+- Do not commit generated `.edgeenv/`, zip bundles, models, engines, datasets, stdout/stderr artifacts, or benchmark evidence.
+- Do not describe future work as currently supported behavior in release notes.
+- Do not describe Jetson local execution validation as SSH or remote target support.
+- Do not present resource metrics or bundle summaries as canonical evidence or ranking surfaces.
+- Do not put metric deltas ahead of the protocol-first `report compare` judgement.
 
-## 5. WHERE — 다른 문서와의 관계
+## 5. WHERE — Related Documents
 
-- **V1 Release Rehearsal**: full gate와 실제 관측 기록을 보관한다.
-- **MVP Readiness Checklist**: 현재 지원/비지원 기능 상태판이다.
-- **README Quickstart Clean-room Rehearsal**: install/entrypoint 신뢰도를 깨끗한 환경에서 확인한다.
-- **Jetson Operations Checklist**: hardware-backed sampled evidence 반복 운영 절차다.
-- **Release Follow-up Note**: release 이후 사용자가 어디서 시작할지 짧게 보여준다.
-- **Release Quality Gate Refresh**: local smoke script와 optional Jetson gate의 반복 실행 기준이다.
+- **V1 Release Rehearsal**: stores the full gate and observed output.
+- **MVP Readiness Checklist**: tracks currently supported and unsupported behavior.
+- **README Quickstart Clean-room Rehearsal**: validates install and entrypoints in a fresh environment.
+- **Jetson Operations Checklist**: repeated operation procedure for hardware-backed sampled evidence.
+- **Release Follow-up Note**: shows where users should start after a release.
+- **Release Quality Gate Refresh**: defines the local smoke script and optional Jetson gate.
 
-## 6. WHY — 배경 판단
+## 6. WHY — Background Judgment
 
-EdgeEnv 릴리스는 기능 수를 늘리는 행위가 아니라, local-first evidence loop를 믿을 수 있는 기준선으로 고정하는 행위다. 체크리스트가 짧아야 반복되고, 반복돼야 release note가 과장 없이 유지된다.
+An EdgeEnv release is not a race to add features. It freezes a trustworthy local-first evidence loop. The checklist must stay short enough to repeat, because repeatability is what keeps release notes accurate and unexaggerated.
 
-이 문서는 `v0.1.4` 이후에도 재사용할 수 있게 version-specific output보다 gate와 판단 기준을 중심으로 쓴다.
+This document is reusable after `v0.1.4` because it focuses on gates and judgement criteria rather than version-specific output.
 
-## 7. ⚠️ LEARNED CAUTIONS — 학습된 주의사항
+## 7. LEARNED CAUTIONS — Learned Cautions
 
-- Release maintenance checklist는 자동화가 아니라 gate 문서다. tag/release 생성은 tests, smoke, CI가 실제로 통과한 뒤에만 수행한다.
+- The release maintenance checklist is a gate document, not automation. Create tags and releases only after tests, smoke, and CI actually pass.

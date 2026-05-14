@@ -19,6 +19,9 @@ Representative English documents:
 - [Portfolio Demo Path](portfolio-demo-path.md) — reviewer-facing demo route
 - [Local Command Contract Guide](local-command-contract.md) — how to connect a benchmark command
 - [Compare Workflow Guide](compare-workflow-guide.md) — how to judge comparability before reading metric deltas
+- [Export/Import Design](export-import-design.md) — portable evidence bundle contract
+- [Schema Versioning And Migration Policy](schema-versioning-migration-policy.md) — evidence compatibility and future-version rejection policy
+- [Release Maintenance Checklist](release-maintenance-checklist.md) — repeatable release gate
 - [Documentation Language Guide](language.md) — this bilingual language-selection guide
 
 Documents that are still Korean or mixed-language retain their original wording because they are operational records, design notes, or agent handoff material. Their top selector still offers an English entry path so a reader can move to the representative English route without hunting through the repository.
@@ -40,6 +43,9 @@ EdgeEnv 문서는 영어 대표 경로와 한국어/혼합 언어 작업 기록�
 - [Portfolio Demo Path](portfolio-demo-path.md) — 리뷰어용 데모 경로
 - [Local Command Contract Guide](local-command-contract.md) — benchmark command 연결 계약
 - [Compare Workflow Guide](compare-workflow-guide.md) — metric delta보다 먼저 comparability를 확인하는 흐름
+- [Export/Import Design](export-import-design.md) — portable evidence bundle contract
+- [Schema Versioning And Migration Policy](schema-versioning-migration-policy.md) — evidence compatibility와 future-version rejection 기준
+- [Release Maintenance Checklist](release-maintenance-checklist.md) — 반복 가능한 release gate
 - [Documentation Language Guide](language.md) — 이 bilingual language-selection guide
 
 한국어 또는 혼합 언어 문서는 운영 기록, 설계 메모, agent handoff 문맥을 보존하기 위해 원문 표현을 유지한다. 대신 모든 공개 문서 상단에 language selector를 두어 영어 대표 경로와 한국어/원문 경로를 바로 선택할 수 있게 한다.
