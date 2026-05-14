@@ -92,7 +92,7 @@ def render_bundle_summary_markdown(
     )
 
     lines = [
-        "# EdgeEnv Sampled Evidence Bundle Handoff",
+        "# EdgeEnv Evidence Bundle Handoff",
         "",
         "## Scope",
         "",
