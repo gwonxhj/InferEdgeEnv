@@ -114,6 +114,8 @@ edgeenv runs show <run_id>
 | `Local benchmark command timed out after ... seconds` | `timeout_seconds` 안에 command가 끝나지 않았다 | benchmark loop를 줄이거나 timeout을 늘린다 |
 | `Failed to start local benchmark command` | command path가 없거나 실행할 수 없다 | `command`, `working_directory`, virtualenv/path를 확인한다 |
 
+CLI failures print the original `Error:` plus a short `Hint:`. For local benchmark failures, EdgeEnv also writes `.edgeenv/failed-runs/<run_id>/` and prints an `edgeenv failed-runs show <run_id> --edgeenv-root <root>` command so stdout/stderr can be inspected without treating the failed command as a successful run.
+
 ## 4. HOW NOT — 피해야 할 함정
 
 - 일반 log에서 latency 숫자를 출력하는 것만으로 충분하다고 가정하지 않는다.

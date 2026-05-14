@@ -86,7 +86,14 @@ def validate_profile(profile_path: Path) -> None:
     try:
         profile = load_target_profile(profile_path)
     except ValueError as exc:
-        _fail(str(exc))
+        _fail(
+            str(exc),
+            hint=(
+                "Check that the target profile is valid YAML and includes "
+                "target_name, target_type, board_name, os, and runtime_tags. "
+                "v1 target_type values are fake and local."
+            ),
+        )
     console.print(f"[green]Valid target profile:[/green] {profile.target_name}")
 
 
@@ -96,7 +103,14 @@ def validate_bench(bench_config_path: Path) -> None:
     try:
         config = load_benchmark_config(bench_config_path)
     except ValueError as exc:
-        _fail(str(exc))
+        _fail(
+            str(exc),
+            hint=(
+                "Check required benchmark YAML fields and protocol values. "
+                "For local commands, also confirm command, timeout_seconds, "
+                "working_directory, and uppercase extra_env keys."
+            ),
+        )
     console.print(f"[green]Valid benchmark config:[/green] {config.name}")
 
 
@@ -115,7 +129,13 @@ def run_benchmark(
         target = load_target_profile(target_path)
         config = load_benchmark_config(config_path)
     except ValueError as exc:
-        _fail(str(exc))
+        _fail(
+            str(exc),
+            hint=(
+                "Validate both files first with `edgeenv profile validate` and "
+                "`edgeenv bench validate`."
+            ),
+        )
 
     runner = _runner_for_target(target)
     run_id = new_run_id()
@@ -147,7 +167,10 @@ def run_benchmark(
             soft_wrap=True,
         )
         console.print("[yellow]Registry:[/yellow] not updated")
-        _fail(str(exc))
+        _fail(
+            str(exc),
+            hint=_local_runner_error_hint(str(exc), run_id, edgeenv_root),
+        )
     result = build_run_result(config, target, runner_result, run_id=run_id)
     sampler_metadata_path: Path | None = None
     try:
@@ -347,7 +370,7 @@ def export_run(
             output_path,
         )
     except (KeyError, RunExportError, OSError) as exc:
-        _fail(str(exc))
+        _fail(str(exc), hint=_export_error_hint(str(exc)))
     console.print("[bold green]Run evidence exported[/bold green]")
     console.print(f"Run ID: {run_id}")
     console.print(f"Archive: {archive_path}", soft_wrap=True)
@@ -371,11 +394,14 @@ def import_run(
         except KeyError:
             pass
         else:
-            _fail(f"Run already exists in registry: {plan.result.run_id}")
+            _fail(
+                f"Run already exists in registry: {plan.result.run_id}",
+                hint=_import_error_hint("Run already exists in registry"),
+            )
         result, run_dir = import_successful_run(archive_path, edgeenv_root)
         registry.insert(result, run_dir / "result.json")
     except (RunImportError, OSError) as exc:
-        _fail(str(exc))
+        _fail(str(exc), hint=_import_error_hint(str(exc)))
     console.print("[bold green]Run evidence imported[/bold green]")
     console.print(f"Run ID: {result.run_id}")
     console.print(f"Result: {run_dir / 'result.json'}", soft_wrap=True)
@@ -469,7 +495,7 @@ def export_failed_run_artifact(
         failed_dir = _failed_run_dir(edgeenv_root, run_id)
         archive_path = export_failed_run(failed_dir, output_path)
     except (RunExportError, OSError, ValueError) as exc:
-        _fail(str(exc))
+        _fail(str(exc), hint=_export_error_hint(str(exc)))
     console.print("[bold green]Failed-run evidence exported[/bold green]")
     console.print(f"Run ID: {run_id}")
     console.print(f"Archive: {archive_path}", soft_wrap=True)
@@ -488,7 +514,7 @@ def import_failed_run_artifact(
     try:
         failure, failed_dir = import_failed_run(archive_path, edgeenv_root)
     except (RunImportError, OSError) as exc:
-        _fail(str(exc))
+        _fail(str(exc), hint=_import_error_hint(str(exc)))
     console.print("[bold green]Failed-run evidence imported[/bold green]")
     console.print(f"Run ID: {failure['run_id']}")
     console.print(f"Artifact: {failed_dir}", soft_wrap=True)
@@ -809,8 +835,118 @@ def _format_float(value: float) -> str:
     return text
 
 
-def _fail(message: str) -> None:
+def _local_runner_error_hint(message: str, run_id: str, edgeenv_root: Path) -> str:
+    inspect_command = (
+        f"edgeenv failed-runs show {run_id} --edgeenv-root {edgeenv_root}"
+    )
+    if "Missing EDGEENV_METRICS_JSON" in message:
+        return (
+            "Emit one stdout line that starts with EDGEENV_METRICS_JSON= and "
+            "contains latency_mean_ms, latency_p50_ms, latency_p95_ms, "
+            f"latency_p99_ms, and throughput_fps. Inspect logs with: {inspect_command}"
+        )
+    if "Invalid EDGEENV_METRICS_JSON JSON" in message:
+        return (
+            "Write the primary metrics line with a structured JSON writer such "
+            f"as json.dumps(...). Inspect stdout with: {inspect_command}"
+        )
+    if "Invalid local metrics schema" in message:
+        return (
+            "Primary metrics must include the five numeric latency/throughput "
+            f"fields. Inspect captured stdout with: {inspect_command}"
+        )
+    if "Invalid EDGEENV_RESOURCE_METRICS_JSON JSON" in message:
+        return (
+            "Resource metrics are optional. Omit EDGEENV_RESOURCE_METRICS_JSON= "
+            "when the sampler cannot produce valid JSON, or write it with "
+            f"json.dumps(...). Inspect stdout with: {inspect_command}"
+        )
+    if "Invalid local resource metrics schema" in message:
+        return (
+            "Resource metrics are supplemental. Use only supported numeric "
+            f"ResourceMetrics fields, or omit the line. Inspect stdout with: {inspect_command}"
+        )
+    if "failed with exit code" in message:
+        return (
+            "The benchmark command exited before EdgeEnv could store a successful "
+            f"run. Inspect stdout/stderr with: {inspect_command}"
+        )
+    if "timed out" in message:
+        return (
+            "The command exceeded timeout_seconds. Reduce the benchmark loop or "
+            f"increase timeout_seconds, then inspect partial logs with: {inspect_command}"
+        )
+    if "Failed to start local benchmark command" in message:
+        return (
+            "Check the command path, quoting, working_directory, virtualenv, and "
+            f"permissions. Inspect the failed-run artifact with: {inspect_command}"
+        )
+    return (
+        "Inspect captured stdout/stderr and copied config/profile evidence with: "
+        f"{inspect_command}"
+    )
+
+
+def _import_error_hint(message: str) -> str:
+    if "already exists" in message or "already exists in registry" in message:
+        return (
+            "Import never overwrites existing evidence. Use a fresh --edgeenv-root "
+            "or choose a bundle whose run_id has not been imported yet."
+        )
+    if "Checksum mismatch" in message or "Byte size mismatch" in message:
+        return (
+            "The bundle bytes do not match manifest.json. Re-export the run from "
+            "the source workspace before importing again."
+        )
+    if "Unsafe archive entry path" in message or "Unsafe export archive path" in message:
+        return (
+            "The bundle contains an unsafe path. Do not edit zip contents manually; "
+            "create bundles with `edgeenv runs export` or `edgeenv failed-runs export`."
+        )
+    if "Unsupported run evidence export schema" in message:
+        return (
+            "This EdgeEnv version cannot import that bundle schema. Use a compatible "
+            "release or add an explicit migration before importing."
+        )
+    if "Unsupported run evidence bundle type" in message:
+        return (
+            "Use `edgeenv runs import` for successful-run bundles and "
+            "`edgeenv failed-runs import` for failed-run diagnostic bundles."
+        )
+    if "Invalid result.json" in message or "Unsupported failed-run schema" in message:
+        return (
+            "The artifact schema is unsupported or corrupt. Validate the source "
+            "bundle and schema version before importing."
+        )
+    return (
+        "Import validates manifest, checksums, safe paths, schema markers, and "
+        "duplicate run IDs before copying evidence."
+    )
+
+
+def _export_error_hint(message: str) -> str:
+    if "Required run artifact file missing" in message:
+        return (
+            "Export requires result/config/target/env/stdout/stderr evidence files. "
+            "Re-run the benchmark or inspect the artifact directory."
+        )
+    if "Sampler raw artifact listed in metadata is missing" in message:
+        return (
+            "Sampler metadata lists a raw artifact that is absent. Re-run the "
+            "sampled benchmark so metadata and raw artifacts stay together."
+        )
+    if "symlink" in message or "Unsafe export archive path" in message:
+        return (
+            "Export only packages regular files under the run artifact directory. "
+            "Remove unsafe paths or symlinks before exporting."
+        )
+    return "Export reads artifact files from the local registry path and writes a zip bundle."
+
+
+def _fail(message: str, *, hint: str | None = None) -> None:
     console.print(f"[red]Error:[/red] {message}", soft_wrap=True)
+    if hint:
+        console.print(f"[yellow]Hint:[/yellow] {hint}", soft_wrap=True)
     raise typer.Exit(code=1)
 
 
