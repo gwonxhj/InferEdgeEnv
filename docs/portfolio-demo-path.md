@@ -178,6 +178,8 @@ What this demonstrates:
 
 #### 6. Generate A Read-Only Handoff Summary
 
+`bundle-summary` summarizes one or more run pairs, so pass each pair with `--scenario <label>:<run_id_a>:<run_id_b>` instead of a single positional run ID.
+
 ```bash
 edgeenv report bundle-summary \
   --scenario same-condition:"$RUN_A":"$RUN_B" \
