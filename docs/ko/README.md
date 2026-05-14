@@ -88,6 +88,7 @@ EdgeEnv는 다음을 구현하지 않는다.
 
 운영 기록:
 
+- [EdgeEnv v0.1.5 Release Rehearsal](../v0.1.5-release-rehearsal.md) — clean-room source archive release gate와 patch 후보 판단
 - [EdgeEnv v0.1.4 Bilingual Docs Sanity Sweep](../v0.1.4-bilingual-docs-sanity-sweep.md) — README, 한국어 README, 대표 문서 읽기 흐름 점검
 - [EdgeEnv v0.1.4 Release Rehearsal](../v0.1.4-release-rehearsal.md) — v0.1.4 후보 전 release quality gate 기록
 - [EdgeEnv v0.1.4 Post-release Sanity Sweep](../v0.1.4-post-release-sanity-sweep.md) — README, follow-up note, GitHub Release 문구 점검 기록

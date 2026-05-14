@@ -113,7 +113,11 @@ echo "[release-quality] work root: $work_root"
 echo "[release-quality] doctor and whitespace"
 "$python_bin" -m inferedge_env.cli doctor
 edgeenv doctor
-git diff --check
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  git diff --check
+else
+  echo "[release-quality] git diff --check skipped outside a git worktree"
+fi
 
 if [[ "$skip_pytest" -eq 0 ]]; then
   echo "[release-quality] pytest"
