@@ -70,13 +70,40 @@ EdgeEnv는 다음을 구현하지 않는다.
 - model upload server, dataset upload server
 - 모든 모델을 하나의 점수로 줄 세우는 ranking system
 
-## 어디를 읽으면 되는가
+## Guide Map
 
-- 영어 대표 문서: [README](../../README.md)
-- 문서 언어 가이드: [Documentation Language Guide](../language.md)
-- benchmark command 연결: [Local Command Contract Guide](../local-command-contract.md)
-- 비교 흐름: [Compare Workflow Guide](../compare-workflow-guide.md)
-- 현재 릴리스 기준선: [EdgeEnv v0.1.4 Follow-up Note](../release-follow-up-v0.1.4.md)
-- 릴리스 품질 기준: [Release Maintenance Checklist](../release-maintenance-checklist.md)
+한국어 README는 빠른 진입과 프로젝트 경계 확인을 돕기 위한 요약이다. 세부 설계와 최신 release evidence는 영어 대표 문서를 기준으로 확인한다.
 
-한국어 문서는 빠른 진입과 프로젝트 경계 확인을 돕기 위한 요약이다. 세부 설계와 최신 release evidence는 영어 대표 문서와 Guide Map을 함께 확인한다.
+영어 대표 경로:
+
+- [README](../../README.md) — 전체 Quickstart와 프로젝트 범위
+- [Documentation Language Guide](../language.md) — 영어 대표 경로와 한국어 진입 경로
+- [EdgeEnv v0.1.4 Follow-up Note](../release-follow-up-v0.1.4.md) — 현재 릴리스 기준선과 시작 경로
+- [Portfolio Demo Path](../portfolio-demo-path.md) — 리뷰어용 fake/local/compare/export-import/bundle-summary 데모 경로
+- [Local Command Contract Guide](../local-command-contract.md) — 사용자 benchmark command 연결 방식
+- [Compare Workflow Guide](../compare-workflow-guide.md) — metric delta보다 먼저 comparability를 확인하는 흐름
+- [Export/Import Design](../export-import-design.md) — portable evidence bundle contract
+- [Schema Versioning And Migration Policy](../schema-versioning-migration-policy.md) — evidence compatibility와 future-version rejection 기준
+- [Release Maintenance Checklist](../release-maintenance-checklist.md) — 반복 가능한 release gate
+
+운영 기록:
+
+- [EdgeEnv v0.1.4 Release Rehearsal](../v0.1.4-release-rehearsal.md) — v0.1.4 후보 전 release quality gate 기록
+- [EdgeEnv v0.1.4 Post-release Sanity Sweep](../v0.1.4-post-release-sanity-sweep.md) — README, follow-up note, GitHub Release 문구 점검 기록
+- [Release Quality Gate Refresh](../release-quality-gate-refresh.md) — local release smoke와 optional Jetson gate 기준
+- [README Quickstart Clean-room Rehearsal](../readme-quickstart-cleanroom-rehearsal.md) — 깨끗한 source archive와 venv에서 README 경로 검증
+- [Jetson Measurement Operations Checklist](../jetson-operations-checklist.md) — Jetson 실측 반복 운영 절차
+- [Jetson Sampled Evidence Bundle Handoff](../jetson-sampled-evidence-bundle-handoff.md) — sampled bundle export/import와 imported compare 검증
+- [EdgeEnv MVP v1 Handoff Status](../v1-handoff-status.md) — 현재 capability snapshot과 future-work 진입점
+- [EdgeEnv v0.1.3 User Feedback Backlog](../v0.1.3-user-feedback-backlog.md) — 새 기능 전에 first-user 질문을 모으는 기준
+
+설계 참고 문서:
+
+- [InferEdgeEnv Six-Month Quality Roadmap](../six-month-quality-roadmap.md)
+- [Evidence Contract Conformance Suite](../evidence-contract-conformance-suite.md)
+- [CLI Error Message Polish](../cli-error-message-polish.md)
+- [Local Real Benchmark Example Guide](../local-real-benchmark-example.md)
+- [Local Runner Design](../local-runner-design.md)
+- [Resource Metrics Design](../resource-metrics-design.md)
+- [Sampler Metadata Artifact Policy](../sampler-metadata-artifact-policy.md)
+- [Bundle Report Generation Design](../bundle-report-generation-design.md)
