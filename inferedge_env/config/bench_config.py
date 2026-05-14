@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import Literal
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
@@ -70,6 +69,3 @@ def load_benchmark_config(path: Path | str) -> BenchmarkConfig:
         return BenchmarkConfig.model_validate(raw)
     except ValidationError as exc:
         raise ValueError(f"Invalid benchmark config {source}: {exc}") from exc
-
-
-BenchmarkRuntime = Literal["onnxruntime", "tensorrt", "fake"]
