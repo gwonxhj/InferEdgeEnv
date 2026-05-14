@@ -16,7 +16,7 @@ Validated scope: fake/local benchmark recording, artifact storage, registry look
 
 Start with [Quickstart](#quickstart). If install fails while pip is fetching build dependencies, check [Install And Quickstart Resilience](docs/install-quickstart-resilience.md) before treating it as an EdgeEnv runtime failure.
 
-If the first path is confusing or blocked, open a [README Quickstart feedback issue](https://github.com/gwonxhj/InferEdgeEnv/issues/new?template=readme-quickstart-feedback.md) and use [EdgeEnv v0.1.3 User Feedback Backlog](docs/v0.1.3-user-feedback-backlog.md) to classify the first blocked step.
+If the first path is confusing or blocked, open a [README Quickstart feedback issue](https://github.com/gwonxhj/InferEdgeEnv/issues/new?template=readme-quickstart-feedback.md) and use the [first-user feedback backlog](docs/v0.1.3-user-feedback-backlog.md) to classify the first blocked step.
 
 After the first fake run, choose the next path:
 
@@ -198,6 +198,7 @@ Release and maintenance:
 
 - [Release Maintenance Checklist](docs/release-maintenance-checklist.md) — repeatable local, clean-room, optional Jetson, tag, and GitHub Release gate
 - [Release Quality Gate Refresh](docs/release-quality-gate-refresh.md) — local release smoke script and optional Jetson gate after the six-month quality roadmap
+- [EdgeEnv v0.1.4 Post-release Sanity Sweep](docs/v0.1.4-post-release-sanity-sweep.md) — post-release check of README, follow-up note, and GitHub Release wording
 - [EdgeEnv v0.1.4 Release Rehearsal](docs/v0.1.4-release-rehearsal.md) — release quality gate run before the v0.1.4 candidate
 - [EdgeEnv v0.1.3 Release Rehearsal](docs/v0.1.3-release-rehearsal.md) — release maintenance checklist run before the v0.1.3 tag
 - [EdgeEnv v0.1.3 Candidate Plan](docs/v0.1.3-candidate-plan.md) — completed first-user polish sequence
