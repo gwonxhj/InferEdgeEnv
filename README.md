@@ -158,66 +158,38 @@ The Python package is `inferedge_env`; the user-facing CLI command remains `edge
 
 ## Guide Map
 
-Start here:
+English representative path:
 
 - [Documentation Language Guide](docs/language.md) — choose the English representative path or Korean entry path
-- [EdgeEnv v0.1.4 Follow-up Note](docs/release-follow-up-v0.1.4.md) — what changed in the release quality baseline and where to start
-- [EdgeEnv v0.1.3 Follow-up Note](docs/release-follow-up-v0.1.3.md) — what changed in the polish release and where to start
-- [InferEdgeEnv Six-Month Quality Roadmap](docs/six-month-quality-roadmap.md) — staged quality plan for evidence conformance, adapter templates, schema policy, demo path, error polish, and release gates
-- [Evidence Contract Conformance Suite](docs/evidence-contract-conformance-suite.md) — public CLI tests for valid/corrupt evidence, failed-run artifacts, compare judgement, and export/import portability
-- [Schema Versioning And Migration Policy](docs/schema-versioning-migration-policy.md) — how result, sampler, failed-run, export, and registry schemas evolve without silent future-version imports
-- [Portfolio Demo Path](docs/portfolio-demo-path.md) — reviewer-facing fake/local/compare/export-import/bundle-summary path, with Jetson as an optional lane
-- [CLI Error Message Polish](docs/cli-error-message-polish.md) — how common config, metrics, command, export, and import failures guide users with actionable hints
-- [EdgeEnv v0.1.3 User Feedback Backlog](docs/v0.1.3-user-feedback-backlog.md) — how to collect first-user questions before adding new features
-- [EdgeEnv v0.1.3 Feedback Template Rehearsal](docs/v0.1.3-feedback-template-rehearsal.md) — sample first-user feedback issues from a README replay
-- [EdgeEnv v0.1.3 Synthetic User Simulation](docs/v0.1.3-synthetic-user-simulation.md) — persona-based README review when real user feedback is not available yet
-- [Install And Quickstart Resilience](docs/install-quickstart-resilience.md) — how to triage install, build dependency, and entrypoint failures
-- [README Quickstart Clean-room Rehearsal](docs/readme-quickstart-cleanroom-rehearsal.md) — fresh source archive and venv validation of the README path
-- [MVP Readiness Checklist](docs/mvp-readiness-checklist.md) — what works in this MVP and what remains out of scope
-- [EdgeEnv MVP v1 Handoff Status](docs/v1-handoff-status.md) — current state, validation commands, and next work candidates
-- [EdgeEnv MVP v1 Release Rehearsal](docs/v1-release-rehearsal.md) — main-based user-flow rehearsal and v1 tag gate
-- [Packaging And Entrypoint Readiness](docs/packaging-entrypoints.md) — install, module entrypoint, and console script checks
-- [CI Readiness Workflow](docs/ci-readiness.md) — automated PR/main checks for MVP contracts
+- [EdgeEnv v0.1.4 Follow-up Note](docs/release-follow-up-v0.1.4.md) — current release baseline and trusted starting point
+- [Portfolio Demo Path](docs/portfolio-demo-path.md) — reviewer-facing fake/local/compare/export-import/bundle-summary demo path
 - [Local Command Contract Guide](docs/local-command-contract.md) — how to connect your own local benchmark command
-- [Local Real Benchmark Example Guide](docs/local-real-benchmark-example.md) — how to wrap a user-owned runtime command
-- [Jetson Tegrastats Wrapper Guide](docs/jetson-tegrastats-wrapper.md) — how to collect Jetson `tegrastats` as optional resource evidence
-- [Jetson Sampled Run Rehearsal](docs/jetson-sampled-run-rehearsal.md) — real Jetson sampler adapter run, inspection UX, and export/import validation
-- [Jetson Environment Setup Hardening](docs/jetson-env-setup-hardening.md) — source snapshot + conda/PYTHONPATH smoke for repeated Jetson validation
-- [Jetson Sampled Comparison Rehearsal](docs/jetson-sampled-comparison-rehearsal.md) — two sampled Jetson runs proving compare remains protocol-first
-- [Jetson Sampled Conditional Comparison Rehearsal](docs/jetson-sampled-conditional-comparison-rehearsal.md) — sampled Jetson provider difference proving Conditional compare suppresses metric deltas
-- [Jetson Sampled Target Comparison Rehearsal](docs/jetson-sampled-target-comparison-rehearsal.md) — sampled Jetson target difference proving target-comparison suppresses metric deltas
-- [Jetson Sampled Evidence Bundle Handoff](docs/jetson-sampled-evidence-bundle-handoff.md) — export/import sampled bundles proving imported compare keeps the same interpretation rules
-- [Jetson Sampled Bundle Portability Review](docs/jetson-sampled-bundle-portability-review.md) — short human-readable handoff report format for sampled evidence bundles
-- [Bundle Report Generation Design](docs/bundle-report-generation-design.md) — read-only Markdown summary generation from imported artifacts and compare output
-- [Jetson Bundle Summary Rehearsal](docs/jetson-bundle-summary-rehearsal.md) — real imported Jetson sampled bundles proving generated Markdown handoff output
-- [Sampler Adapter API Design](docs/sampler-adapter-api-design.md) — future sampler adapter lifecycle and metadata schema
-- [LocalRunner Sampler Wiring Design](docs/local-runner-sampler-wiring-design.md) — how LocalRunner should enable sampler lifecycle without breaking stdout metrics
-- [Sampler Metadata Artifact Policy](docs/sampler-metadata-artifact-policy.md) — where sampler metadata/raw artifacts belong
-- [Resource Query Rehearsal](docs/resource-query-rehearsal.md) — local and imported registry lookup proof for `runs resources list`
-- [Compare Workflow Guide](docs/compare-workflow-guide.md) — how to create two runs and judge comparability
-- [Export/Import Design](docs/export-import-design.md) — proposed portable evidence bundle contract
-
-Release and maintenance:
-
+- [Compare Workflow Guide](docs/compare-workflow-guide.md) — how to judge comparability before reading metric deltas
+- [Export/Import Design](docs/export-import-design.md) — portable evidence bundle contract
+- [Schema Versioning And Migration Policy](docs/schema-versioning-migration-policy.md) — evidence compatibility and future-version rejection policy
 - [Release Maintenance Checklist](docs/release-maintenance-checklist.md) — repeatable local, clean-room, optional Jetson, tag, and GitHub Release gate
-- [Release Quality Gate Refresh](docs/release-quality-gate-refresh.md) — local release smoke script and optional Jetson gate after the six-month quality roadmap
-- [EdgeEnv v0.1.4 Post-release Sanity Sweep](docs/v0.1.4-post-release-sanity-sweep.md) — post-release check of README, follow-up note, and GitHub Release wording
+
+Operational records:
+
 - [EdgeEnv v0.1.4 Release Rehearsal](docs/v0.1.4-release-rehearsal.md) — release quality gate run before the v0.1.4 candidate
-- [EdgeEnv v0.1.3 Release Rehearsal](docs/v0.1.3-release-rehearsal.md) — release maintenance checklist run before the v0.1.3 tag
-- [EdgeEnv v0.1.3 Candidate Plan](docs/v0.1.3-candidate-plan.md) — completed first-user polish sequence
-- [EdgeEnv v0.1.2 Follow-up Note](docs/release-follow-up-v0.1.2.md) — previous MVP v1 baseline note
+- [EdgeEnv v0.1.4 Post-release Sanity Sweep](docs/v0.1.4-post-release-sanity-sweep.md) — post-release check of README, follow-up note, and GitHub Release wording
+- [Release Quality Gate Refresh](docs/release-quality-gate-refresh.md) — local release smoke script and optional Jetson gate after the six-month quality roadmap
+- [README Quickstart Clean-room Rehearsal](docs/readme-quickstart-cleanroom-rehearsal.md) — fresh source archive and venv validation of the README path
+- [Jetson Measurement Operations Checklist](docs/jetson-operations-checklist.md) — repeated hardware measurement procedure
+- [Jetson Sampled Evidence Bundle Handoff](docs/jetson-sampled-evidence-bundle-handoff.md) — sampled bundle export/import and imported compare validation
+- [EdgeEnv MVP v1 Handoff Status](docs/v1-handoff-status.md) — current capability snapshot and future-work entry points
+- [EdgeEnv v0.1.3 User Feedback Backlog](docs/v0.1.3-user-feedback-backlog.md) — first-user question intake before new feature work
 
 Design references:
 
+- [InferEdgeEnv Six-Month Quality Roadmap](docs/six-month-quality-roadmap.md)
+- [Evidence Contract Conformance Suite](docs/evidence-contract-conformance-suite.md)
+- [CLI Error Message Polish](docs/cli-error-message-polish.md)
+- [Local Real Benchmark Example Guide](docs/local-real-benchmark-example.md)
 - [Local Runner Design](docs/local-runner-design.md)
 - [Resource Metrics Design](docs/resource-metrics-design.md)
-- [Sampler Failure Policy](docs/sampler-failure-policy.md)
-- [Platform Sampler Design](docs/platform-sampler-design.md)
-- [Sampler Adapter API Design](docs/sampler-adapter-api-design.md)
-- [LocalRunner Sampler Wiring Design](docs/local-runner-sampler-wiring-design.md)
 - [Sampler Metadata Artifact Policy](docs/sampler-metadata-artifact-policy.md)
-- [Registry Resource Query Design](docs/registry-resource-query-design.md)
-- [Resource Query Rehearsal](docs/resource-query-rehearsal.md)
+- [Bundle Report Generation Design](docs/bundle-report-generation-design.md)
 
 ## Benchmark Config Example
 
