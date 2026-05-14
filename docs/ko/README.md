@@ -85,6 +85,7 @@ InferEdgeOrchestrator도 별도 영역이다. Orchestrator는 배포 이후 sche
 영어 대표 경로:
 
 - [README](../../README.md) — 전체 Quickstart와 프로젝트 범위
+- [InferEdgeEnv Portfolio Summary](../portfolio_summary.md) — 이 레포의 30초 역할 요약과 reviewer path
 - [Documentation Language Guide](../language.md) — 영어 대표 경로와 한국어 진입 경로
 - [EdgeEnv v0.1.4 Follow-up Note](../release-follow-up-v0.1.4.md) — 현재 릴리스 기준선과 시작 경로
 - [Portfolio Demo Path](../portfolio-demo-path.md) — 리뷰어용 fake/local/compare/export-import/bundle-summary 데모 경로
@@ -110,6 +111,7 @@ InferEdgeOrchestrator도 별도 영역이다. Orchestrator는 배포 이후 sche
 설계 참고 문서:
 
 - [InferEdgeEnv Six-Month Quality Roadmap](../six-month-quality-roadmap.md)
+- [InferEdgeEnv Portfolio Summary](../portfolio_summary.md)
 - [Cross-Repo Positioning Review](../cross-repo-positioning-review.md)
 - [Evidence Contract Conformance Suite](../evidence-contract-conformance-suite.md)
 - [CLI Error Message Polish](../cli-error-message-polish.md)
