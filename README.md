@@ -4,9 +4,9 @@
 
 InferEdgeEnv is a local-first run evidence registry and comparability checker for Edge AI inference benchmark results. The user-facing CLI command is `edgeenv`.
 
-## Start Here for v0.1.4
+## Start Here for v0.1.5
 
-`v0.1.4` is the current release quality baseline. The first path is:
+`v0.1.5` is the current v1-complete release baseline. InferEdgeEnv v1 is complete as a local-first run evidence registry and comparability checker; later work should be treated as v1.1+ extensions, not missing MVP scope. The first path is:
 
 1. Install and run `doctor`.
 2. Record a deterministic fake run.
@@ -162,7 +162,7 @@ English representative path:
 
 - [InferEdgeEnv Portfolio Summary](docs/portfolio_summary.md) — 30-second role, boundary, and reviewer path for this repository
 - [Documentation Language Guide](docs/language.md) — choose the English representative path or Korean entry path
-- [EdgeEnv v0.1.4 Follow-up Note](docs/release-follow-up-v0.1.4.md) — current release baseline and trusted starting point
+- [EdgeEnv v0.1.5 Follow-up Note](docs/release-follow-up-v0.1.5.md) — current v1-complete release baseline and trusted starting point
 - [Portfolio Demo Path](docs/portfolio-demo-path.md) — reviewer-facing fake/local/compare/export-import/bundle-summary demo path
 - [Local Command Contract Guide](docs/local-command-contract.md) — how to connect your own local benchmark command
 - [Compare Workflow Guide](docs/compare-workflow-guide.md) — how to judge comparability before reading metric deltas
@@ -173,6 +173,7 @@ English representative path:
 Operational records:
 
 - [EdgeEnv v0.1.5 Release Rehearsal](docs/v0.1.5-release-rehearsal.md) — clean-room source archive release gate and patch-candidate judgement
+- [EdgeEnv v0.1.4 Follow-up Note](docs/release-follow-up-v0.1.4.md) — previous release quality baseline
 - [EdgeEnv v0.1.4 Bilingual Docs Sanity Sweep](docs/v0.1.4-bilingual-docs-sanity-sweep.md) — README, Korean README, and representative docs reading-path check
 - [EdgeEnv v0.1.4 Release Rehearsal](docs/v0.1.4-release-rehearsal.md) — release quality gate run before the v0.1.4 candidate
 - [EdgeEnv v0.1.4 Post-release Sanity Sweep](docs/v0.1.4-post-release-sanity-sweep.md) — post-release check of README, follow-up note, and GitHub Release wording

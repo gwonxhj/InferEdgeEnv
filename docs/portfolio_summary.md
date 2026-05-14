@@ -4,6 +4,8 @@
 
 InferEdgeEnv is a local-first run evidence registry and comparability checker for Edge AI inference benchmark results.
 
+Release baseline: `v0.1.5` freezes InferEdgeEnv v1 as complete for this role. Future SSH, remote, cloud, dashboard, or broader target work belongs to v1.1+ extensions.
+
 ## 30-Second Structure
 
 ```text
