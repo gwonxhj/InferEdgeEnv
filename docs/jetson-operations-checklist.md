@@ -1,5 +1,7 @@
 # Jetson Measurement Operations Checklist
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 문서가 정하는 것
 
 `v0.1.4` 이후 Jetson에서 sampled benchmark를 반복 실행할 때 확인할 운영 체크리스트를 정한다. 목표는 매번 같은 기준으로 환경을 확인하고, evidence를 보관하고, 실패 시 어디서부터 triage할지 빠르게 판단하는 것이다.

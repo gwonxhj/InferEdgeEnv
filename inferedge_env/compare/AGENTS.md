@@ -1,5 +1,7 @@
 # inferedge_env/compare 작업 가이드
 
+> Language: [English overview](../../docs/language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 모듈은 무엇을 하는가
 두 run의 comparability를 판단한다. 필수 비교 필드가 같으면 same-condition, runtime/execution_provider/target만 다르면 conditional runtime/target comparison으로 표시한다.
 

@@ -1,5 +1,7 @@
 # MVP Readiness Checklist
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 문서가 정하는 것
 
 EdgeEnv MVP가 현재 어떤 사용자 흐름을 지원하고, 어떤 범위를 의도적으로 지원하지 않는지 release/readiness 관점에서 정리한다.

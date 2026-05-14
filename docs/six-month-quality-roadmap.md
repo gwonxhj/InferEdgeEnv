@@ -1,5 +1,7 @@
 # InferEdgeEnv Six-Month Quality Roadmap
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 This document turns the next six months of InferEdgeEnv work into a staged agentic execution plan.
 
 InferEdgeEnv is already a usable local-first run evidence registry and comparability checker. The next work should improve confidence, onboarding, schema durability, and release discipline rather than expanding into remote runners, dashboards, leaderboards, or deployment decisions.

@@ -1,5 +1,7 @@
 # Jetson Sampled Target Comparison Rehearsal
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 문서가 정하는 것
 
 Jetson에서 `sampler: jetson-tegrastats`가 켜진 sampled local run 두 개를 생성하되, 두 번째 run의 target profile metadata만 의도적으로 다르게 만들어 `report compare`가 `Mode: target-comparison`을 출력하고 metric delta를 숨기는지 확인한다.

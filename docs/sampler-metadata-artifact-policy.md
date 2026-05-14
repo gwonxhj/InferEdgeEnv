@@ -1,5 +1,7 @@
 # Sampler Metadata Artifact Policy
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 문서가 정하는 것
 
 future sampler adapter가 만든 metadata와 raw sampler output을 성공 run artifact 안에 어디에 저장할지 결정한다.

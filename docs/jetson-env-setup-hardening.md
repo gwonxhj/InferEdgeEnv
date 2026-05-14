@@ -1,5 +1,7 @@
 # Jetson Environment Setup Hardening
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 문서가 정하는 것
 
 Jetson에서 InferEdgeEnv source snapshot을 안정적으로 실행하기 위한 환경 준비와 smoke 절차를 정한다. 목표는 실제 장비에서 `sampler: jetson-tegrastats` sampled run을 반복 검증할 때, editable install이나 shell PATH 상태에 덜 흔들리는 진입점을 제공하는 것이다.

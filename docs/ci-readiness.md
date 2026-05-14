@@ -1,5 +1,7 @@
 # CI Readiness Workflow
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 문서가 정하는 것
 
 GitHub Actions에서 EdgeEnv MVP의 핵심 계약을 자동 검증하는 readiness workflow 범위를 정리한다.

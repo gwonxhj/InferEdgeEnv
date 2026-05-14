@@ -1,5 +1,7 @@
 # Jetson Sampled Comparison Rehearsal
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 문서가 정하는 것
 
 Jetson에서 `sampler: jetson-tegrastats`가 켜진 sampled local run 두 개를 생성하고, `report compare`가 sampler/resource evidence가 아니라 benchmark protocol을 먼저 보고 판단하는지 확인한다.

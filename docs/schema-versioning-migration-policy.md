@@ -1,5 +1,7 @@
 # Schema Versioning And Migration Policy
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 문서가 정하는 것
 
 InferEdgeEnv evidence artifact가 릴리스 이후에도 해석 가능하도록 `result.json`, `failure.json`, `sampler/metadata.json`, export `manifest.json`, SQLite registry의 버전 호환 정책을 정한다.

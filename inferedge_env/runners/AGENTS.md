@@ -1,5 +1,7 @@
 # inferedge_env/runners 작업 가이드
 
+> Language: [English overview](../../docs/language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 모듈은 무엇을 하는가
 runner interface와 v1 FakeRunner를 담당한다. 실제 모델 실행 없이 deterministic benchmark result를 만들어 CLI, result writer, registry 흐름을 검증한다.
 

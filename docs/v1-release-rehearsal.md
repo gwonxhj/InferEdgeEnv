@@ -1,5 +1,7 @@
 # EdgeEnv MVP v1 Release Rehearsal
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 문서가 정하는 것
 
 `main` 기준으로 MVP v1 사용자가 실제로 밟을 수 있는 end-to-end 흐름과, 그 흐름을 v1 release/tag 전에 통과해야 하는 기준으로 정리한다.

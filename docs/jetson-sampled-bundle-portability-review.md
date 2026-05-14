@@ -1,5 +1,7 @@
 # Jetson Sampled Bundle Portability Review
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 문서가 정하는 것
 
 Jetson sampled evidence bundle handoff 이후, raw `manifest.json`과 smoke output만으로 충분한지 검토하고 사람이 읽기 쉬운 handoff report가 필요한 경우의 최소 형식을 정한다.

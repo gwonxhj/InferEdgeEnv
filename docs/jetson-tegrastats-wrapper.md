@@ -1,5 +1,7 @@
 # Jetson Tegrastats Wrapper Guide
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 문서가 정하는 것
 
 Jetson에서 `target_type: local` runner를 유지한 채 `tegrastats` resource sampling을 EdgeEnv stdout contract로 연결하는 wrapper command 흐름을 정한다.

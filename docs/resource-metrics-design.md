@@ -1,5 +1,7 @@
 # Resource Metrics Design
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — resource metrics가 하는 일
 
 Resource metrics는 benchmark run의 latency/throughput 결과를 보조 설명하는 선택적 evidence다. 예시는 memory, power, energy, temperature처럼 target 환경에 강하게 묶이는 값이다.

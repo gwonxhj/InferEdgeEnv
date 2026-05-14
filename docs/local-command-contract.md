@@ -1,5 +1,7 @@
 # Local Command Contract Guide
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 문서가 정하는 것
 
 사용자가 자기 benchmark command를 `target_type: local` runner에 연결할 때 지켜야 하는 stdout contract, config 작성 방식, 실패 원인 진단 기준을 정리한다.

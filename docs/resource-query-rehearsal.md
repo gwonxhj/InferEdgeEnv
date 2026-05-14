@@ -1,5 +1,7 @@
 # Resource Query Rehearsal
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 문서가 정하는 것
 
 `runs resources list`가 source registry와 imported registry에서 같은 lookup 의미를 유지하는지 확인한다.

@@ -1,11 +1,15 @@
 # docs 작업 가이드
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 모듈은 무엇을 하는가
 README와 설계/운영 문서가 위치하는 영역이다. EdgeEnv가 무엇이고 무엇이 아닌지, InferEdge/EdgeBench와 어떤 관계인지 명확히 설명한다.
 
 ## 2. CONTENTS — 파일/디렉토리와 기술 스택
 - `README.md` 또는 root `README.md` — 사용자용 시작 문서
 - `docs/` — 설계 메모, 향후 roadmap, Obsidian에서 옮겨온 문서
+- `docs/language.md` — 문서 상단 language selector의 영어 대표 경로와 한국어 진입 경로 설명
+- `docs/ko/README.md` — 한국어 사용자 진입 README
 - `docs/local-runner-design.md` — `target_type: local` runner와 실패 artifact 설계 기준
 - `docs/resource-metrics-design.md` — memory/power 같은 optional resource metrics 확장 설계 기준
 - `docs/registry-resource-query-design.md` — resource metrics artifact-first 정책과 rebuildable registry query index 기준

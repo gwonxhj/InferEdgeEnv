@@ -1,5 +1,7 @@
 # EdgeEnv Release Maintenance Checklist
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 문서가 정하는 것
 
 반복 릴리스 작업자가 `main`을 다음 tag로 고정하기 전에 확인해야 할 최소 절차를 한 장으로 정리한다.

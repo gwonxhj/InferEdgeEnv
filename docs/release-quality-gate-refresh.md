@@ -1,5 +1,7 @@
 # Release Quality Gate Refresh
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 문서가 정하는 것
 
 Evidence Contract Conformance Suite, Real Command Adapter Templates, Schema Versioning, Portfolio Demo Path, CLI Error Message Polish 이후의 release gate를 반복 가능한 형태로 정리한다.

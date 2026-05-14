@@ -1,5 +1,7 @@
 # Local Real Benchmark Example Guide
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 문서가 정하는 것
 
 `target_type: local`에서 실제 runtime command를 붙이기 직전의 adapter 형태를 설명한다. 이 예제는 모델이나 dataset artifact를 repo에 넣지 않고, 작은 subprocess command를 runtime stand-in으로 실행한 뒤 EdgeEnv stdout contract를 출력한다.

@@ -1,5 +1,7 @@
 # Jetson Sampled Evidence Bundle Handoff
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 문서가 정하는 것
 
 Jetson sampled run evidence를 zip bundle로 export/import한 뒤에도 compare 판단이 그대로 유지되는지 확인한다.

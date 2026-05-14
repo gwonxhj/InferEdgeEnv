@@ -1,5 +1,7 @@
 # Packaging And Entrypoint Readiness
 
+> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+
 ## 1. WHAT — 이 문서가 정하는 것
 
 EdgeEnv MVP를 로컬 개발 환경에서 설치하고 실행할 때 기대하는 package metadata와 CLI entrypoint contract를 정리한다.
