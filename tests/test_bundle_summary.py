@@ -61,7 +61,7 @@ def test_bundle_summary_generates_markdown_for_three_scenarios(
         edgeenv_root=edgeenv_root,
     )
 
-    assert "# EdgeEnv Sampled Evidence Bundle Handoff" in markdown
+    assert "# EdgeEnv Evidence Bundle Handoff" in markdown
     assert (
         "| same-condition | run-a | run-b | core + sampler | "
         "metadata + raw log | absent |"
@@ -118,6 +118,7 @@ def test_bundle_summary_allows_missing_optional_sampler_metadata(
         edgeenv_root=edgeenv_root,
     )
 
+    assert "# EdgeEnv Evidence Bundle Handoff" in markdown
     assert "| same-condition | run-1 | run-2 | core | absent | absent |" in markdown
     assert "- Sampler metadata present: no" in markdown
     assert "## Warnings" in markdown
