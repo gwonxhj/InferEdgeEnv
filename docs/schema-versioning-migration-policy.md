@@ -1,16 +1,16 @@
 # Schema Versioning And Migration Policy
 
-> Language: [English overview](language.md#english-overview) | [한국어/원문](#)
+> Language: English | [한국어/원문](language.md#korean-overview)
 
-## 1. WHAT — 이 문서가 정하는 것
+## 1. WHAT — What This Document Defines
 
-InferEdgeEnv evidence artifact가 릴리스 이후에도 해석 가능하도록 `result.json`, `failure.json`, `sampler/metadata.json`, export `manifest.json`, SQLite registry의 버전 호환 정책을 정한다.
+This policy defines how InferEdgeEnv keeps evidence artifacts interpretable across releases: `result.json`, `failure.json`, `sampler/metadata.json`, export `manifest.json`, and the local SQLite registry.
 
-현재 정책은 보수적이다. `v1` evidence는 유지하고, 알 수 없는 미래 schema는 자동으로 import하지 않는다. 새 schema를 받으려면 별도 migration 설계와 테스트가 먼저 필요하다.
+The policy is intentionally conservative. Current `v1` evidence remains supported, while unknown future schemas are not imported automatically. Accepting a new schema requires an explicit migration design and tests first.
 
-## 2. CONTENTS — 관련 파일과 기술 스택
+## 2. CONTENTS — Files And Stack
 
-관련 파일:
+Related files:
 
 - `inferedge_env/result/schema.py` — successful run `RunResult` schema and `edgeenv.result.v1`
 - `inferedge_env/result/writer.py` — successful/failed run artifact writer and sampler metadata writer
@@ -21,11 +21,11 @@ InferEdgeEnv evidence artifact가 릴리스 이후에도 해석 가능하도록 
 - `docs/export-import-design.md` — bundle path safety, checksum, and manifest validation
 - `docs/sampler-metadata-artifact-policy.md` — sampler metadata artifact shape
 
-기술 스택: Pydantic, JSON artifacts, zip manifest, SHA-256 checksums, SQLite local index
+Stack: Pydantic, JSON artifacts, zip manifest, SHA-256 checksums, SQLite local index
 
-## 3. HOW — version compatibility policy
+## 3. HOW — Version Compatibility Policy
 
-### Current schema markers
+### Current Schema Markers
 
 | Artifact | Canonical location | Current marker | Compatibility rule |
 |---|---|---:|---|
@@ -35,7 +35,7 @@ InferEdgeEnv evidence artifact가 릴리스 이후에도 해석 가능하도록 
 | Export manifest | `<run_id>/manifest.json` inside zip | `edgeenv.export.v1` | Required. Unknown marker is rejected before extraction. |
 | SQLite registry | `.edgeenv/runs.db` | Internal schema table/migration logic | Rebuildable local index. It is not canonical exported evidence. |
 
-### Additive v1 changes
+### Additive v1 Changes
 
 Small additive changes can remain `v1` when all of these are true:
 
@@ -51,7 +51,7 @@ Examples:
 - Adding an optional display-only sampler metadata key.
 - Adding a read-only report that summarizes existing artifacts without mutating them.
 
-### Migration-required changes
+### Migration-Required Changes
 
 A new schema marker or migration design is required when any of these are true:
 
@@ -71,7 +71,7 @@ Migration design must define:
 - registry rebuild behavior
 - tests with old, current, corrupt, and future-version fixtures
 
-## 4. HOW NOT — 피해야 할 함정
+## 4. HOW NOT — What To Avoid
 
 - Do not silently import unknown future `result.json`, `failure.json`, `sampler/metadata.json`, or manifest schemas.
 - Do not treat checksum validation as schema migration. Checksums prove bytes, not semantic compatibility.
@@ -80,7 +80,7 @@ Migration design must define:
 - Do not turn schema migration into deployment validation, ranking, auth, dashboard, cloud sync, Docker, WSL, SSH, or model upload behavior.
 - Do not rewrite existing v1 artifact semantics without compatibility tests.
 
-## 5. WHERE — 다른 설계와의 관계
+## 5. WHERE — Related Design Boundaries
 
 - [Export/Import Design](export-import-design.md) validates archive shape, checksums, manifest schema, required files, and safe paths before import.
 - [Sampler Metadata Artifact Policy](sampler-metadata-artifact-policy.md) keeps sampler metadata optional and separate from `result.json`.
@@ -88,9 +88,9 @@ Migration design must define:
 - [Registry Resource Query Design](registry-resource-query-design.md) keeps resource query indexes rebuildable from artifacts.
 - [Compare Workflow Guide](compare-workflow-guide.md) keeps same-condition/conditional/no comparability judgement protocol-first.
 
-## 6. WHY — 배경 판단
+## 6. WHY — Background Judgment
 
-InferEdgeEnv is a local-first run evidence registry and comparability checker. Its evidence bundles may outlive the code version that created them, so readers must know whether a file is current, legacy-compatible, or unsupported.
+InferEdgeEnv is a local-first run evidence registry and comparability checker. Evidence bundles may outlive the code version that created them, so readers must know whether a file is current, legacy-compatible, or unsupported.
 
 The safest policy is explicit compatibility:
 
@@ -101,6 +101,6 @@ The safest policy is explicit compatibility:
 
 This preserves the project boundary: InferEdgeEnv records whether benchmark evidence can be trusted and compared; it does not decide whether a model should deploy.
 
-## 7. ⚠️ LEARNED CAUTIONS — 학습된 주의사항
+## 7. LEARNED CAUTIONS — Learned Cautions
 
-_(아직 없음)_
+_(None yet)_
