@@ -160,6 +160,7 @@ The Python package is `inferedge_env`; the user-facing CLI command remains `edge
 
 English representative path:
 
+- [InferEdgeEnv Portfolio Summary](docs/portfolio_summary.md) — 30-second role, boundary, and reviewer path for this repository
 - [Documentation Language Guide](docs/language.md) — choose the English representative path or Korean entry path
 - [EdgeEnv v0.1.4 Follow-up Note](docs/release-follow-up-v0.1.4.md) — current release baseline and trusted starting point
 - [Portfolio Demo Path](docs/portfolio-demo-path.md) — reviewer-facing fake/local/compare/export-import/bundle-summary demo path
@@ -185,6 +186,7 @@ Operational records:
 Design references:
 
 - [InferEdgeEnv Six-Month Quality Roadmap](docs/six-month-quality-roadmap.md)
+- [InferEdgeEnv Portfolio Summary](docs/portfolio_summary.md)
 - [Evidence Contract Conformance Suite](docs/evidence-contract-conformance-suite.md)
 - [CLI Error Message Polish](docs/cli-error-message-polish.md)
 - [Local Real Benchmark Example Guide](docs/local-real-benchmark-example.md)
