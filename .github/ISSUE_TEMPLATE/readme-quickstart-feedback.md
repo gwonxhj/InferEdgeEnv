@@ -1,6 +1,6 @@
 ---
 name: README Quickstart feedback
-about: Report where the v0.1.3 README starting path was confusing or blocked.
+about: Report where the current README starting path was confusing or blocked.
 title: "[feedback] README quickstart: "
 labels: ""
 assignees: ""
@@ -50,4 +50,4 @@ What would have made the next step clearer?
 
 ## Scope Check
 
-This feedback is for README/docs/first-run usability. EdgeEnv v0.1.3 does not include remote SSH execution, Docker/WSL/VM targets, cloud services, dashboards, leaderboards, upload servers, or composite rankings.
+This feedback is for README/docs/first-run usability. EdgeEnv v0.1.4 does not include remote SSH execution, Docker/WSL/VM targets, cloud services, dashboards, leaderboards, upload servers, or composite rankings.

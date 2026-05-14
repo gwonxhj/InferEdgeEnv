@@ -179,7 +179,7 @@ Operational records:
 - [Jetson Measurement Operations Checklist](docs/jetson-operations-checklist.md) — repeated hardware measurement procedure
 - [Jetson Sampled Evidence Bundle Handoff](docs/jetson-sampled-evidence-bundle-handoff.md) — sampled bundle export/import and imported compare validation
 - [EdgeEnv MVP v1 Handoff Status](docs/v1-handoff-status.md) — current capability snapshot and future-work entry points
-- [EdgeEnv v0.1.3 User Feedback Backlog](docs/v0.1.3-user-feedback-backlog.md) — first-user question intake before new feature work
+- [First-user Feedback Backlog](docs/v0.1.3-user-feedback-backlog.md) — v0.1.5 candidate usability observations before new feature work
 
 Design references:
 
