@@ -43,6 +43,7 @@ README와 설계/운영 문서가 위치하는 영역이다. EdgeEnv가 무엇�
 - `docs/v0.1.3-candidate-plan.md` — `v0.1.3` first-user polish 후보 4단계와 순차 진행 기준
 - `docs/install-quickstart-resilience.md` — install/build dependency/entrypoint 실패를 구분하는 Quickstart troubleshooting 기준
 - `docs/release-maintenance-checklist.md` — local tests, clean-room rehearsal, optional Jetson smoke, tag, GitHub Release를 반복 가능한 gate로 묶은 릴리스 체크리스트
+- `docs/release-quality-gate-refresh.md` — six-month quality roadmap 이후 local release smoke와 optional Jetson gate를 반복 가능한 기준으로 묶은 문서
 - `docs/v0.1.3-release-rehearsal.md` — release maintenance checklist 기준으로 `v0.1.3` 후보 smoke를 실제 수행한 기록
 - `docs/compare-workflow-guide.md` — 두 local run 생성부터 `runs list/show/report compare`까지 이어지는 compare workflow guide
 - `docs/failed-run-inspection.md` — failed-run artifact를 `failed-runs list/show/export/import`로 안전하게 확인/이동하는 guide

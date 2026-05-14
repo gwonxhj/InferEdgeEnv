@@ -16,6 +16,8 @@ GitHub Actions에서 EdgeEnv MVP의 핵심 계약을 자동 검증하는 readine
 - `examples/` — representative config validation fixtures
 - `docs/packaging-entrypoints.md` — install and entrypoint readiness
 - `docs/mvp-readiness-checklist.md` — MVP user path and non-goals
+- `docs/release-quality-gate-refresh.md` — local release quality smoke that extends CI coverage for release candidates
+- `scripts/smoke_release_quality_gate.sh` — local release smoke script
 
 기술 스택: GitHub Actions, Python 3.10/3.11, pip editable install, pytest, Typer CLI
 
@@ -51,6 +53,14 @@ python -m pytest -q
 
 The workflow intentionally checks both module and console entrypoints because README exposes both paths.
 
+Release candidates should additionally run the local release quality smoke:
+
+```bash
+scripts/smoke_release_quality_gate.sh
+```
+
+That script exercises generated run artifacts, resource lookup portability, export/import, compare, bundle-summary, and failed-run portability with a temporary `--edgeenv-root`. It is intentionally not part of mandatory PR CI yet because full artifact smoke is release-gate confidence, while CI readiness stays small and fast.
+
 ## 4. HOW NOT — 피해야 할 함정
 
 - CI에서 repo root `.edgeenv`에 long-lived artifact를 남기는 benchmark run을 기본으로 만들지 않는다.
@@ -58,6 +68,7 @@ The workflow intentionally checks both module and console entrypoints because RE
 - public leaderboard, model upload, dataset upload 같은 non-goals를 CI path로 암시하지 않는다.
 - Python version을 하나만 고정해 `requires-python >=3.10` contract를 놓치지 않는다.
 - CI 실패를 무시하고 merge하지 않는다.
+- `scripts/smoke_release_quality_gate.sh`를 Jetson-required smoke처럼 취급하지 않는다. It is local-only; Jetson remains an optional hardware gate.
 
 ## 5. WHERE — 다른 설계와의 관계
 
@@ -65,6 +76,7 @@ The workflow intentionally checks both module and console entrypoints because RE
 - **MVP Readiness Checklist**: supported MVP user path 중 가벼운 validation subset을 자동화한다.
 - **Tests**: full pytest suite가 executable spec 역할을 한다.
 - **Examples**: 대표 profile/bench config가 README와 계속 맞는지 확인한다.
+- **Release Quality Gate Refresh**: release candidates run deeper local artifact and portability smoke outside mandatory PR CI.
 
 ## 6. WHY — 배경 판단
 

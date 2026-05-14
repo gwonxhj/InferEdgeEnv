@@ -19,6 +19,8 @@
 - `docs/release-follow-up-v0.1.3.md` — latest release follow-up note 형식
 - `docs/v0.1.3-candidate-plan.md` — v0.1.3 polish 작업 순서
 - `docs/v0.1.3-release-rehearsal.md` — 이 checklist 기준으로 수행한 v0.1.3 후보 리허설 기록
+- `docs/release-quality-gate-refresh.md` — six-month quality roadmap 이후 반복 가능한 local/optional Jetson gate 기준
+- `scripts/smoke_release_quality_gate.sh` — local-only release quality smoke
 
 기술 스택: Markdown, pytest, Typer CLI, GitHub Actions, GitHub Release
 
@@ -50,14 +52,29 @@ python -m inferedge_env.cli doctor
 edgeenv doctor
 ```
 
+반복 가능한 local smoke로는 다음을 실행한다.
+
+```bash
+scripts/smoke_release_quality_gate.sh
+```
+
+이미 같은 후보 환경에서 `python -m pytest -q`가 통과했고 CLI 흐름만 재확인하는 경우에만 다음을 쓴다.
+
+```bash
+scripts/smoke_release_quality_gate.sh --skip-pytest
+```
+
 성공 기준:
 
 - pytest가 모두 통과한다.
 - whitespace diff 문제가 없다.
 - module entrypoint와 console script가 모두 동작한다.
+- release quality smoke가 fake/local/resource/export-import/compare/bundle-summary/failed-run portability 흐름을 모두 통과한다.
 - `git status --short --branch`가 clean `main...origin/main` 상태다.
 
 ### 3. README Quickstart Smoke
+
+`scripts/smoke_release_quality_gate.sh`가 이 섹션의 local fake/resource/export-import 흐름을 자동으로 실행한다. 수동으로 단계별 관찰이 필요하면 아래 명령을 사용한다.
 
 임시 root를 사용해 repo를 더럽히지 않는다.
 
@@ -86,6 +103,8 @@ edgeenv runs resources list --metric memory_peak_mb --json --edgeenv-root "$work
 
 ### 4. Compare And Report Smoke
 
+`scripts/smoke_release_quality_gate.sh`가 이 섹션의 same-condition compare와 bundle-summary 흐름을 자동으로 실행한다. 수동으로 출력 문구를 확인해야 할 때 아래 명령을 사용한다.
+
 ```bash
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_compare_a.yaml --edgeenv-root "$work_root/.edgeenv"
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_compare_b.yaml --edgeenv-root "$work_root/.edgeenv"
@@ -100,6 +119,8 @@ edgeenv report bundle-summary --scenario same-condition:<run_id_a>:<run_id_b> --
 - bundle summary는 read-only Markdown output이고 run artifact나 exported zip을 수정하지 않는다.
 
 ### 5. Failed-run Portability Smoke
+
+`scripts/smoke_release_quality_gate.sh`가 malformed resource metrics failed-run artifact, export/import, imported failed-run inspection까지 자동으로 실행한다. 수동 triage가 필요하면 아래 명령을 사용한다.
 
 ```bash
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_sampler_malformed_resource.yaml --edgeenv-root "$work_root/.edgeenv"
@@ -206,6 +227,7 @@ Non-goals
 - **README Quickstart Clean-room Rehearsal**: install/entrypoint 신뢰도를 깨끗한 환경에서 확인한다.
 - **Jetson Operations Checklist**: hardware-backed sampled evidence 반복 운영 절차다.
 - **Release Follow-up Note**: release 이후 사용자가 어디서 시작할지 짧게 보여준다.
+- **Release Quality Gate Refresh**: local smoke script와 optional Jetson gate의 반복 실행 기준이다.
 
 ## 6. WHY — 배경 판단
 
