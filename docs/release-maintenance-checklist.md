@@ -56,6 +56,8 @@ python -m inferedge_env.cli doctor
 edgeenv doctor
 ```
 
+When `scripts/smoke_release_quality_gate.sh` runs from a source archive rather than a Git worktree, it skips `git diff --check` with an explicit message. Run `git diff --check` in the real repository before creating the archive.
+
 Run the repeatable local smoke:
 
 ```bash
