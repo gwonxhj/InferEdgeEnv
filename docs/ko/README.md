@@ -96,7 +96,7 @@ EdgeEnv는 다음을 구현하지 않는다.
 - [Jetson Measurement Operations Checklist](../jetson-operations-checklist.md) — Jetson 실측 반복 운영 절차
 - [Jetson Sampled Evidence Bundle Handoff](../jetson-sampled-evidence-bundle-handoff.md) — sampled bundle export/import와 imported compare 검증
 - [EdgeEnv MVP v1 Handoff Status](../v1-handoff-status.md) — 현재 capability snapshot과 future-work 진입점
-- [EdgeEnv v0.1.3 User Feedback Backlog](../v0.1.3-user-feedback-backlog.md) — 새 기능 전에 first-user 질문을 모으는 기준
+- [First-user Feedback Backlog](../v0.1.3-user-feedback-backlog.md) — v0.1.5 후보 사용성 관찰을 모으는 기준
 
 설계 참고 문서:
 
