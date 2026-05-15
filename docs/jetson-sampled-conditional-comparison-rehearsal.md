@@ -26,7 +26,7 @@ Jetson에서 `sampler: jetson-tegrastats`가 켜진 sampled local run 두 개를
 From the repo root on Jetson:
 
 ```bash
-scripts/smoke_jetson_sampled_conditional_compare.sh --python /home/risenano01/miniconda3/envs/yolo_env/bin/python --keep-artifacts
+scripts/smoke_jetson_sampled_conditional_compare.sh --python /home/${JETSON_USER}/miniconda3/envs/yolo_env/bin/python --keep-artifacts
 ```
 
 What the script checks:
@@ -85,14 +85,14 @@ That distinction keeps EdgeEnv from accidentally turning sampled platform eviden
 
 - Conditional sampled compare should assert that `Metrics Delta` is absent and resource/sampler evidence is absent from compare reasons.
 
-## Validation Record — nano01
+## Validation Record — jetson-device
 
-Status: passed on `nano01`.
+Status: passed on `jetson-device`.
 
 Command:
 
 ```bash
-scripts/smoke_jetson_sampled_conditional_compare.sh --python /home/risenano01/miniconda3/envs/yolo_env/bin/python --keep-artifacts
+scripts/smoke_jetson_sampled_conditional_compare.sh --python /home/${JETSON_USER}/miniconda3/envs/yolo_env/bin/python --keep-artifacts
 ```
 
 Observed run ids:

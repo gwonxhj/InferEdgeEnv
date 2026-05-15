@@ -107,7 +107,7 @@ When validating a copied source snapshot on Jetson, prefer the dedicated smoke
 instead of assuming editable install support:
 
 ```bash
-scripts/smoke_jetson_source_env.sh --python /home/risenano01/miniconda3/envs/yolo_env/bin/python --keep-artifacts
+scripts/smoke_jetson_source_env.sh --python /home/${JETSON_USER}/miniconda3/envs/yolo_env/bin/python --keep-artifacts
 ```
 
 This script sets `PYTHONPATH` to the repo root, verifies runtime dependencies

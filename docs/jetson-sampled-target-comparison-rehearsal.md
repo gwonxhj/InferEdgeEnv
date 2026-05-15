@@ -26,7 +26,7 @@ Jetson에서 `sampler: jetson-tegrastats`가 켜진 sampled local run 두 개를
 From the repo root on Jetson:
 
 ```bash
-scripts/smoke_jetson_sampled_target_compare.sh --python /home/risenano01/miniconda3/envs/yolo_env/bin/python --keep-artifacts
+scripts/smoke_jetson_sampled_target_compare.sh --python /home/${JETSON_USER}/miniconda3/envs/yolo_env/bin/python --keep-artifacts
 ```
 
 What the script checks:
@@ -86,14 +86,14 @@ That distinction matters because sampled platform evidence can look compelling, 
 
 - Target sampled compare should assert that runtime identity remains unchanged while target identity differs.
 
-## Validation Record — nano01
+## Validation Record — jetson-device
 
-Status: passed on `nano01`.
+Status: passed on `jetson-device`.
 
 Command:
 
 ```bash
-scripts/smoke_jetson_sampled_target_compare.sh --python /home/risenano01/miniconda3/envs/yolo_env/bin/python --keep-artifacts
+scripts/smoke_jetson_sampled_target_compare.sh --python /home/${JETSON_USER}/miniconda3/envs/yolo_env/bin/python --keep-artifacts
 ```
 
 Observed run ids:

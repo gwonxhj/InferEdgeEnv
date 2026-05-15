@@ -216,7 +216,7 @@ Technology stack: CLI commands, examples, Markdown, optional Jetson notes.
 Document the path in two lanes:
 
 - local-only lane: fake/local command evidence that anyone can run
-- Jetson lane: hardware-backed optional evidence when `nano01` or another Jetson is available
+- Jetson lane: hardware-backed optional evidence when `jetson-device` or another Jetson is available
 
 Keep each command copyable and state what files should appear.
 

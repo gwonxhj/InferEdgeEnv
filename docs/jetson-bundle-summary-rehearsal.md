@@ -33,7 +33,7 @@
 
 ```bash
 scripts/smoke_jetson_sampled_bundle_handoff.sh \
-  --python /home/risenano01/miniconda3/envs/yolo_env/bin/python \
+  --python /home/${JETSON_USER}/miniconda3/envs/yolo_env/bin/python \
   --edgeenv-root /tmp/InferEdgeEnv-jetson-summary.jdrYbb/source/.edgeenv \
   --import-root /tmp/InferEdgeEnv-jetson-summary.jdrYbb/imported/.edgeenv \
   --bundle-dir /tmp/InferEdgeEnv-jetson-summary.jdrYbb/bundles \
@@ -47,7 +47,7 @@ python -m inferedge_env.cli report bundle-summary \
   --scenario same-condition:run-20260508-040809-0c61523a:run-20260508-040811-42caf723 \
   --scenario runtime-conditional:run-20260508-040814-28de6c30:run-20260508-040817-001d2fe1 \
   --scenario target-conditional:run-20260508-040819-3aa37b09:run-20260508-040822-13cca899 \
-  --source-device nano01 \
+  --source-device jetson-device \
   --edgeenv-root /tmp/InferEdgeEnv-jetson-summary.jdrYbb/imported/.edgeenv \
   --output /tmp/InferEdgeEnv-jetson-summary.jdrYbb/bundle-summary.md
 ```
@@ -56,7 +56,7 @@ Repeated release rehearsal can now do both steps in one smoke run:
 
 ```bash
 scripts/smoke_jetson_sampled_bundle_handoff.sh \
-  --python /home/risenano01/miniconda3/envs/yolo_env/bin/python \
+  --python /home/${JETSON_USER}/miniconda3/envs/yolo_env/bin/python \
   --bundle-summary-output /tmp/InferEdgeEnv-jetson-summary.md \
   --keep-artifacts
 ```
@@ -100,9 +100,9 @@ Expected behavior:
 
 - Jetson bundle-summary rehearsal should use the imported `.edgeenv` root, because the report is meant to summarize handoff evidence after export/import.
 
-## Validation Record — nano01
+## Validation Record — jetson-device
 
-Status: passed on `nano01`.
+Status: passed on `jetson-device`.
 
 Imported registry root:
 
@@ -139,7 +139,7 @@ python -m inferedge_env.cli report bundle-summary \
   --scenario same-condition:run-20260508-040809-0c61523a:run-20260508-040811-42caf723 \
   --scenario runtime-conditional:run-20260508-040814-28de6c30:run-20260508-040817-001d2fe1 \
   --scenario target-conditional:run-20260508-040819-3aa37b09:run-20260508-040822-13cca899 \
-  --source-device nano01 \
+  --source-device jetson-device \
   --edgeenv-root /tmp/InferEdgeEnv-jetson-summary.jdrYbb/imported/.edgeenv \
   --output /tmp/InferEdgeEnv-jetson-summary.jdrYbb/bundle-summary.md
 ```
@@ -158,7 +158,7 @@ Generated Markdown:
 
 ## Scope
 
-- Source device: nano01
+- Source device: jetson-device
 - EdgeEnv version: 0.1.2
 - Bundle type: successful-run
 - Export/import validation: previously completed before summary generation
@@ -207,17 +207,17 @@ Conclusion:
 
 `scripts/smoke_jetson_sampled_bundle_handoff.sh --bundle-summary-output <path>` automates this generated report check for repeated release rehearsal. The option remains opt-in because bundle-summary generation is a handoff convenience, not canonical evidence.
 
-## Automation Validation — nano01
+## Automation Validation — jetson-device
 
-Status: passed on `nano01`.
+Status: passed on `jetson-device`.
 
 Command shape:
 
 ```bash
 scripts/smoke_jetson_sampled_bundle_handoff.sh \
-  --python /home/risenano01/miniconda3/envs/yolo_env/bin/python \
+  --python /home/${JETSON_USER}/miniconda3/envs/yolo_env/bin/python \
   --bundle-summary-output <workdir>/bundle-summary.md \
-  --bundle-summary-source-device nano01 \
+  --bundle-summary-source-device jetson-device \
   --keep-artifacts
 ```
 
