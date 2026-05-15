@@ -19,7 +19,7 @@ Jetson에서 InferEdgeEnv source snapshot을 안정적으로 실행하기 위한
 - `scripts/smoke_jetson_sampled_bundle_handoff.sh` — sampled Jetson run bundle export/import plus imported compare smoke
 - `examples/profiles/jetson_nano_sampled_local.yaml` — optional `jetson-tegrastats` sampler profile
 - `examples/benches/jetson_sampled_local.yaml` — deterministic sampled benchmark config
-- `docs/jetson-sampled-run-rehearsal.md` — 실제 `nano01` sampled run 관측 기록
+- `docs/jetson-sampled-run-rehearsal.md` — 실제 `jetson-device` sampled run 관측 기록
 - `docs/packaging-entrypoints.md` — 일반 개발 환경의 editable install/entrypoint readiness 기준
 
 기술 스택: Jetson Linux, conda Python, `PYTHONPATH`, `tegrastats`, EdgeEnv CLI
@@ -37,10 +37,10 @@ print("EdgeEnv runtime dependencies: OK")
 PY
 ```
 
-Observed on `nano01`:
+Observed on `jetson-device`:
 
 ```text
-/home/risenano01/miniconda3/envs/yolo_env/bin/python
+/home/${JETSON_USER}/miniconda3/envs/yolo_env/bin/python
 Python 3.10.12
 ```
 
@@ -59,7 +59,7 @@ The source smoke intentionally fails if `tegrastats` is missing, because this pa
 From the repo root on Jetson:
 
 ```bash
-scripts/smoke_jetson_source_env.sh --python /home/risenano01/miniconda3/envs/yolo_env/bin/python --keep-artifacts
+scripts/smoke_jetson_source_env.sh --python /home/${JETSON_USER}/miniconda3/envs/yolo_env/bin/python --keep-artifacts
 ```
 
 What the script checks:
@@ -99,10 +99,10 @@ This avoids depending on editable install support in the Jetson Python packaging
 
 ### 5. Validation record
 
-Validated on `nano01` using:
+Validated on `jetson-device` using:
 
 ```bash
-scripts/smoke_jetson_source_env.sh --python /home/risenano01/miniconda3/envs/yolo_env/bin/python --keep-artifacts
+scripts/smoke_jetson_source_env.sh --python /home/${JETSON_USER}/miniconda3/envs/yolo_env/bin/python --keep-artifacts
 ```
 
 Observed:
@@ -125,10 +125,10 @@ temporary registry root, and verified that `runs sampler show` still found
 For compare-specific validation, run:
 
 ```bash
-scripts/smoke_jetson_sampled_compare.sh --python /home/risenano01/miniconda3/envs/yolo_env/bin/python --keep-artifacts
-scripts/smoke_jetson_sampled_conditional_compare.sh --python /home/risenano01/miniconda3/envs/yolo_env/bin/python --keep-artifacts
-scripts/smoke_jetson_sampled_target_compare.sh --python /home/risenano01/miniconda3/envs/yolo_env/bin/python --keep-artifacts
-scripts/smoke_jetson_sampled_bundle_handoff.sh --python /home/risenano01/miniconda3/envs/yolo_env/bin/python --keep-artifacts
+scripts/smoke_jetson_sampled_compare.sh --python /home/${JETSON_USER}/miniconda3/envs/yolo_env/bin/python --keep-artifacts
+scripts/smoke_jetson_sampled_conditional_compare.sh --python /home/${JETSON_USER}/miniconda3/envs/yolo_env/bin/python --keep-artifacts
+scripts/smoke_jetson_sampled_target_compare.sh --python /home/${JETSON_USER}/miniconda3/envs/yolo_env/bin/python --keep-artifacts
+scripts/smoke_jetson_sampled_bundle_handoff.sh --python /home/${JETSON_USER}/miniconda3/envs/yolo_env/bin/python --keep-artifacts
 ```
 
 ## 4. HOW NOT — 피해야 할 함정

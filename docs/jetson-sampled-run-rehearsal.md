@@ -29,7 +29,7 @@ Jetson에서 `target_type: local`과 `sampler: jetson-tegrastats`를 함께 사�
 For repeated source snapshot validation, run the hardened smoke script:
 
 ```bash
-scripts/smoke_jetson_source_env.sh --python /home/risenano01/miniconda3/envs/yolo_env/bin/python --keep-artifacts
+scripts/smoke_jetson_source_env.sh --python /home/${JETSON_USER}/miniconda3/envs/yolo_env/bin/python --keep-artifacts
 ```
 
 Run these commands on the Jetson from the repo root:
@@ -92,16 +92,16 @@ The command remains deterministic for primary benchmark metrics so the rehearsal
 
 - Short benchmark commands can finish before the first `tegrastats` line appears; keep `startup_wait_ms` at least as large as one sampling interval and keep the smoke command alive briefly for sampled runs.
 
-## Validation Record — nano01
+## Validation Record — jetson-device
 
-Status: passed on `nano01`.
+Status: passed on `jetson-device`.
 
 Environment:
 
 ```text
-hostname: nano01
+hostname: jetson-device
 platform: Linux 5.15.148-tegra aarch64
-python: /home/risenano01/miniconda3/envs/yolo_env/bin/python, Python 3.10.12
+python: /home/${JETSON_USER}/miniconda3/envs/yolo_env/bin/python, Python 3.10.12
 tegrastats: /usr/bin/tegrastats
 ```
 

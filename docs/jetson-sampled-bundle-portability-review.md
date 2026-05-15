@@ -12,7 +12,7 @@ Jetson sampled evidence bundle handoff 이후, raw `manifest.json`과 smoke outp
 
 관련 파일:
 
-- `docs/jetson-sampled-evidence-bundle-handoff.md` — 실제 `nano01` sampled bundle export/import 검증 기록
+- `docs/jetson-sampled-evidence-bundle-handoff.md` — 실제 `jetson-device` sampled bundle export/import 검증 기록
 - `scripts/smoke_jetson_sampled_bundle_handoff.sh` — source/import/bundle root에서 raw validation을 수행하는 smoke
 - `docs/export-import-design.md` — manifest/checksum/path-safety/source-of-truth contract
 - `docs/sampler-metadata-artifact-policy.md` — sampler metadata/raw artifact portability policy
@@ -95,14 +95,14 @@ Use the template manually when editing PR/release notes directly, or use `edgeen
 - No model, dataset, engine, cloud DB, auth, dashboard, leaderboard, or target remote execution semantics are included.
 ```
 
-### Filled example from `nano01`
+### Filled example from `jetson-device`
 
 ```markdown
 # EdgeEnv Sampled Evidence Bundle Handoff
 
 ## Scope
 
-- Source device: nano01
+- Source device: jetson-device
 - EdgeEnv version: 0.1.2
 - Bundle type: successful-run
 - Export/import validation: passed

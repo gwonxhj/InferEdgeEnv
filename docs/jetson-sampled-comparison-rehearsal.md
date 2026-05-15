@@ -26,7 +26,7 @@ Jetson에서 `sampler: jetson-tegrastats`가 켜진 sampled local run 두 개를
 From the repo root on Jetson:
 
 ```bash
-scripts/smoke_jetson_sampled_compare.sh --python /home/risenano01/miniconda3/envs/yolo_env/bin/python --keep-artifacts
+scripts/smoke_jetson_sampled_compare.sh --python /home/${JETSON_USER}/miniconda3/envs/yolo_env/bin/python --keep-artifacts
 ```
 
 What the script checks:
@@ -77,14 +77,14 @@ EdgeEnv's main value is not collecting more numbers; it is preventing unsupporte
 
 - Jetson sampled compare should assert that compare output does not mention sampler/resource evidence as a judgement gate.
 
-## Validation Record — nano01
+## Validation Record — jetson-device
 
-Status: passed on `nano01`.
+Status: passed on `jetson-device`.
 
 Command:
 
 ```bash
-scripts/smoke_jetson_sampled_compare.sh --python /home/risenano01/miniconda3/envs/yolo_env/bin/python --keep-artifacts
+scripts/smoke_jetson_sampled_compare.sh --python /home/${JETSON_USER}/miniconda3/envs/yolo_env/bin/python --keep-artifacts
 ```
 
 Observed run ids:

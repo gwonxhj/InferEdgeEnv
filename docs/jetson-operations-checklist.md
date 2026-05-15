@@ -49,7 +49,7 @@ When Jetson does not already have a current source snapshot, create and transfer
 
 ```bash
 git archive --format=tar --output=/tmp/inferedgeenv-v0.1.5-ops.tar HEAD
-scp /tmp/inferedgeenv-v0.1.5-ops.tar risenano01@nano01.local:/tmp/inferedgeenv-v0.1.5-ops.tar
+scp /tmp/inferedgeenv-v0.1.5-ops.tar ${JETSON_USER}@${JETSON_HOST}.local:/tmp/inferedgeenv-v0.1.5-ops.tar
 ```
 
 Then unpack it into a fresh Jetson source directory:
@@ -68,8 +68,8 @@ Run from the Jetson shell:
 hostname
 uname -a
 command -v tegrastats
-/home/risenano01/miniconda3/envs/yolo_env/bin/python --version
-/home/risenano01/miniconda3/envs/yolo_env/bin/python - <<'PY'
+/home/${JETSON_USER}/miniconda3/envs/yolo_env/bin/python --version
+/home/${JETSON_USER}/miniconda3/envs/yolo_env/bin/python - <<'PY'
 import typer, rich, pydantic, yaml
 print("EdgeEnv runtime dependencies: OK")
 PY
@@ -77,7 +77,7 @@ PY
 
 Expected:
 
-- hostname matches the intended device, for example `nano01`
+- hostname matches the intended device, for example `jetson-device`
 - kernel is Jetson Linux, for example `5.15.148-tegra aarch64`
 - `tegrastats` is available
 - selected Python can import EdgeEnv runtime dependencies
@@ -85,7 +85,7 @@ Expected:
 For source snapshot runs, prefer:
 
 ```bash
-/home/risenano01/miniconda3/envs/yolo_env/bin/python -m inferedge_env.cli doctor
+/home/${JETSON_USER}/miniconda3/envs/yolo_env/bin/python -m inferedge_env.cli doctor
 ```
 
 The `edgeenv` console script may not be on PATH in a non-interactive SSH command. The smoke scripts still check the selected Python environment and use `PYTHONPATH` so the source snapshot path remains deterministic.
@@ -119,7 +119,7 @@ For a single sampled run:
 
 ```bash
 scripts/smoke_jetson_source_env.sh \
-  --python /home/risenano01/miniconda3/envs/yolo_env/bin/python \
+  --python /home/${JETSON_USER}/miniconda3/envs/yolo_env/bin/python \
   --edgeenv-root "$EDGEENV_OP_ROOT/single/source/.edgeenv" \
   --import-root "$EDGEENV_OP_ROOT/single/imported/.edgeenv" \
   --keep-artifacts
@@ -129,7 +129,7 @@ For release-level sampled bundle handoff:
 
 ```bash
 scripts/smoke_jetson_sampled_bundle_handoff.sh \
-  --python /home/risenano01/miniconda3/envs/yolo_env/bin/python \
+  --python /home/${JETSON_USER}/miniconda3/envs/yolo_env/bin/python \
   --edgeenv-root "$EDGEENV_OP_ROOT/handoff/source/.edgeenv" \
   --import-root "$EDGEENV_OP_ROOT/handoff/imported/.edgeenv" \
   --bundle-dir "$EDGEENV_OP_ROOT/handoff/bundles" \
@@ -256,9 +256,9 @@ This checklist keeps the operation local-first: the Jetson executes the benchmar
 - When documenting an operations rehearsal on a feature branch, do not run the checklist's `git pull --ff-only` literally on that branch; verify the branch is based on `origin/main` instead.
 - Non-interactive Jetson SSH sessions may not expose the `edgeenv` console script on PATH; use the selected Python with `python -m inferedge_env.cli` for manual inspection commands.
 
-## Validation Record — nano01
+## Validation Record — jetson-device
 
-Status: passed on `nano01`.
+Status: passed on `jetson-device`.
 
 Host baseline:
 
@@ -272,10 +272,10 @@ release tag present: v0.1.2
 Jetson environment:
 
 ```text
-hostname: nano01
+hostname: jetson-device
 platform: Linux 5.15.148-tegra aarch64
 tegrastats: /usr/bin/tegrastats
-python: /home/risenano01/miniconda3/envs/yolo_env/bin/python, Python 3.10.12
+python: /home/${JETSON_USER}/miniconda3/envs/yolo_env/bin/python, Python 3.10.12
 runtime dependencies: OK
 ```
 

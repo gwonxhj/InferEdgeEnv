@@ -36,7 +36,7 @@ Jetson sampled run evidence를 zip bundle로 export/import한 뒤에도 compare 
 From the repo root on Jetson:
 
 ```bash
-scripts/smoke_jetson_sampled_bundle_handoff.sh --python /home/risenano01/miniconda3/envs/yolo_env/bin/python --keep-artifacts
+scripts/smoke_jetson_sampled_bundle_handoff.sh --python /home/${JETSON_USER}/miniconda3/envs/yolo_env/bin/python --keep-artifacts
 ```
 
 What the script checks:
@@ -69,7 +69,7 @@ To include generated Markdown handoff smoke in the same run:
 
 ```bash
 scripts/smoke_jetson_sampled_bundle_handoff.sh \
-  --python /home/risenano01/miniconda3/envs/yolo_env/bin/python \
+  --python /home/${JETSON_USER}/miniconda3/envs/yolo_env/bin/python \
   --bundle-summary-output /tmp/InferEdgeEnv-jetson-bundle-summary.md \
   --keep-artifacts
 ```
@@ -122,14 +122,14 @@ This rehearsal deliberately checks portability and interpretation together: the 
 
 - Sampled evidence bundle handoff should validate both archive portability and imported compare output; checking only zip contents misses compare contract drift.
 
-## Validation Record — nano01
+## Validation Record — jetson-device
 
-Status: passed on `nano01`.
+Status: passed on `jetson-device`.
 
 Command:
 
 ```bash
-scripts/smoke_jetson_sampled_bundle_handoff.sh --python /home/risenano01/miniconda3/envs/yolo_env/bin/python --keep-artifacts
+scripts/smoke_jetson_sampled_bundle_handoff.sh --python /home/${JETSON_USER}/miniconda3/envs/yolo_env/bin/python --keep-artifacts
 ```
 
 Observed run pairs:

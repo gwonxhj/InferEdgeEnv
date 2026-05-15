@@ -204,12 +204,12 @@ bash scripts/smoke_entrypoints.sh
 For Jetson source snapshot validation:
 
 ```bash
-scripts/smoke_jetson_source_env.sh --python /home/risenano01/miniconda3/envs/yolo_env/bin/python --keep-artifacts
-scripts/smoke_jetson_sampled_compare.sh --python /home/risenano01/miniconda3/envs/yolo_env/bin/python --keep-artifacts
-scripts/smoke_jetson_sampled_conditional_compare.sh --python /home/risenano01/miniconda3/envs/yolo_env/bin/python --keep-artifacts
-scripts/smoke_jetson_sampled_target_compare.sh --python /home/risenano01/miniconda3/envs/yolo_env/bin/python --keep-artifacts
-scripts/smoke_jetson_sampled_bundle_handoff.sh --python /home/risenano01/miniconda3/envs/yolo_env/bin/python --keep-artifacts
-scripts/smoke_jetson_sampled_bundle_handoff.sh --python /home/risenano01/miniconda3/envs/yolo_env/bin/python --bundle-summary-output /tmp/InferEdgeEnv-jetson-bundle-summary.md --keep-artifacts
+scripts/smoke_jetson_source_env.sh --python /home/${JETSON_USER}/miniconda3/envs/yolo_env/bin/python --keep-artifacts
+scripts/smoke_jetson_sampled_compare.sh --python /home/${JETSON_USER}/miniconda3/envs/yolo_env/bin/python --keep-artifacts
+scripts/smoke_jetson_sampled_conditional_compare.sh --python /home/${JETSON_USER}/miniconda3/envs/yolo_env/bin/python --keep-artifacts
+scripts/smoke_jetson_sampled_target_compare.sh --python /home/${JETSON_USER}/miniconda3/envs/yolo_env/bin/python --keep-artifacts
+scripts/smoke_jetson_sampled_bundle_handoff.sh --python /home/${JETSON_USER}/miniconda3/envs/yolo_env/bin/python --keep-artifacts
+scripts/smoke_jetson_sampled_bundle_handoff.sh --python /home/${JETSON_USER}/miniconda3/envs/yolo_env/bin/python --bundle-summary-output /tmp/InferEdgeEnv-jetson-bundle-summary.md --keep-artifacts
 ```
 
 Notes:

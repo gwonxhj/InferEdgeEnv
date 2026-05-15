@@ -210,9 +210,9 @@ Full sampled bundle handoff smoke:
 
 ```bash
 scripts/smoke_jetson_sampled_bundle_handoff.sh \
-  --python /home/risenano01/miniconda3/envs/yolo_env/bin/python \
+  --python /home/${JETSON_USER}/miniconda3/envs/yolo_env/bin/python \
   --bundle-summary-output /tmp/InferEdgeEnv-jetson-bundle-summary.md \
-  --bundle-summary-source-device nano01 \
+  --bundle-summary-source-device jetson-device \
   --keep-artifacts
 ```
 

@@ -36,11 +36,11 @@ tegrastats --help
 python3 --version
 ```
 
-Observed on `nano01` during validation:
+Observed on `jetson-device` during validation:
 
 ```text
-nano01
-Linux nano01 5.15.148-tegra ... aarch64 GNU/Linux
+jetson-device
+Linux jetson-device 5.15.148-tegra ... aarch64 GNU/Linux
 /usr/bin/tegrastats
 Python 3.10.12
 ```
@@ -84,7 +84,7 @@ The resulting `result.json` should include `resource_metrics` with whichever fie
 
 ### 4. Validation record
 
-Validated on `nano01` with `yolo_env`:
+Validated on `jetson-device` with `yolo_env`:
 
 ```bash
 python -m pip install -e .
