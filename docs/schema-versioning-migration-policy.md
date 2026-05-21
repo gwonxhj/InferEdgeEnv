@@ -48,6 +48,8 @@ Small additive changes can remain `v1` when all of these are true:
 Examples:
 
 - Adding an optional resource evidence field to `ResourceMetrics`.
+- Adding optional artifact-only runtime operation evidence that is omitted from
+  comparability gates.
 - Adding an optional display-only sampler metadata key.
 - Adding a read-only report that summarizes existing artifacts without mutating them.
 

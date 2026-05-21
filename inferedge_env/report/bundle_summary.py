@@ -48,6 +48,7 @@ class _RunEvidence:
     exported_files_label: str
     sampler_evidence_label: str
     resource_source: str
+    runtime_operation_source: str
     warnings: tuple[str, ...]
 
 
@@ -85,8 +86,8 @@ def render_bundle_summary_markdown(
     summaries = [_summarize_scenario(registry, scenario) for scenario in scenarios]
     warnings = _collect_warnings(summaries)
     notes = tuple(opts.notes) or (
-        "Sampler/resource evidence was supplemental and did not appear as a "
-        "compare judgement reason.",
+        "Sampler/resource/runtime operation evidence was supplemental and did "
+        "not appear as a compare judgement reason.",
         "No model, dataset, engine, cloud DB, auth, dashboard, leaderboard, "
         "or target remote execution semantics are included.",
     )
@@ -104,8 +105,8 @@ def render_bundle_summary_markdown(
         "",
         "## Bundles",
         "",
-        "| Scenario | Run A | Run B | Exported files | Sampler evidence | Resource source |",
-        "| --- | --- | --- | --- | --- | --- |",
+        "| Scenario | Run A | Run B | Exported files | Sampler evidence | Resource source | Runtime operation source |",
+        "| --- | --- | --- | --- | --- | --- | --- |",
     ]
     for summary in summaries:
         lines.append(
@@ -126,6 +127,10 @@ def render_bundle_summary_markdown(
                     _escape_table(_combine_labels(
                         summary.run_a.resource_source,
                         summary.run_b.resource_source,
+                    )),
+                    _escape_table(_combine_labels(
+                        summary.run_a.runtime_operation_source,
+                        summary.run_b.runtime_operation_source,
                     )),
                 ]
             )
@@ -230,6 +235,7 @@ def _load_run_evidence(registry: RunRegistry, run_id: str) -> _RunEvidence:
         if result.resource_metrics is not None and result.resource_metrics.source
         else "absent"
     )
+    runtime_operation_source = _runtime_operation_source(result)
     exported_files_label = "core + sampler" if sampler_label != "absent" else "core"
     return _RunEvidence(
         run_id=run_id,
@@ -238,8 +244,18 @@ def _load_run_evidence(registry: RunRegistry, run_id: str) -> _RunEvidence:
         exported_files_label=exported_files_label,
         sampler_evidence_label=sampler_label,
         resource_source=resource_source,
+        runtime_operation_source=runtime_operation_source,
         warnings=tuple(warnings),
     )
+
+
+def _runtime_operation_source(result: RunResult) -> str:
+    if result.runtime_operation_summary is None:
+        return "absent"
+    source = result.runtime_operation_summary.get("source")
+    if isinstance(source, str) and source:
+        return source
+    return "present"
 
 
 def _sampler_evidence_label(run_id: str, run_dir: Path) -> tuple[str, list[str]]:

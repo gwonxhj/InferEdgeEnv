@@ -64,7 +64,7 @@ def test_bundle_summary_generates_markdown_for_three_scenarios(
     assert "# EdgeEnv Evidence Bundle Handoff" in markdown
     assert (
         "| same-condition | run-a | run-b | core + sampler | "
-        "metadata + raw log | absent |"
+        "metadata + raw log | absent | absent |"
     ) in markdown
     assert "| same-condition | Yes | same-condition | present | yes |" in markdown
     assert (
@@ -119,11 +119,41 @@ def test_bundle_summary_allows_missing_optional_sampler_metadata(
     )
 
     assert "# EdgeEnv Evidence Bundle Handoff" in markdown
-    assert "| same-condition | run-1 | run-2 | core | absent | absent |" in markdown
+    assert "| same-condition | run-1 | run-2 | core | absent | absent | absent |" in markdown
     assert "- Sampler metadata present: no" in markdown
     assert "## Warnings" in markdown
     assert "run-1: sampler metadata absent" in markdown
     assert "run-2: resource metrics absent" in markdown
+
+
+def test_bundle_summary_surfaces_runtime_operation_source(
+    tmp_path: Path,
+    bench_config: BenchmarkConfig,
+    target_profile: TargetProfile,
+) -> None:
+    edgeenv_root = tmp_path / ".edgeenv"
+    first = _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        "run-1",
+        runtime_operation_summary={
+            "source": "inferedge-runtime",
+            "health_reason": "completed",
+        },
+    )
+    second = _write_registered_run(edgeenv_root, bench_config, target_profile, "run-2")
+
+    markdown = render_bundle_summary_markdown(
+        [BundleScenario("same-condition", first, second)],
+        edgeenv_root=edgeenv_root,
+    )
+
+    assert (
+        "| same-condition | run-1 | run-2 | core | absent | absent | "
+        "inferedge-runtime / absent |"
+    ) in markdown
+    assert "runtime operation evidence was supplemental" in markdown
 
 
 def test_bundle_summary_fails_when_required_artifact_is_missing(
@@ -236,6 +266,7 @@ def _write_registered_run(
     bench_config: BenchmarkConfig,
     target_profile: TargetProfile,
     run_id: str,
+    runtime_operation_summary: dict | None = None,
 ) -> str:
     config_path = edgeenv_root.parent / f"{run_id}-config.yaml"
     target_path = edgeenv_root.parent / f"{run_id}-target.yaml"
@@ -243,6 +274,10 @@ def _write_registered_run(
     config_path.write_text("name: test\n", encoding="utf-8")
     target_path.write_text("target_name: test\n", encoding="utf-8")
     result = make_result(bench_config, target_profile, run_id=run_id)
+    if runtime_operation_summary is not None:
+        result = result.model_copy(
+            update={"runtime_operation_summary": runtime_operation_summary}
+        )
     run_dir = ResultArtifactWriter(edgeenv_root).write(
         result=result,
         config_path=config_path,

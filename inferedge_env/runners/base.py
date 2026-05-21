@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Protocol
+from typing import Any, Protocol
 
 from pydantic import BaseModel, ConfigDict
 
@@ -19,6 +19,7 @@ class RunnerResult(BaseModel):
     latency_p99_ms: float
     throughput_fps: float
     resource_metrics: ResourceMetrics | None = None
+    runtime_operation_summary: dict[str, Any] | None = None
     sampler_summary: SamplerSummary | None = None
     stdout: str
     stderr: str

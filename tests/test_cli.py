@@ -445,6 +445,16 @@ print("EDGEENV_RESOURCE_METRICS_JSON=" + json.dumps({
     "power_mean_w": 8.2,
     "source": "benchmark-command",
 }))
+print("EDGEENV_RUNTIME_OPERATION_SUMMARY_JSON=" + json.dumps({
+    "source": "inferedge-runtime",
+    "health_reason": "completed",
+    "runtime_events": [
+        {
+            "event": "runtime_operation_summary_recorded",
+            "severity": "info",
+        }
+    ],
+}))
 print("EDGEENV_METRICS_JSON=" + json.dumps({
     "latency_mean_ms": 10.0,
     "latency_p50_ms": 9.5,
@@ -513,6 +523,10 @@ runtime_tags: [local]
         "Resource metrics: stored "
         "(source=benchmark-command, fields=memory_peak_mb, power_mean_w)"
     ) in run_result.output
+    assert (
+        "Runtime operation summary: stored (source=inferedge-runtime)"
+        in run_result.output
+    )
     run_dirs = list((edgeenv_root / "runs").iterdir())
     payload = json.loads((run_dirs[0] / "result.json").read_text(encoding="utf-8"))
     show_result = runner.invoke(
@@ -531,6 +545,12 @@ runtime_tags: [local]
     assert shown["resource_metrics"]["memory_peak_mb"] == 512.0
     assert shown["resource_metrics"]["power_mean_w"] == 8.2
     assert shown["resource_metrics"]["source"] == "benchmark-command"
+    assert shown["runtime_operation_summary"]["source"] == "inferedge-runtime"
+    assert shown["runtime_operation_summary"]["health_reason"] == "completed"
+    assert (
+        shown["runtime_operation_summary"]["runtime_events"][0]["event"]
+        == "runtime_operation_summary_recorded"
+    )
     resources_result = runner.invoke(
         app,
         [

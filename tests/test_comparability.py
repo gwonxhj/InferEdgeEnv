@@ -57,3 +57,29 @@ def test_comparability_ignores_resource_metrics_presence(bench_config, target_pr
 
     assert report.comparable == "Yes"
     assert report.mode == "same-condition"
+
+
+def test_comparability_ignores_runtime_operation_summary_presence(
+    bench_config,
+    target_profile,
+):
+    left = make_result(bench_config, target_profile, run_id="run-a")
+    runner_result = FakeRunner().run(bench_config, target_profile).model_copy(
+        update={
+            "runtime_operation_summary": {
+                "source": "inferedge-runtime",
+                "health_reason": "completed",
+            }
+        }
+    )
+    right = make_result(
+        bench_config,
+        target_profile,
+        run_id="run-b",
+        runner_result=runner_result,
+    )
+
+    report = check_comparability(left, right)
+
+    assert report.comparable == "Yes"
+    assert report.mode == "same-condition"

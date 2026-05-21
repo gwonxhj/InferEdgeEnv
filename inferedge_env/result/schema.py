@@ -87,6 +87,7 @@ class RunResult(BaseModel):
     protocol: BenchmarkProtocol
     metrics: BenchmarkMetrics
     resource_metrics: ResourceMetrics | None = None
+    runtime_operation_summary: dict[str, Any] | None = None
     env: dict[str, Any] = Field(default_factory=dict)
 
     @property
