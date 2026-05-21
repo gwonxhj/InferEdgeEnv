@@ -53,6 +53,17 @@ EDGEENV_RESOURCE_METRICS_JSON={"memory_peak_mb":512.0,"power_mean_w":8.2,"source
 
 If the command cannot produce reliable resource metrics, omit the resource metrics line. The benchmark run can still succeed; EdgeEnv will preserve the primary result and simply omit the `resource_metrics` field.
 
+Optional runtime operation summary:
+
+```text
+EDGEENV_RUNTIME_OPERATION_SUMMARY_JSON={"source":"inferedge-runtime","health_reason":"completed"}
+```
+
+If the command cannot produce structured runtime operation context, omit this
+line. When present, it must be a JSON object. EdgeEnv preserves it as
+supplemental run evidence in `result.json` and `runs show`; it does not become a
+same-condition comparability gate.
+
 ### Template Flow
 
 ```bash
@@ -112,6 +123,8 @@ edgeenv runs show <run_id>
 | `Invalid local metrics schema` | Required latency/throughput fields are missing or typed incorrectly | Emit all five required primary metrics as numeric values |
 | `Invalid EDGEENV_RESOURCE_METRICS_JSON JSON` | Optional resource metrics JSON is malformed | Omit the line when valid resource metrics are unavailable |
 | `Invalid local resource metrics schema` | Unknown fields or invalid types were emitted | Use only supported unit-suffixed `ResourceMetrics` fields |
+| `Invalid EDGEENV_RUNTIME_OPERATION_SUMMARY_JSON JSON` | Optional operation summary JSON is malformed | Omit the line when structured operation evidence is unavailable |
+| `Invalid local runtime operation summary schema` | Operation summary is not a JSON object | Emit an object, not an array/string/number |
 | `Local benchmark command failed with exit code N` | The benchmark command itself failed | Use `edgeenv failed-runs list` and `edgeenv failed-runs show <run_id>` to inspect stdout/stderr |
 | `Local benchmark command timed out after ... seconds` | The command did not finish within `timeout_seconds` | Shorten the benchmark loop or increase the timeout |
 | `Failed to start local benchmark command` | The command path is missing or not executable | Check `command`, `working_directory`, virtualenv, and PATH setup |
@@ -125,12 +138,14 @@ CLI failures print the original `Error:` plus a short `Hint:`. For local benchma
 - Do not hand-concatenate JSON strings when a structured JSON writer is available.
 - Do not emit placeholder strings or unit-suffixed strings when resource metrics are unknown.
 - Do not hide benchmark failures by printing success metrics anyway.
+- Do not treat runtime operation context as a replacement for protocol-first comparability.
 - Do not present Docker, WSL, SSH, or cloud execution as the default local command path.
 
 ## 5. WHERE — Related Design Boundaries
 
 - **Local Runner Design**: this guide turns the local runner design into a user-facing contract.
 - **Resource Metrics Design**: optional resource metrics fields and storage policy.
+- **Runtime Operation Summary Evidence**: optional runtime operation context preservation policy.
 - **Sampler Failure Policy**: omit uncertain sampler/resource evidence; validate it if emitted.
 - **Registry Resource Query Design**: `result.json` is the source of truth for resource metrics, while `runs resources list` is a rebuildable lookup surface.
 

@@ -5,6 +5,7 @@ import os
 import shlex
 import subprocess
 from pathlib import Path
+from typing import Any
 
 from pydantic import ValidationError
 
@@ -25,6 +26,8 @@ METRICS_PREFIX = "EDGEENV_METRICS_JSON="
 METRICS_NAME = "EDGEENV_METRICS_JSON"
 RESOURCE_METRICS_PREFIX = "EDGEENV_RESOURCE_METRICS_JSON="
 RESOURCE_METRICS_NAME = "EDGEENV_RESOURCE_METRICS_JSON"
+RUNTIME_OPERATION_SUMMARY_PREFIX = "EDGEENV_RUNTIME_OPERATION_SUMMARY_JSON="
+RUNTIME_OPERATION_SUMMARY_NAME = "EDGEENV_RUNTIME_OPERATION_SUMMARY_JSON"
 
 
 class LocalRunnerError(RuntimeError):
@@ -108,6 +111,9 @@ class LocalRunner:
         try:
             metrics = _extract_metrics(completed.stdout)
             resource_metrics = _extract_resource_metrics(completed.stdout)
+            runtime_operation_summary = _extract_runtime_operation_summary(
+                completed.stdout
+            )
             if sampler is not None:
                 try:
                     sampler_summary = sampler.summary()
@@ -136,6 +142,7 @@ class LocalRunner:
             stdout=completed.stdout,
             stderr=completed.stderr,
             resource_metrics=resource_metrics,
+            runtime_operation_summary=runtime_operation_summary,
             sampler_summary=sampler_summary,
             **metrics,
         )
@@ -197,7 +204,13 @@ def _extract_metrics(stdout: str) -> dict[str, float]:
         raise LocalRunnerError(f"Invalid local metrics schema: {exc}") from exc
 
     return result.model_dump(
-        exclude={"stdout", "stderr", "resource_metrics", "sampler_summary"}
+        exclude={
+            "stdout",
+            "stderr",
+            "resource_metrics",
+            "runtime_operation_summary",
+            "sampler_summary",
+        }
     )
 
 
@@ -219,6 +232,30 @@ def _extract_resource_metrics(stdout: str) -> ResourceMetrics | None:
         return ResourceMetrics.model_validate(payload)
     except ValidationError as exc:
         raise LocalRunnerError(f"Invalid local resource metrics schema: {exc}") from exc
+
+
+def _extract_runtime_operation_summary(stdout: str) -> dict[str, Any] | None:
+    summary_line: str | None = None
+    for line in stdout.splitlines():
+        if line.startswith(RUNTIME_OPERATION_SUMMARY_PREFIX):
+            summary_line = line[len(RUNTIME_OPERATION_SUMMARY_PREFIX) :]
+
+    if summary_line is None:
+        return None
+
+    try:
+        payload = json.loads(summary_line)
+    except json.JSONDecodeError as exc:
+        raise LocalRunnerError(
+            f"Invalid {RUNTIME_OPERATION_SUMMARY_NAME} JSON: {exc}"
+        ) from exc
+
+    if not isinstance(payload, dict):
+        raise LocalRunnerError(
+            f"Invalid local runtime operation summary schema: "
+            f"{RUNTIME_OPERATION_SUMMARY_NAME} must be a JSON object"
+        )
+    return payload
 
 
 def _edgeenv_env(config: BenchmarkConfig, target: TargetProfile) -> dict[str, str]:

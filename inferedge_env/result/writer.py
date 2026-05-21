@@ -97,6 +97,7 @@ def build_run_result(
             throughput_fps=runner_result.throughput_fps,
         ),
         resource_metrics=runner_result.resource_metrics,
+        runtime_operation_summary=runner_result.runtime_operation_summary,
         env=captured_env,
     )
 
@@ -125,6 +126,8 @@ class ResultArtifactWriter:
                 for key, value in payload["resource_metrics"].items()
                 if value is not None
             }
+        if payload["runtime_operation_summary"] is None:
+            del payload["runtime_operation_summary"]
         (run_dir / "result.json").write_text(
             json.dumps(payload, indent=2),
             encoding="utf-8",

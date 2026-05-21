@@ -149,6 +149,51 @@ def test_result_json_persists_resource_metrics(
     assert payload["resource_metrics"]["source"] == "benchmark-command"
 
 
+def test_result_json_persists_runtime_operation_summary(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    bench_path, profile_path = config_files
+    runner_result = FakeRunner().run(bench_config, target_profile).model_copy(
+        update={
+            "runtime_operation_summary": {
+                "source": "inferedge-runtime",
+                "health_reason": "completed",
+                "runtime_events": [
+                    {
+                        "event": "runtime_operation_summary_recorded",
+                        "severity": "info",
+                    }
+                ],
+            }
+        }
+    )
+    result = make_result(
+        bench_config,
+        target_profile,
+        run_id="run-runtime-operation",
+        runner_result=runner_result,
+    )
+
+    run_dir = ResultArtifactWriter(tmp_path / ".edgeenv").write(
+        result,
+        bench_path,
+        profile_path,
+        runner_result.stdout,
+        runner_result.stderr,
+    )
+
+    payload = json.loads((run_dir / "result.json").read_text(encoding="utf-8"))
+    assert payload["schema_version"] == "edgeenv.result.v1"
+    assert payload["runtime_operation_summary"]["source"] == "inferedge-runtime"
+    assert payload["runtime_operation_summary"]["health_reason"] == "completed"
+    loaded = load_result(run_dir / "result.json")
+    assert loaded.runtime_operation_summary is not None
+    assert loaded.runtime_operation_summary["runtime_events"][0]["severity"] == "info"
+
+
 def test_result_writer_allows_precreated_sampler_directory(
     tmp_path,
     bench_config,

@@ -200,6 +200,10 @@ def run_benchmark(
     console.print(f"Result: {result_path}", soft_wrap=True)
     console.print(f"Latency mean: {result.metrics.latency_mean_ms} ms")
     console.print(_resource_metrics_status(result.resource_metrics), soft_wrap=True)
+    console.print(
+        _runtime_operation_summary_status(result.runtime_operation_summary),
+        soft_wrap=True,
+    )
     if sampler_metadata_path is not None:
         console.print(
             f"Sampler metadata: stored ({sampler_metadata_path})",
@@ -703,6 +707,8 @@ def _show_payload(record: RegistryRecord) -> dict:
             mode="json",
             exclude_none=True,
         )
+    if result.runtime_operation_summary is not None:
+        payload["runtime_operation_summary"] = result.runtime_operation_summary
     return payload
 
 
@@ -816,6 +822,17 @@ def _resource_metrics_status(resource_metrics: ResourceMetrics | None) -> str:
     if measured_fields:
         return f"Resource metrics: stored (fields={', '.join(measured_fields)})"
     return "Resource metrics: stored"
+
+
+def _runtime_operation_summary_status(
+    runtime_operation_summary: dict[str, Any] | None,
+) -> str:
+    if runtime_operation_summary is None:
+        return "Runtime operation summary: omitted"
+    source = runtime_operation_summary.get("source")
+    if source:
+        return f"Runtime operation summary: stored (source={source})"
+    return "Runtime operation summary: stored"
 
 
 def _resource_metric_lookup_payload(

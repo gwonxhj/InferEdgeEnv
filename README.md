@@ -130,7 +130,8 @@ edgeenv failed-runs import edgeenv-failed-run-<failed_run_id>.zip
 
 ### 5. Inspect Evidence
 
-`runs show` reads the result artifact and includes resource evidence when the local command emits it:
+`runs show` reads the result artifact and includes resource or runtime operation
+evidence when the local command emits it:
 
 ```bash
 edgeenv runs show <run_id>
@@ -148,6 +149,10 @@ edgeenv runs resources list --metric memory_peak_mb --json
     "power_peak_w": 11.4,
     "source": "example-script",
     "temperature_peak_c": 72.0
+  },
+  "runtime_operation_summary": {
+    "health_reason": "completed",
+    "source": "inferedge-runtime"
   }
 }
 ```
@@ -269,6 +274,10 @@ edgeenv report regression <baseline_run_id> <candidate_run_id> \
   --output-md /tmp/edgeenv-regression.md
 ```
 
+`runtime_operation_summary` remains supplemental run evidence. It is preserved
+in `result.json` and returned by `runs show`, but it is not a required
+same-condition comparability field.
+
 `report regression` reuses the same comparability gate. It only computes
 mean/p95/p99/FPS/resource deltas for `Comparable: Yes` with
 `Mode: same-condition`. Runtime/provider or target differences are reported as
@@ -388,4 +397,5 @@ Non-goals:
 - [Compare Workflow Guide](docs/compare-workflow-guide.md)
 - [Failed Run Inspection Guide](docs/failed-run-inspection.md)
 - [Resource Metrics Design](docs/resource-metrics-design.md)
+- [Runtime Operation Summary Evidence](docs/runtime-operation-summary-evidence.md)
 - [Sampler Failure Policy](docs/sampler-failure-policy.md)
