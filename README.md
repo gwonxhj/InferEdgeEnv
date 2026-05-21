@@ -260,6 +260,24 @@ Mode: same-condition
 
 For same-condition comparisons only, `report compare` also prints supplemental latency and throughput deltas after the comparability judgement. Conditional and non-comparable reports do not print metric deltas, and EdgeEnv does not produce rankings or composite scores.
 
+Generate a comparability-first runtime regression report when you need
+machine-readable evidence for a baseline/candidate pair:
+
+```bash
+edgeenv report regression <baseline_run_id> <candidate_run_id> \
+  --output-json /tmp/edgeenv-regression.json \
+  --output-md /tmp/edgeenv-regression.md
+```
+
+`report regression` reuses the same comparability gate. It only computes
+mean/p95/p99/FPS/resource deltas for `Comparable: Yes` with
+`Mode: same-condition`. Runtime/provider or target differences are reported as
+`runtime-comparison` or `target-comparison`; protocol mismatches are reported
+as `protocol_mismatch` with a rerun recommendation. The default starter policy
+marks mean latency +15%, p99 +25%, FPS -20%, and memory peak +30% as review or
+warning evidence. This is local regression evidence, not cloud monitoring,
+ranking, or production observability.
+
 If required fields differ, EdgeEnv reports:
 
 ```text

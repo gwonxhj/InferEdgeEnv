@@ -7,6 +7,7 @@
 
 ## 2. CONTENTS — 파일/디렉토리와 기술 스택
 - `comparability.py` — comparison rules, reason list, output model
+- `regression.py` — comparability-first runtime regression report logic
 - `docs/compare-workflow-guide.md` — 사용자가 run 생성부터 compare까지 따라가는 guide
 - `examples/benches/local_compare_a.yaml`, `examples/benches/local_compare_b.yaml` — same-condition compare workflow fixtures
 

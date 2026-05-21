@@ -14,6 +14,7 @@ User-owned benchmark command
 -> .edgeenv/runs/<run_id>/ artifacts
 -> SQLite registry index
 -> comparability checker
+-> optional runtime regression report
 -> optional export/import bundle
 -> optional read-only bundle summary
 ```
@@ -36,6 +37,7 @@ It does not answer whether a model should be deployed. That decision belongs to 
 | Artifact writer | Stores `result.json`, config, target, env, stdout, and stderr | Artifacts remain canonical; registry is rebuildable |
 | Registry | Provides local SQLite lookup for successful runs and resource metrics | Not a cloud DB or public leaderboard |
 | Comparability checker | Reports same-condition, conditional, or non-comparable judgement | Does not produce rankings or composite scores |
+| Runtime regression report | Calculates mean/p95/p99/FPS/resource regression only after same-condition comparability passes | Not cloud monitoring or production observability |
 | Export/import | Moves evidence bundles with manifest, checksum, and path-safety validation | Does not mutate evidence semantics |
 | Sampler evidence | Stores optional resource/sampler metadata as supplemental evidence | Not a comparability gate |
 

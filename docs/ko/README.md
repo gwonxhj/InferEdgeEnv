@@ -60,6 +60,21 @@ edgeenv runs list
 edgeenv report compare <run_id_a> <run_id_b>
 ```
 
+runtime regression evidence가 필요하면 같은 comparability gate를 재사용하는
+별도 report를 생성한다.
+
+```bash
+edgeenv report regression <baseline_run_id> <candidate_run_id> \
+  --output-json /tmp/edgeenv-regression.json \
+  --output-md /tmp/edgeenv-regression.md
+```
+
+`report regression`은 `same-condition`일 때만 mean/p95/p99/FPS/resource
+delta를 계산한다. runtime/provider 또는 target 차이는 각각
+`runtime-comparison`, `target-comparison`으로 표시하고, benchmark protocol
+mismatch는 `protocol_mismatch`로 표시한다. 이 기능은 local regression
+evidence이지 cloud monitoring, public leaderboard, production observability가 아니다.
+
 ## EdgeEnv가 아닌 것
 
 EdgeEnv는 다음을 구현하지 않는다.
