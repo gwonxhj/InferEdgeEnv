@@ -11,6 +11,10 @@ from rich.table import Table
 
 from inferedge_env import __version__
 from inferedge_env.compare.comparability import check_comparability
+from inferedge_env.compare.regression import (
+    analyze_regression,
+    render_regression_markdown,
+)
 from inferedge_env.config.bench_config import load_benchmark_config
 from inferedge_env.config.target_profile import TargetProfile, load_target_profile
 from inferedge_env.registry.db import RunRegistry
@@ -551,6 +555,84 @@ def compare_runs(
         _print_same_condition_metric_delta(result_a, result_b)
 
 
+@report_app.command("regression")
+def regression_report(
+    baseline_run_id: str,
+    candidate_run_id: str,
+    edgeenv_root: Path = typer.Option(
+        Path(".edgeenv"),
+        "--edgeenv-root",
+        help="Directory for EdgeEnv artifacts and registry.",
+    ),
+    output_json: Path | None = typer.Option(
+        None,
+        "--output-json",
+        help="Optional path to write the machine-readable regression report.",
+    ),
+    output_markdown: Path | None = typer.Option(
+        None,
+        "--output-md",
+        help="Optional path to write the Markdown regression report.",
+    ),
+) -> None:
+    """Generate comparability-first runtime regression evidence."""
+    registry = RunRegistry(edgeenv_root / "runs.db")
+    try:
+        baseline_record = registry.show(baseline_run_id)
+        candidate_record = registry.show(candidate_run_id)
+    except KeyError as exc:
+        _fail(str(exc))
+
+    baseline = load_result(baseline_record.result_path)
+    candidate = load_result(candidate_record.result_path)
+    report = analyze_regression(baseline, candidate)
+    payload = report.to_dict()
+
+    if output_json is not None:
+        try:
+            output_json.parent.mkdir(parents=True, exist_ok=True)
+            output_json.write_text(
+                json.dumps(payload, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+        except OSError as exc:
+            _fail(str(exc))
+    if output_markdown is not None:
+        try:
+            output_markdown.parent.mkdir(parents=True, exist_ok=True)
+            output_markdown.write_text(
+                render_regression_markdown(report),
+                encoding="utf-8",
+            )
+        except OSError as exc:
+            _fail(str(exc))
+
+    console.print("[bold]EdgeEnv Runtime Regression Report[/bold]")
+    console.print(f"Baseline: {report.baseline_run_id}")
+    console.print(f"Candidate: {report.candidate_run_id}")
+    console.print(f"Comparable: {str(report.comparable).lower()}")
+    console.print(f"Mode: {report.mode}")
+    console.print(f"Regression detected: {str(report.regression_detected).lower()}")
+    console.print(f"Regression type: {report.regression_type}")
+    console.print(f"Severity: {report.severity}")
+    console.print(f"Recommendation: {report.recommendation}")
+    console.print("Comparability:")
+    console.print(f"- Judgement: {report.comparability.comparable}")
+    if report.comparability.mode:
+        console.print(f"- Mode: {report.comparability.mode}")
+    for reason in report.comparability.reasons:
+        console.print(f"- {reason}")
+    if report.comparable and report.mode == "same-condition":
+        console.print("Regression Evidence:")
+        _print_regression_evidence(report.evidence)
+    else:
+        console.print("Regression Evidence: not evaluated")
+    if output_json is not None:
+        console.print(f"JSON report: {output_json}", soft_wrap=True)
+    if output_markdown is not None:
+        console.print(f"Markdown report: {output_markdown}", soft_wrap=True)
+
+
 @report_app.command("bundle-summary")
 def bundle_summary(
     scenarios: list[str] = typer.Option(
@@ -805,6 +887,34 @@ def _print_same_condition_metric_delta(a: RunResult, b: RunResult) -> None:
         left = getattr(a.metrics, field)
         right = getattr(b.metrics, field)
         console.print(_metric_delta_line(field, left, right, unit))
+
+
+def _print_regression_evidence(evidence: dict[str, Any]) -> None:
+    for field in [
+        "mean_delta_pct",
+        "p95_delta_pct",
+        "p99_delta_pct",
+        "fps_delta_pct",
+        "memory_peak_delta_pct",
+    ]:
+        value = evidence.get(field)
+        if value is None:
+            console.print(f"- {field}: n/a")
+        else:
+            console.print(f"- {field}: {_format_signed_float(float(value))}%")
+    triggered = evidence.get("triggered_thresholds", [])
+    if not triggered:
+        console.print("- triggered_thresholds: none")
+        return
+    console.print("- triggered_thresholds:")
+    for item in triggered:
+        console.print(
+            "  - "
+            f"{item['name']} ({item['metric']} {item['comparison']} "
+            f"{item['threshold']}, observed {_format_float(float(item['observed']))}, "
+            f"severity={item['severity']})",
+            soft_wrap=True,
+        )
 
 
 def _metric_delta_line(field: str, left: float, right: float, unit: str) -> str:

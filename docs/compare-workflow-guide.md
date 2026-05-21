@@ -91,6 +91,34 @@ For portability across workspaces, see [Jetson Sampled Evidence Bundle Handoff](
 | `Comparable: Conditional`, `Mode: target-comparison` | Required fields match, but target differs | Treat as target/platform comparison |
 | `Comparable: No` | Required fields differ | Do not make direct regression claims |
 
+### Runtime Regression Report
+
+Use `report regression` when the compare judgement should be saved as
+machine-readable runtime regression evidence:
+
+```bash
+edgeenv report regression <baseline_run_id> <candidate_run_id> \
+  --output-json /tmp/edgeenv-regression.json \
+  --output-md /tmp/edgeenv-regression.md
+```
+
+The command follows the same comparability-first rule as `report compare`.
+It calculates mean/p95/p99/FPS/resource deltas only for
+`Comparable: Yes` with `Mode: same-condition`. Conditional runtime/provider or
+target comparisons are labelled as `runtime-comparison` or
+`target-comparison`, and protocol mismatches are labelled
+`protocol_mismatch` with a rerun recommendation. This keeps regression evidence
+separate from runtime behavior comparisons and target/platform comparisons.
+
+Default starter thresholds:
+
+| Signal | Threshold | Meaning |
+| --- | ---: | --- |
+| Mean latency | +15% | review |
+| P99 latency | +25% | review / high severity |
+| FPS | -20% | review |
+| Memory peak | +30% | warning |
+
 ## 4. HOW NOT — What To Avoid
 
 - Do not conclude regression from mean latency in `runs list` alone.
