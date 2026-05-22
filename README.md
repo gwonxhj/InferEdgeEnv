@@ -296,7 +296,9 @@ registered run telemetry into an `edgeenv.runtime-telemetry-history.v1` JSON
 artifact. The export records missing telemetry as an evidence gap and remains
 local replay evidence, not production monitoring.
 Use `edgeenv runs telemetry inspect-history <path>` to validate and summarize
-that replay artifact before attaching it to a regression report.
+that replay artifact before attaching it to a regression report. The intended
+local flow is export history, inspect the replay artifact, then pass it to
+`report regression --telemetry-history`.
 
 `report regression` reuses the same comparability gate. It only computes
 mean/p95/p99/FPS/resource deltas for `Comparable: Yes` with

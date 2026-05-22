@@ -330,6 +330,117 @@ def test_regression_cli_attaches_runtime_telemetry_history_context(
     assert "edgeenv.runtime-telemetry-history.v1" in markdown
 
 
+def test_cli_telemetry_replay_to_regression_smoke(
+    tmp_path,
+    bench_config,
+    target_profile,
+):
+    runner = CliRunner()
+    edgeenv_root = tmp_path / ".edgeenv"
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        "baseline",
+        _runner_result(
+            mean=100.0,
+            p95=120.0,
+            p99=130.0,
+            fps=50.0,
+            runtime_telemetry=_runtime_telemetry(sequence_id=1),
+        ),
+    )
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        "candidate",
+        _runner_result(
+            mean=118.0,
+            p95=132.0,
+            p99=171.6,
+            fps=39.0,
+            runtime_telemetry=_runtime_telemetry(sequence_id=2),
+        ),
+    )
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        "telemetry-gap",
+        _runner_result(mean=99.0, p95=110.0, p99=120.0, fps=52.0),
+    )
+    history_path = tmp_path / "runtime-telemetry-history.json"
+    regression_json = tmp_path / "edgeenv-regression.json"
+    regression_md = tmp_path / "edgeenv-regression.md"
+
+    export_result = runner.invoke(
+        app,
+        [
+            "runs",
+            "telemetry",
+            "export-history",
+            "--edgeenv-root",
+            str(edgeenv_root),
+            "--output",
+            str(history_path),
+        ],
+    )
+    inspect_result = runner.invoke(
+        app,
+        [
+            "runs",
+            "telemetry",
+            "inspect-history",
+            str(history_path),
+        ],
+    )
+    regression_result = runner.invoke(
+        app,
+        [
+            "report",
+            "regression",
+            "baseline",
+            "candidate",
+            "--edgeenv-root",
+            str(edgeenv_root),
+            "--telemetry-history",
+            str(history_path),
+            "--output-json",
+            str(regression_json),
+            "--output-md",
+            str(regression_md),
+        ],
+    )
+
+    assert export_result.exit_code == 0, export_result.output
+    assert "Telemetry entries: 2" in export_result.output
+    assert "Missing telemetry: 1" in export_result.output
+    assert inspect_result.exit_code == 0, inspect_result.output
+    assert "Runtime telemetry history valid" in inspect_result.output
+    assert "Replay runs: 2" in inspect_result.output
+    assert "Evidence gaps: 1" in inspect_result.output
+    assert "Scope: read-only local replay validation" in inspect_result.output
+    assert regression_result.exit_code == 0, regression_result.output
+    assert "Runtime Telemetry Context:" in regression_result.output
+    assert "Regression detected: true" in regression_result.output
+    assert "p99_latency_high" in regression_result.output
+
+    history_payload = json.loads(history_path.read_text(encoding="utf-8"))
+    assert history_payload["summary"]["telemetry_runs"] == 2
+    assert history_payload["summary"]["missing_telemetry_runs"] == 1
+    regression_payload = json.loads(regression_json.read_text(encoding="utf-8"))
+    context = regression_payload["runtime_telemetry_context"]
+    assert context["history"]["summary"]["missing_telemetry_runs"] == 1
+    assert context["baseline"]["history_entry_present"] is True
+    assert context["candidate"]["history_entry_present"] is True
+    assert regression_payload["mode"] == "same-condition"
+    assert regression_payload["regression_detected"] is True
+    markdown = regression_md.read_text(encoding="utf-8")
+    assert "## Runtime Telemetry Context" in markdown
+    assert "edgeenv.runtime-telemetry-history.v1" in markdown
+
+
 def test_regression_cli_marks_runtime_comparison_not_evaluated(
     tmp_path,
     bench_config,

@@ -102,6 +102,19 @@ edgeenv report regression <baseline_run_id> <candidate_run_id> \
   --output-md /tmp/edgeenv-regression.md
 ```
 
+Replay-to-regression smoke sequence:
+
+```bash
+edgeenv runs telemetry export-history \
+  --output /tmp/edgeenv-runtime-telemetry-history.json
+edgeenv runs telemetry inspect-history \
+  /tmp/edgeenv-runtime-telemetry-history.json
+edgeenv report regression <baseline_run_id> <candidate_run_id> \
+  --telemetry-history /tmp/edgeenv-runtime-telemetry-history.json \
+  --output-json /tmp/edgeenv-regression.json \
+  --output-md /tmp/edgeenv-regression.md
+```
+
 The regression report records telemetry coverage and evidence gaps for the
 baseline/candidate pair. It still calculates regression deltas only after the
 normal same-condition comparability gate passes.
