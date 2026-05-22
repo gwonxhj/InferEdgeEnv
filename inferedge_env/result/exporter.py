@@ -37,6 +37,7 @@ REQUIRED_FAILED_RUN_FILES = [
     "stderr.log",
 ]
 SAMPLER_METADATA_FILE = "sampler/metadata.json"
+RUNTIME_TELEMETRY_FILE = "runtime_telemetry.json"
 
 
 class RunExportError(ValueError):
@@ -73,6 +74,7 @@ def export_successful_run(run_dir: Path | str, output_path: Path | str) -> Path:
         )
 
     files = _collect_required_files(source_dir)
+    files.update(_collect_runtime_telemetry_file(source_dir))
     files.update(_collect_sampler_files(source_dir))
     destination.parent.mkdir(parents=True, exist_ok=True)
     manifest = _build_manifest(result, files)
@@ -137,6 +139,7 @@ def validate_successful_run_import(archive_path: Path | str) -> RunImportPlan:
                 REQUIRED_RUN_FILES,
             )
             _validate_sampler_extension(archive, members, file_entries)
+            _validate_runtime_telemetry_extension(archive, members, file_entries)
             result = _load_import_result(archive, members["result.json"])
             if manifest.get("run_id") != result.run_id:
                 raise RunImportError("Manifest run_id does not match result.json run_id")
@@ -298,6 +301,18 @@ def _collect_sampler_files(source_dir: Path) -> dict[str, Path]:
             )
         files[raw_artifact] = raw_path
     return files
+
+
+def _collect_runtime_telemetry_file(source_dir: Path) -> dict[str, Path]:
+    telemetry_path = source_dir / RUNTIME_TELEMETRY_FILE
+    if not telemetry_path.exists():
+        return {}
+    if not telemetry_path.is_file():
+        raise RunExportError(
+            f"Runtime telemetry artifact must be a file: {telemetry_path}"
+        )
+    _load_runtime_telemetry_payload(telemetry_path, RunExportError)
+    return {RUNTIME_TELEMETRY_FILE: telemetry_path}
 
 
 def _build_manifest(result: RunResult, files: dict[str, Path]) -> dict[str, Any]:
@@ -498,7 +513,7 @@ def _verify_archive_members_match_manifest(
             raise RunImportError(f"Manifest file entry is not marked required: {name}")
     unexpected_manifest_entries = [
         name for name in sorted(set(entries) - set(required_files))
-        if not name.startswith("sampler/")
+        if not name.startswith("sampler/") and name != RUNTIME_TELEMETRY_FILE
     ]
     if unexpected_manifest_entries:
         raise RunImportError(
@@ -545,6 +560,60 @@ def _validate_sampler_extension(
             raise RunImportError(f"Unexpected sampler artifact file: {extra[0]}")
         if missing:
             raise RunImportError(f"Sampler raw artifact missing: {missing[0]}")
+
+
+def _validate_runtime_telemetry_extension(
+    archive: zipfile.ZipFile,
+    members: dict[str, zipfile.ZipInfo],
+    entries: dict[str, dict[str, Any]],
+) -> None:
+    if RUNTIME_TELEMETRY_FILE not in entries:
+        return
+    if RUNTIME_TELEMETRY_FILE not in members:
+        raise RunImportError(
+            f"Required run artifact file missing: {RUNTIME_TELEMETRY_FILE}"
+        )
+    _load_runtime_telemetry_payload_from_archive(
+        archive,
+        members[RUNTIME_TELEMETRY_FILE],
+        RunImportError,
+    )
+
+
+def _load_runtime_telemetry_payload(
+    path: Path,
+    error_cls: type[RunImportError] | type[RunExportError],
+) -> dict[str, Any]:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise error_cls(f"Invalid runtime telemetry artifact: {path}") from exc
+    _validate_runtime_telemetry_payload(payload, error_cls)
+    return payload
+
+
+def _load_runtime_telemetry_payload_from_archive(
+    archive: zipfile.ZipFile,
+    info: zipfile.ZipInfo,
+    error_cls: type[RunImportError] | type[RunExportError],
+) -> dict[str, Any]:
+    try:
+        payload = json.loads(archive.read(info))
+    except json.JSONDecodeError as exc:
+        raise error_cls("Invalid runtime telemetry artifact JSON") from exc
+    _validate_runtime_telemetry_payload(payload, error_cls)
+    return payload
+
+
+def _validate_runtime_telemetry_payload(
+    payload: Any,
+    error_cls: type[RunImportError] | type[RunExportError],
+) -> None:
+    if not isinstance(payload, dict):
+        raise error_cls("Runtime telemetry artifact must be a JSON object")
+    schema_version = payload.get("schema_version")
+    if schema_version is not None and not isinstance(schema_version, str):
+        raise error_cls("Runtime telemetry schema_version must be a string")
 
 
 def _load_import_sampler_metadata(

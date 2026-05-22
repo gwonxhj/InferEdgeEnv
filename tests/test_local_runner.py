@@ -318,6 +318,44 @@ print("EDGEENV_METRICS_JSON=" + json.dumps({
     )
 
 
+def test_local_runner_parses_optional_runtime_telemetry(
+    tmp_path: Path,
+    bench_config,
+    target_profile,
+):
+    script = _write_script(
+        tmp_path,
+        """
+import json
+print("EDGEENV_RUNTIME_TELEMETRY_JSON=" + json.dumps({
+    "schema_version": "inferedge-runtime-telemetry-v1",
+    "evidence_role": "runtime_telemetry_seed",
+    "collection_mode": "single_result_export",
+    "resource": {
+        "telemetry_source": "runtime-result",
+    },
+}))
+print("EDGEENV_METRICS_JSON=" + json.dumps({
+    "latency_mean_ms": 10.0,
+    "latency_p50_ms": 9.5,
+    "latency_p95_ms": 11.0,
+    "latency_p99_ms": 12.0,
+    "throughput_fps": 100.0,
+}))
+""",
+    )
+    config = bench_config.model_copy(update={"command": _python_command(script)})
+    target = target_profile.model_copy(update={"target_type": "local"})
+
+    result = LocalRunner().run(config, target)
+
+    assert result.runtime_telemetry is not None
+    assert result.runtime_telemetry["schema_version"] == (
+        "inferedge-runtime-telemetry-v1"
+    )
+    assert result.runtime_telemetry["resource"]["telemetry_source"] == "runtime-result"
+
+
 def test_local_runner_uses_last_resource_metrics_line(
     tmp_path: Path,
     bench_config,
@@ -542,6 +580,50 @@ print('EDGEENV_METRICS_JSON={"latency_mean_ms":1,"latency_p50_ms":1,"latency_p95
     with pytest.raises(
         LocalRunnerError,
         match="Invalid local runtime operation summary schema",
+    ):
+        LocalRunner().run(config, target)
+
+
+def test_local_runner_invalid_runtime_telemetry_json_fails(
+    tmp_path: Path,
+    bench_config,
+    target_profile,
+):
+    script = _write_script(
+        tmp_path,
+        """
+print('EDGEENV_RUNTIME_TELEMETRY_JSON={bad json')
+print('EDGEENV_METRICS_JSON={"latency_mean_ms":1,"latency_p50_ms":1,"latency_p95_ms":1,"latency_p99_ms":1,"throughput_fps":1}')
+""",
+    )
+    config = bench_config.model_copy(update={"command": _python_command(script)})
+    target = target_profile.model_copy(update={"target_type": "local"})
+
+    with pytest.raises(
+        LocalRunnerError,
+        match="Invalid EDGEENV_RUNTIME_TELEMETRY_JSON JSON",
+    ):
+        LocalRunner().run(config, target)
+
+
+def test_local_runner_invalid_runtime_telemetry_schema_fails(
+    tmp_path: Path,
+    bench_config,
+    target_profile,
+):
+    script = _write_script(
+        tmp_path,
+        """
+print('EDGEENV_RUNTIME_TELEMETRY_JSON=[{"schema_version":"inferedge-runtime-telemetry-v1"}]')
+print('EDGEENV_METRICS_JSON={"latency_mean_ms":1,"latency_p50_ms":1,"latency_p95_ms":1,"latency_p99_ms":1,"throughput_fps":1}')
+""",
+    )
+    config = bench_config.model_copy(update={"command": _python_command(script)})
+    target = target_profile.model_copy(update={"target_type": "local"})
+
+    with pytest.raises(
+        LocalRunnerError,
+        match="Invalid local runtime telemetry schema",
     ):
         LocalRunner().run(config, target)
 

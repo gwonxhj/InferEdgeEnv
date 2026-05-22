@@ -194,6 +194,46 @@ def test_result_json_persists_runtime_operation_summary(
     assert loaded.runtime_operation_summary["runtime_events"][0]["severity"] == "info"
 
 
+def test_result_json_persists_runtime_telemetry_sidecar(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    bench_path, profile_path = config_files
+    telemetry = _runtime_telemetry_payload()
+    runner_result = FakeRunner().run(bench_config, target_profile).model_copy(
+        update={"runtime_telemetry": telemetry}
+    )
+    result = make_result(
+        bench_config,
+        target_profile,
+        run_id="run-runtime-telemetry",
+        runner_result=runner_result,
+    )
+
+    run_dir = ResultArtifactWriter(tmp_path / ".edgeenv").write(
+        result,
+        bench_path,
+        profile_path,
+        runner_result.stdout,
+        runner_result.stderr,
+    )
+
+    payload = json.loads((run_dir / "result.json").read_text(encoding="utf-8"))
+    sidecar = json.loads(
+        (run_dir / "runtime_telemetry.json").read_text(encoding="utf-8")
+    )
+    assert payload["schema_version"] == "edgeenv.result.v1"
+    assert payload["runtime_telemetry"]["schema_version"] == (
+        "inferedge-runtime-telemetry-v1"
+    )
+    assert sidecar == telemetry
+    loaded = load_result(run_dir / "result.json")
+    assert loaded.runtime_telemetry is not None
+    assert loaded.runtime_telemetry["resource"]["telemetry_source"] == "runtime-result"
+
+
 def test_result_writer_allows_precreated_sampler_directory(
     tmp_path,
     bench_config,
@@ -440,6 +480,43 @@ def test_export_successful_run_includes_optional_sampler_artifacts(
         )
 
 
+def test_export_successful_run_includes_optional_runtime_telemetry_artifact(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    run_dir = _write_export_fixture(
+        tmp_path,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="run-export-runtime-telemetry",
+        runtime_telemetry=_runtime_telemetry_payload(),
+    )
+
+    archive_path = export_successful_run(
+        run_dir,
+        tmp_path / "run-export-runtime-telemetry.zip",
+    )
+
+    with zipfile.ZipFile(archive_path) as archive:
+        names = sorted(archive.namelist())
+        assert f"run-export-runtime-telemetry/runtime_telemetry.json" in names
+        manifest = json.loads(
+            archive.read("run-export-runtime-telemetry/manifest.json")
+        )
+        file_entries = {entry["path"]: entry for entry in manifest["files"]}
+        assert file_entries["runtime_telemetry.json"]["required"] is False
+        assert file_entries["runtime_telemetry.json"]["sha256"] == sha256_file(
+            run_dir / "runtime_telemetry.json"
+        )
+        telemetry = json.loads(
+            archive.read("run-export-runtime-telemetry/runtime_telemetry.json")
+        )
+        assert telemetry["schema_version"] == "inferedge-runtime-telemetry-v1"
+
+
 def test_export_successful_run_rejects_missing_sampler_raw_artifact(
     tmp_path,
     bench_config,
@@ -571,6 +648,39 @@ def test_import_successful_run_copies_optional_sampler_artifacts(
     assert (
         imported_dir / "sampler" / "tegrastats.log"
     ).read_bytes() == (run_dir / "sampler" / "tegrastats.log").read_bytes()
+    assert not (imported_dir / "manifest.json").exists()
+
+
+def test_import_successful_run_copies_optional_runtime_telemetry_artifact(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    run_dir = _write_export_fixture(
+        tmp_path,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="run-import-runtime-telemetry",
+        runtime_telemetry=_runtime_telemetry_payload(),
+    )
+    archive_path = export_successful_run(
+        run_dir,
+        tmp_path / "run-import-runtime-telemetry.zip",
+    )
+
+    result, imported_dir = import_successful_run(
+        archive_path,
+        tmp_path / "imported-edgeenv",
+    )
+
+    assert result.run_id == "run-import-runtime-telemetry"
+    assert result.runtime_telemetry is not None
+    assert result.runtime_telemetry["resource"]["telemetry_source"] == "runtime-result"
+    assert (imported_dir / "runtime_telemetry.json").read_bytes() == (
+        run_dir / "runtime_telemetry.json"
+    ).read_bytes()
     assert not (imported_dir / "manifest.json").exists()
 
 
@@ -976,10 +1086,18 @@ def _write_export_fixture(
     target_profile,
     config_files,
     run_id: str,
+    runtime_telemetry: dict | None = None,
 ):
     bench_path, profile_path = config_files
-    runner_result = FakeRunner().run(bench_config, target_profile)
-    result = make_result(bench_config, target_profile, run_id=run_id)
+    runner_result = FakeRunner().run(bench_config, target_profile).model_copy(
+        update={"runtime_telemetry": runtime_telemetry}
+    )
+    result = make_result(
+        bench_config,
+        target_profile,
+        run_id=run_id,
+        runner_result=runner_result,
+    )
     return ResultArtifactWriter(tmp_path / ".edgeenv").write(
         result,
         bench_path,
@@ -1046,4 +1164,26 @@ def _sampler_metadata(raw_artifacts: list[str]) -> dict:
         "raw_artifacts": raw_artifacts,
         "fields": {},
         "warnings": [],
+    }
+
+
+def _runtime_telemetry_payload() -> dict:
+    return {
+        "schema_version": "inferedge-runtime-telemetry-v1",
+        "evidence_role": "runtime_telemetry_seed",
+        "collection_mode": "single_result_export",
+        "telemetry_timestamp": "2026-05-22T00:00:00Z",
+        "execution_sequence_id": 0,
+        "latency": {
+            "mean_ms": 10.0,
+            "p99_ms": 12.0,
+        },
+        "resource": {
+            "telemetry_source": "runtime-result",
+        },
+        "operation": {
+            "timeout_observed": False,
+        },
+        "missing_fields": ["queue_depth"],
+        "production_monitoring": False,
     }

@@ -28,6 +28,8 @@ RESOURCE_METRICS_PREFIX = "EDGEENV_RESOURCE_METRICS_JSON="
 RESOURCE_METRICS_NAME = "EDGEENV_RESOURCE_METRICS_JSON"
 RUNTIME_OPERATION_SUMMARY_PREFIX = "EDGEENV_RUNTIME_OPERATION_SUMMARY_JSON="
 RUNTIME_OPERATION_SUMMARY_NAME = "EDGEENV_RUNTIME_OPERATION_SUMMARY_JSON"
+RUNTIME_TELEMETRY_PREFIX = "EDGEENV_RUNTIME_TELEMETRY_JSON="
+RUNTIME_TELEMETRY_NAME = "EDGEENV_RUNTIME_TELEMETRY_JSON"
 
 
 class LocalRunnerError(RuntimeError):
@@ -114,6 +116,7 @@ class LocalRunner:
             runtime_operation_summary = _extract_runtime_operation_summary(
                 completed.stdout
             )
+            runtime_telemetry = _extract_runtime_telemetry(completed.stdout)
             if sampler is not None:
                 try:
                     sampler_summary = sampler.summary()
@@ -143,6 +146,7 @@ class LocalRunner:
             stderr=completed.stderr,
             resource_metrics=resource_metrics,
             runtime_operation_summary=runtime_operation_summary,
+            runtime_telemetry=runtime_telemetry,
             sampler_summary=sampler_summary,
             **metrics,
         )
@@ -209,6 +213,7 @@ def _extract_metrics(stdout: str) -> dict[str, float]:
             "stderr",
             "resource_metrics",
             "runtime_operation_summary",
+            "runtime_telemetry",
             "sampler_summary",
         }
     )
@@ -254,6 +259,34 @@ def _extract_runtime_operation_summary(stdout: str) -> dict[str, Any] | None:
         raise LocalRunnerError(
             f"Invalid local runtime operation summary schema: "
             f"{RUNTIME_OPERATION_SUMMARY_NAME} must be a JSON object"
+        )
+    return payload
+
+
+def _extract_runtime_telemetry(stdout: str) -> dict[str, Any] | None:
+    telemetry_line: str | None = None
+    for line in stdout.splitlines():
+        if line.startswith(RUNTIME_TELEMETRY_PREFIX):
+            telemetry_line = line[len(RUNTIME_TELEMETRY_PREFIX) :]
+
+    if telemetry_line is None:
+        return None
+
+    try:
+        payload = json.loads(telemetry_line)
+    except json.JSONDecodeError as exc:
+        raise LocalRunnerError(f"Invalid {RUNTIME_TELEMETRY_NAME} JSON: {exc}") from exc
+
+    if not isinstance(payload, dict):
+        raise LocalRunnerError(
+            f"Invalid local runtime telemetry schema: "
+            f"{RUNTIME_TELEMETRY_NAME} must be a JSON object"
+        )
+    schema_version = payload.get("schema_version")
+    if schema_version is not None and not isinstance(schema_version, str):
+        raise LocalRunnerError(
+            f"Invalid local runtime telemetry schema: "
+            f"{RUNTIME_TELEMETRY_NAME}.schema_version must be a string"
         )
     return payload
 
