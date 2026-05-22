@@ -82,6 +82,19 @@ The history artifact uses this top-level shape:
 
 This is a replay dataset seed. It records evidence gaps explicitly and does not turn missing telemetry into a failed benchmark run.
 
+Regression reports can attach this artifact as supplemental context:
+
+```bash
+edgeenv report regression <baseline_run_id> <candidate_run_id> \
+  --telemetry-history /tmp/edgeenv-runtime-telemetry-history.json \
+  --output-json /tmp/edgeenv-regression.json \
+  --output-md /tmp/edgeenv-regression.md
+```
+
+The regression report records telemetry coverage and evidence gaps for the
+baseline/candidate pair. It still calculates regression deltas only after the
+normal same-condition comparability gate passes.
+
 ## 4. HOW NOT — What To Avoid
 
 - Do not make runtime telemetry required for a successful run.
@@ -101,7 +114,7 @@ Runtime result
 -> EdgeEnv result.json + runtime_telemetry.json
 -> EdgeEnv export/import replay seed
 -> EdgeEnv runtime telemetry history artifact
--> future replay/regression analysis
+-> EdgeEnv comparability-first regression report with telemetry context
 -> Lab deployment risk report
 ```
 

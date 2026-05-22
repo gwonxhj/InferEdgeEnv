@@ -98,6 +98,7 @@ machine-readable runtime regression evidence:
 
 ```bash
 edgeenv report regression <baseline_run_id> <candidate_run_id> \
+  --telemetry-history /tmp/edgeenv-runtime-telemetry-history.json \
   --output-json /tmp/edgeenv-regression.json \
   --output-md /tmp/edgeenv-regression.md
 ```
@@ -109,6 +110,11 @@ target comparisons are labelled as `runtime-comparison` or
 `target-comparison`, and protocol mismatches are labelled
 `protocol_mismatch` with a rerun recommendation. This keeps regression evidence
 separate from runtime behavior comparisons and target/platform comparisons.
+
+If a runtime telemetry history artifact is available, pass
+`--telemetry-history` to attach coverage and evidence-gap context to the
+regression report. Telemetry context remains supplemental evidence; it never
+bypasses the same-condition comparability gate.
 
 Default starter thresholds:
 
