@@ -119,6 +119,16 @@ The regression report records telemetry coverage and evidence gaps for the
 baseline/candidate pair. It still calculates regression deltas only after the
 normal same-condition comparability gate passes.
 
+Replay edge cases are preserved as evidence context:
+
+- If the compared candidate is missing runtime telemetry, the regression report
+  records both `runtime_telemetry_missing_in_result` and the history
+  `runtime_telemetry_missing` gap for that run.
+- If the baseline/candidate `execution_sequence_id` order is inverted, EdgeEnv
+  preserves both result-side and history-side sequence IDs. This does not
+  change comparability or regression math; downstream diagnosis can treat it as
+  deterministic review context.
+
 Optional AIGuard handoff:
 
 ```bash
