@@ -94,6 +94,8 @@ edgeenv report compare <run_id_a> <run_id_b>
 ```
 
 For the full flow, see [Compare Workflow Guide](docs/compare-workflow-guide.md).
+The guide also links small committed runtime regression replay fixtures under
+`examples/regression/` for downstream AIGuard/Lab handoff checks.
 
 ### 4. Optional Resource And Sampler Evidence
 
