@@ -137,6 +137,7 @@ or runtime telemetry evidence when the local command emits it:
 edgeenv runs show <run_id>
 edgeenv runs resources list --metric memory_peak_mb
 edgeenv runs resources list --metric memory_peak_mb --json
+edgeenv runs telemetry export-history --output /tmp/edgeenv-runtime-telemetry-history.json
 ```
 
 ```json
@@ -288,6 +289,11 @@ they are not required same-condition comparability fields. Runtime telemetry is
 also written as `runtime_telemetry.json` when present so a run bundle can carry
 history/replay seed evidence without promoting telemetry into a production
 monitoring store.
+
+Use `edgeenv runs telemetry export-history --output <path>` to aggregate
+registered run telemetry into an `edgeenv.runtime-telemetry-history.v1` JSON
+artifact. The export records missing telemetry as an evidence gap and remains
+local replay evidence, not production monitoring.
 
 `report regression` reuses the same comparability gate. It only computes
 mean/p95/p99/FPS/resource deltas for `Comparable: Yes` with

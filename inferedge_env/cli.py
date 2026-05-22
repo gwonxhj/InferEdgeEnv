@@ -39,6 +39,10 @@ from inferedge_env.result.schema import (
     ResourceMetrics,
     RunResult,
 )
+from inferedge_env.result.telemetry_history import (
+    RuntimeTelemetryHistoryError,
+    write_runtime_telemetry_history,
+)
 from inferedge_env.result.writer import (
     FailedRunArtifactWriter,
     ResultArtifactWriter,
@@ -58,6 +62,7 @@ bench_app = typer.Typer(help="Benchmark config and run commands.")
 runs_app = typer.Typer(help="Local run registry commands.")
 runs_sampler_app = typer.Typer(help="Sampler metadata inspection commands.")
 runs_resources_app = typer.Typer(help="Resource metric index commands.")
+runs_telemetry_app = typer.Typer(help="Runtime telemetry evidence commands.")
 failed_runs_app = typer.Typer(help="Failed local run artifact commands.")
 report_app = typer.Typer(help="Report and comparison commands.")
 console = Console()
@@ -71,6 +76,7 @@ app.add_typer(bench_app, name="bench")
 app.add_typer(runs_app, name="runs")
 runs_app.add_typer(runs_sampler_app, name="sampler")
 runs_app.add_typer(runs_resources_app, name="resources")
+runs_app.add_typer(runs_telemetry_app, name="telemetry")
 app.add_typer(failed_runs_app, name="failed-runs")
 app.add_typer(report_app, name="report")
 
@@ -354,6 +360,46 @@ def list_run_resources(
             soft_wrap=True,
         )
         console.print(f"  Source: {record.source or ''}", soft_wrap=True)
+
+
+@runs_telemetry_app.command("export-history")
+def export_runtime_telemetry_history(
+    output_path: Path = typer.Option(
+        ...,
+        "--output",
+        "-o",
+        help="Path to write the runtime telemetry history JSON artifact.",
+    ),
+    run_ids: Optional[list[str]] = typer.Option(
+        None,
+        "--run-id",
+        help="Optional run id to include. Repeat to build a selected replay set.",
+    ),
+    edgeenv_root: Path = typer.Option(
+        Path(".edgeenv"),
+        "--edgeenv-root",
+        help="Directory for EdgeEnv artifacts and registry.",
+    ),
+) -> None:
+    """Export local runtime telemetry evidence as a replayable history artifact."""
+    try:
+        payload = write_runtime_telemetry_history(
+            edgeenv_root,
+            output_path,
+            run_ids=run_ids,
+        )
+    except (RuntimeTelemetryHistoryError, OSError) as exc:
+        _fail(str(exc), hint=_telemetry_history_error_hint(str(exc)))
+    summary = payload["summary"]
+    console.print("[bold green]Runtime telemetry history exported[/bold green]")
+    console.print(f"Output: {output_path}", soft_wrap=True)
+    console.print(f"Runs scanned: {summary['registered_runs']}")
+    console.print(f"Telemetry entries: {summary['telemetry_runs']}")
+    console.print(f"Missing telemetry: {summary['missing_telemetry_runs']}")
+    console.print(
+        "Scope: local replay evidence; not production monitoring.",
+        soft_wrap=True,
+    )
 
 
 @runs_app.command("export")
@@ -1064,6 +1110,23 @@ def _import_error_hint(message: str) -> str:
     return (
         "Import validates manifest, checksums, safe paths, schema markers, and "
         "duplicate run IDs before copying evidence."
+    )
+
+
+def _telemetry_history_error_hint(message: str) -> str:
+    if "Run not found" in message:
+        return (
+            "Use `edgeenv runs list` to find registered run IDs, or omit "
+            "--run-id to export history for all registered runs."
+        )
+    if "Invalid result artifact" in message:
+        return (
+            "Runtime telemetry history is rebuilt from result.json artifacts. "
+            "Re-import or re-run the affected benchmark before exporting history."
+        )
+    return (
+        "Telemetry history export reads local result artifacts and optional "
+        "runtime_telemetry evidence; missing telemetry is recorded as an evidence gap."
     )
 
 

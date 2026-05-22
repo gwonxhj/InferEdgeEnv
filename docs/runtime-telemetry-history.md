@@ -17,6 +17,7 @@ Related files:
 - `inferedge_env/result/schema.py` — preserves optional telemetry in `edgeenv.result.v1`
 - `inferedge_env/result/writer.py` — writes telemetry to `result.json` and `runtime_telemetry.json`
 - `inferedge_env/result/exporter.py` — exports/imports the optional sidecar with manifest validation
+- `inferedge_env/result/telemetry_history.py` — rebuilds telemetry history from registered run artifacts
 - `inferedge_env/cli.py` — shows stored/omitted telemetry status and `runs show` payload
 - `docs/local-command-contract.md` — stdout contract for local commands
 - `docs/export-import-design.md` — portable evidence bundle contract
@@ -46,6 +47,41 @@ When present, EdgeEnv stores the payload in two places:
 
 `result.json` keeps the run self-describing. The sidecar makes export/import and replay-oriented tooling easier without requiring a registry schema migration.
 
+History export command:
+
+```bash
+edgeenv runs telemetry export-history --output /tmp/edgeenv-runtime-telemetry-history.json
+```
+
+The history artifact uses this top-level shape:
+
+```json
+{
+  "schema_version": "edgeenv.runtime-telemetry-history.v1",
+  "summary": {
+    "registered_runs": 2,
+    "telemetry_runs": 1,
+    "missing_telemetry_runs": 1
+  },
+  "runs": [
+    {
+      "run_id": "run-20260522-000000-12345678",
+      "runtime_telemetry": {
+        "schema_version": "inferedge-runtime-telemetry-v1"
+      }
+    }
+  ],
+  "missing_telemetry": [
+    {
+      "run_id": "run-without-telemetry",
+      "reason": "runtime_telemetry_missing"
+    }
+  ]
+}
+```
+
+This is a replay dataset seed. It records evidence gaps explicitly and does not turn missing telemetry into a failed benchmark run.
+
 ## 4. HOW NOT — What To Avoid
 
 - Do not make runtime telemetry required for a successful run.
@@ -64,7 +100,8 @@ Current flow:
 Runtime result
 -> EdgeEnv result.json + runtime_telemetry.json
 -> EdgeEnv export/import replay seed
--> future telemetry history/replay/regression analysis
+-> EdgeEnv runtime telemetry history artifact
+-> future replay/regression analysis
 -> Lab deployment risk report
 ```
 
@@ -72,7 +109,7 @@ Runtime result
 
 Runtime regression monitoring needs more than a single latency number. It needs evidence about when, where, and under which runtime/resource conditions a result was produced. Storing telemetry as optional local evidence lets EdgeEnv deepen toward regression history without turning into a production monitoring platform.
 
-The first implementation keeps compatibility by preserving unknown fields and keeping `edgeenv.result.v1` additive. Future phases can add history accumulation and replay validation using the same artifact-first policy.
+The first implementation keeps compatibility by preserving unknown fields and keeping `edgeenv.result.v1` additive. The history export continues the same artifact-first policy: `runs.db` locates records, but `result.json` and optional telemetry evidence remain the source of truth.
 
 ## 7. LEARNED CAUTIONS — Learned Cautions
 
