@@ -41,6 +41,8 @@ from inferedge_env.result.schema import (
 )
 from inferedge_env.result.telemetry_history import (
     RuntimeTelemetryHistoryError,
+    inspect_runtime_telemetry_history,
+    load_runtime_telemetry_history,
     write_runtime_telemetry_history,
 )
 from inferedge_env.result.writer import (
@@ -398,6 +400,38 @@ def export_runtime_telemetry_history(
     console.print(f"Missing telemetry: {summary['missing_telemetry_runs']}")
     console.print(
         "Scope: local replay evidence; not production monitoring.",
+        soft_wrap=True,
+    )
+
+
+@runs_telemetry_app.command("inspect-history")
+def inspect_runtime_telemetry_history_command(
+    history_path: Path,
+    json_output: bool = typer.Option(
+        False,
+        "--json",
+        help="Print machine-readable replay summary as JSON.",
+    ),
+) -> None:
+    """Validate and summarize a runtime telemetry history replay artifact."""
+    try:
+        payload = load_runtime_telemetry_history(history_path)
+        summary = inspect_runtime_telemetry_history(payload)
+    except RuntimeTelemetryHistoryError as exc:
+        _fail(str(exc), hint=_telemetry_history_input_error_hint(str(exc)))
+    if json_output:
+        console.print(json.dumps(summary, indent=2, sort_keys=True), soft_wrap=True)
+        return
+    replay = summary["replay"]
+    console.print("[bold green]Runtime telemetry history valid[/bold green]")
+    console.print(f"Input: {history_path}", soft_wrap=True)
+    console.print(f"Schema: {summary['schema_version']}")
+    console.print(f"Replay runs: {len(replay['run_ids'])}")
+    console.print(f"Telemetry fields: {', '.join(replay['telemetry_fields']) or '-'}")
+    console.print(f"Evidence gaps: {replay['evidence_gap_count']}")
+    console.print(f"Missing run IDs: {', '.join(replay['missing_run_ids']) or '-'}")
+    console.print(
+        "Scope: read-only local replay validation; not production monitoring.",
         soft_wrap=True,
     )
 
@@ -780,15 +814,9 @@ def _load_telemetry_history_payload(path: Path | None) -> dict[str, Any] | None:
     if path is None:
         return None
     try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
+        return load_runtime_telemetry_history(path)
+    except RuntimeTelemetryHistoryError as exc:
         _fail(str(exc), hint=_telemetry_history_input_error_hint(str(exc)))
-    if not isinstance(payload, dict):
-        _fail(
-            f"Runtime telemetry history must be a JSON object: {path}",
-            hint=_telemetry_history_input_error_hint("not a JSON object"),
-        )
-    return payload
 
 
 def _sampler_show_payload(record: RegistryRecord) -> dict[str, Any]:

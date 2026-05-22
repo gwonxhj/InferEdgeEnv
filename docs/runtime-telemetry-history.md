@@ -53,6 +53,12 @@ History export command:
 edgeenv runs telemetry export-history --output /tmp/edgeenv-runtime-telemetry-history.json
 ```
 
+Replay validation command:
+
+```bash
+edgeenv runs telemetry inspect-history /tmp/edgeenv-runtime-telemetry-history.json
+```
+
 The history artifact uses this top-level shape:
 
 ```json
@@ -82,6 +88,11 @@ The history artifact uses this top-level shape:
 
 This is a replay dataset seed. It records evidence gaps explicitly and does not turn missing telemetry into a failed benchmark run.
 
+`inspect-history` is a read-only validation step for that seed artifact. It
+checks the schema, summarizes replay run IDs, available telemetry fields,
+execution sequence IDs, and missing telemetry evidence gaps. It does not mutate
+the registry, change comparability judgement, or act as a monitoring alert.
+
 Regression reports can attach this artifact as supplemental context:
 
 ```bash
@@ -102,6 +113,7 @@ normal same-condition comparability gate passes.
 - Do not add telemetry columns to `runs.db` before a query/report requirement is proven.
 - Do not describe this as production observability, cloud monitoring, distributed tracing, or real-time data drift detection.
 - Do not use telemetry to bypass the existing comparability-first regression policy.
+- Do not treat `inspect-history` as a live health check; it only validates a local replay artifact.
 
 ## 5. WHERE — Role In The InferEdge Flow
 
@@ -114,6 +126,7 @@ Runtime result
 -> EdgeEnv result.json + runtime_telemetry.json
 -> EdgeEnv export/import replay seed
 -> EdgeEnv runtime telemetry history artifact
+-> EdgeEnv inspect-history replay validation
 -> EdgeEnv comparability-first regression report with telemetry context
 -> Lab deployment risk report
 ```

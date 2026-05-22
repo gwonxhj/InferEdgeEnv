@@ -79,6 +79,8 @@ evidence이지 cloud monitoring, public leaderboard, production observability가
 runtime telemetry history artifact가 있으면 `--telemetry-history`로 연결해
 report에 telemetry coverage와 evidence gap을 보조 context로 첨부할 수 있다.
 이 context는 same-condition comparability gate를 우회하지 않는다.
+`edgeenv runs telemetry inspect-history <path>`로 history artifact의 schema,
+replay run, telemetry field, evidence gap을 먼저 확인할 수 있다.
 
 ## EdgeEnv가 아닌 것
 
