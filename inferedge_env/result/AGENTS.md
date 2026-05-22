@@ -9,6 +9,7 @@ run result schema와 `.edgeenv/runs/<run_id>/` artifact writer를 담당한다. 
 - `schema.py` — result JSON schema
 - `writer.py` — artifact directory, core run files, optional sampler metadata file 생성
 - `exporter.py` — successful run evidence와 failed-run diagnostic bundle zip export/import, manifest, checksum generation, safe archive validation
+- `telemetry_history.py` — optional runtime telemetry evidence를 local replay/history artifact로 재구성
 
 기술 스택: Python, Pydantic, JSON/YAML file IO
 
