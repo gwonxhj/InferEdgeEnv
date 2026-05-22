@@ -119,6 +119,18 @@ The regression report records telemetry coverage and evidence gaps for the
 baseline/candidate pair. It still calculates regression deltas only after the
 normal same-condition comparability gate passes.
 
+Optional AIGuard handoff:
+
+```bash
+python -m inferedge_aiguard.cli reason-edgeenv-regression \
+  --input /tmp/edgeenv-regression.json
+```
+
+This is a cross-repo artifact handoff, not an EdgeEnv runtime dependency.
+EdgeEnv owns the local history, comparability judgement, and regression report.
+AIGuard may consume that report as deterministic warning evidence, while Lab
+remains the final deployment decision owner.
+
 ## 4. HOW NOT — What To Avoid
 
 - Do not make runtime telemetry required for a successful run.
