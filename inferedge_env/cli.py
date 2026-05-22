@@ -382,6 +382,14 @@ def export_runtime_telemetry_history(
         "--edgeenv-root",
         help="Directory for EdgeEnv artifacts and registry.",
     ),
+    orchestrator_feeds: Optional[list[Path]] = typer.Option(
+        None,
+        "--orchestrator-feed",
+        help=(
+            "Optional InferEdgeOrchestrator EdgeEnv telemetry feed JSON to attach "
+            "as supplemental operation context. Repeat for multiple run IDs."
+        ),
+    ),
 ) -> None:
     """Export local runtime telemetry evidence as a replayable history artifact."""
     try:
@@ -389,6 +397,7 @@ def export_runtime_telemetry_history(
             edgeenv_root,
             output_path,
             run_ids=run_ids,
+            orchestrator_feeds=orchestrator_feeds,
         )
     except (RuntimeTelemetryHistoryError, OSError) as exc:
         _fail(str(exc), hint=_telemetry_history_error_hint(str(exc)))
@@ -398,6 +407,9 @@ def export_runtime_telemetry_history(
     console.print(f"Runs scanned: {summary['registered_runs']}")
     console.print(f"Telemetry entries: {summary['telemetry_runs']}")
     console.print(f"Missing telemetry: {summary['missing_telemetry_runs']}")
+    console.print(
+        f"Orchestrator context entries: {summary.get('orchestrator_feed_runs', 0)}"
+    )
     console.print(
         "Scope: local replay evidence; not production monitoring.",
         soft_wrap=True,
@@ -428,6 +440,10 @@ def inspect_runtime_telemetry_history_command(
     console.print(f"Schema: {summary['schema_version']}")
     console.print(f"Replay runs: {len(replay['run_ids'])}")
     console.print(f"Telemetry fields: {', '.join(replay['telemetry_fields']) or '-'}")
+    console.print(
+        "Orchestrator context runs: "
+        f"{len(replay.get('orchestrator_context_run_ids', []))}"
+    )
     console.print(f"Evidence gaps: {replay['evidence_gap_count']}")
     console.print(f"Missing run IDs: {', '.join(replay['missing_run_ids']) or '-'}")
     console.print(
@@ -1205,6 +1221,12 @@ def _import_error_hint(message: str) -> str:
 
 
 def _telemetry_history_error_hint(message: str) -> str:
+    if "Orchestrator telemetry feed" in message:
+        return (
+            "Attach only EdgeEnv runtime telemetry feed artifacts produced by "
+            "InferEdgeOrchestrator for run IDs included in this export. The feed "
+            "is supplemental operation context and never replaces runtime telemetry."
+        )
     if "Run not found" in message:
         return (
             "Use `edgeenv runs list` to find registered run IDs, or omit "

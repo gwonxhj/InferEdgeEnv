@@ -53,6 +53,28 @@ History export command:
 edgeenv runs telemetry export-history --output /tmp/edgeenv-runtime-telemetry-history.json
 ```
 
+Optional Orchestrator operation context can be attached when the feed comes
+from InferEdgeOrchestrator's EdgeEnv handoff contract:
+
+```bash
+edgeenv runs telemetry export-history \
+  --orchestrator-feed /tmp/orchestrator-edgeenv-feed.json \
+  --output /tmp/edgeenv-runtime-telemetry-history.json
+```
+
+The feed schema is:
+
+```text
+inferedge-orchestrator-edgeenv-runtime-telemetry-feed-v1
+```
+
+EdgeEnv only accepts this feed when it explicitly declares
+`not_a_regression_judgement=true` and `not_a_comparability_gate=true`. The feed
+is then preserved under the matching history entry as
+`orchestrator_operation_context`. It does not replace `runtime_telemetry`, does
+not turn missing telemetry into a successful telemetry run, and does not change
+the same-condition comparability gate.
+
 Replay validation command:
 
 ```bash
@@ -74,6 +96,11 @@ The history artifact uses this top-level shape:
       "run_id": "run-20260522-000000-12345678",
       "runtime_telemetry": {
         "schema_version": "inferedge-runtime-telemetry-v1"
+      },
+      "orchestrator_operation_context": {
+        "schema_version": "inferedge-orchestrator-edgeenv-runtime-telemetry-feed-v1",
+        "not_a_regression_judgement": true,
+        "not_a_comparability_gate": true
       }
     }
   ],
@@ -128,6 +155,11 @@ Replay edge cases are preserved as evidence context:
   preserves both result-side and history-side sequence IDs. This does not
   change comparability or regression math; downstream diagnosis can treat it as
   deterministic review context.
+- If an Orchestrator feed is attached, the regression report exposes it under
+  the matching run's runtime telemetry context as supplemental operation
+  evidence. Queue depth, deadline/fallback, and resource hints remain context
+  for downstream review; EdgeEnv still owns only comparability-first regression
+  analysis.
 
 Optional AIGuard handoff:
 
@@ -149,6 +181,7 @@ remains the final deployment decision owner.
 - Do not describe this as production observability, cloud monitoring, distributed tracing, or real-time data drift detection.
 - Do not use telemetry to bypass the existing comparability-first regression policy.
 - Do not treat `inspect-history` as a live health check; it only validates a local replay artifact.
+- Do not use Orchestrator operation feed context as a substitute for Runtime telemetry or Lab deployment judgement.
 
 ## 5. WHERE — Role In The InferEdge Flow
 
@@ -159,6 +192,7 @@ Current flow:
 ```text
 Runtime result
 -> EdgeEnv result.json + runtime_telemetry.json
+-> optional Orchestrator edgeenv_runtime_telemetry_feed context
 -> EdgeEnv export/import replay seed
 -> EdgeEnv runtime telemetry history artifact
 -> EdgeEnv inspect-history replay validation

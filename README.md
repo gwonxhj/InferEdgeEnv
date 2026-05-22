@@ -297,6 +297,18 @@ Use `edgeenv runs telemetry export-history --output <path>` to aggregate
 registered run telemetry into an `edgeenv.runtime-telemetry-history.v1` JSON
 artifact. The export records missing telemetry as an evidence gap and remains
 local replay evidence, not production monitoring.
+If an InferEdgeOrchestrator sustained run produced an
+`edgeenv_runtime_telemetry_feed` artifact, attach it during export:
+
+```bash
+edgeenv runs telemetry export-history \
+  --orchestrator-feed /tmp/orchestrator-edgeenv-feed.json \
+  --output /tmp/edgeenv-runtime-telemetry-history.json
+```
+
+The feed is stored as supplemental operation context for the matching run ID.
+It does not replace Runtime telemetry, change comparability, or act as a
+regression judgement.
 Use `edgeenv runs telemetry inspect-history <path>` to validate and summarize
 that replay artifact before attaching it to a regression report. The intended
 local flow is export history, inspect the replay artifact, then pass it to

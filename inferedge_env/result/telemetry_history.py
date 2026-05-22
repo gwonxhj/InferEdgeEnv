@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from copy import deepcopy
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -12,6 +13,9 @@ from inferedge_env.result.writer import load_result
 
 
 RUNTIME_TELEMETRY_HISTORY_SCHEMA_VERSION = "edgeenv.runtime-telemetry-history.v1"
+ORCHESTRATOR_TELEMETRY_FEED_SCHEMA_VERSION = (
+    "inferedge-orchestrator-edgeenv-runtime-telemetry-feed-v1"
+)
 
 
 class RuntimeTelemetryHistoryError(ValueError):
@@ -23,25 +27,37 @@ def build_runtime_telemetry_history(
     *,
     run_ids: list[str] | None = None,
     generated_at: datetime | None = None,
+    orchestrator_feeds: list[Path | str] | None = None,
 ) -> dict[str, Any]:
     root = Path(edgeenv_root)
     registry = RunRegistry(root / "runs.db")
     records = _select_records(registry, run_ids)
     generated = generated_at or datetime.now(timezone.utc)
+    orchestrator_contexts = _load_orchestrator_feeds(orchestrator_feeds)
+    _validate_orchestrator_feed_scope(orchestrator_contexts, records)
 
     entries: list[dict[str, Any]] = []
-    missing: list[dict[str, str]] = []
+    missing: list[dict[str, Any]] = []
     for record in records:
         result = _load_record_result(record)
         if result.runtime_telemetry is None:
-            missing.append(
-                {
-                    "run_id": result.run_id,
-                    "reason": "runtime_telemetry_missing",
-                }
-            )
+            missing_entry: dict[str, Any] = {
+                "run_id": result.run_id,
+                "reason": "runtime_telemetry_missing",
+            }
+            orchestrator_context = orchestrator_contexts.get(result.run_id)
+            if orchestrator_context is not None:
+                missing_entry["orchestrator_operation_context"] = (
+                    orchestrator_context
+                )
+            missing.append(missing_entry)
             continue
-        entries.append(_history_entry(result))
+        entries.append(
+            _history_entry(
+                result,
+                orchestrator_context=orchestrator_contexts.get(result.run_id),
+            )
+        )
 
     entries.sort(
         key=lambda entry: (
@@ -64,6 +80,7 @@ def build_runtime_telemetry_history(
             "registered_runs": len(records),
             "telemetry_runs": len(entries),
             "missing_telemetry_runs": len(missing),
+            "orchestrator_feed_runs": len(orchestrator_contexts),
         },
         "runs": entries,
         "missing_telemetry": missing,
@@ -71,6 +88,7 @@ def build_runtime_telemetry_history(
             "Runtime telemetry history is local replay evidence, not production monitoring.",
             "Missing telemetry is recorded as an evidence gap, not a failed benchmark run.",
             "Comparability-first regression analysis must still run before delta judgement.",
+            "Orchestrator feed context is supplemental operation evidence, not a regression judgement.",
         ],
     }
 
@@ -80,8 +98,13 @@ def write_runtime_telemetry_history(
     output_path: Path | str,
     *,
     run_ids: list[str] | None = None,
+    orchestrator_feeds: list[Path | str] | None = None,
 ) -> dict[str, Any]:
-    payload = build_runtime_telemetry_history(edgeenv_root, run_ids=run_ids)
+    payload = build_runtime_telemetry_history(
+        edgeenv_root,
+        run_ids=run_ids,
+        orchestrator_feeds=orchestrator_feeds,
+    )
     destination = Path(output_path)
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_text(
@@ -151,6 +174,16 @@ def validate_runtime_telemetry_history(
                 "Runtime telemetry history "
                 f"runs[{index}].runtime_telemetry must be an object: {label}"
             )
+        orchestrator_context = entry.get("orchestrator_operation_context")
+        if orchestrator_context is not None and not isinstance(
+            orchestrator_context,
+            dict,
+        ):
+            raise RuntimeTelemetryHistoryError(
+                "Runtime telemetry history "
+                f"runs[{index}].orchestrator_operation_context must be an object: "
+                f"{label}"
+            )
 
 
 def inspect_runtime_telemetry_history(payload: dict[str, Any]) -> dict[str, Any]:
@@ -175,6 +208,11 @@ def inspect_runtime_telemetry_history(payload: dict[str, Any]) -> dict[str, Any]
         "replay": {
             "run_ids": run_ids,
             "telemetry_fields": _telemetry_fields(runs),
+            "orchestrator_context_run_ids": [
+                entry["run_id"]
+                for entry in runs
+                if isinstance(entry.get("orchestrator_operation_context"), dict)
+            ],
             "first_telemetry_timestamp": min(timestamps) if timestamps else None,
             "last_telemetry_timestamp": max(timestamps) if timestamps else None,
             "execution_sequence_ids": sequence_ids,
@@ -224,13 +262,17 @@ def _load_record_result(record: RegistryRecord) -> RunResult:
         ) from exc
 
 
-def _history_entry(result: RunResult) -> dict[str, Any]:
+def _history_entry(
+    result: RunResult,
+    *,
+    orchestrator_context: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     telemetry = result.runtime_telemetry
     if telemetry is None:
         raise RuntimeTelemetryHistoryError(
             f"Runtime telemetry missing for run: {result.run_id}"
         )
-    return {
+    entry = {
         "run_id": result.run_id,
         "created_at": result.created_at.isoformat(),
         "telemetry_timestamp": telemetry.get("telemetry_timestamp"),
@@ -242,6 +284,94 @@ def _history_entry(result: RunResult) -> dict[str, Any]:
         "metrics": result.metrics.model_dump(mode="json"),
         "runtime_telemetry": telemetry,
     }
+    if orchestrator_context is not None:
+        entry["orchestrator_operation_context"] = orchestrator_context
+    return entry
+
+
+def _load_orchestrator_feeds(
+    orchestrator_feeds: list[Path | str] | None,
+) -> dict[str, dict[str, Any]]:
+    contexts: dict[str, dict[str, Any]] = {}
+    for feed_path in orchestrator_feeds or []:
+        context = _load_orchestrator_feed(feed_path)
+        run_id = context["run_id"]
+        if run_id in contexts:
+            raise RuntimeTelemetryHistoryError(
+                f"Duplicate Orchestrator telemetry feed for run: {run_id}"
+            )
+        contexts[run_id] = context
+    return contexts
+
+
+def _load_orchestrator_feed(feed_path: Path | str) -> dict[str, Any]:
+    source = Path(feed_path)
+    try:
+        payload = json.loads(source.read_text(encoding="utf-8"))
+    except OSError as exc:
+        raise RuntimeTelemetryHistoryError(
+            f"Orchestrator telemetry feed not found: {source}"
+        ) from exc
+    except json.JSONDecodeError as exc:
+        raise RuntimeTelemetryHistoryError(
+            f"Invalid Orchestrator telemetry feed JSON: {source}"
+        ) from exc
+    if not isinstance(payload, dict):
+        raise RuntimeTelemetryHistoryError(
+            f"Orchestrator telemetry feed must be a JSON object: {source}"
+        )
+    schema_version = payload.get("schema_version")
+    if schema_version != ORCHESTRATOR_TELEMETRY_FEED_SCHEMA_VERSION:
+        raise RuntimeTelemetryHistoryError(
+            "Unsupported Orchestrator telemetry feed schema: "
+            f"{schema_version or '<missing>'}"
+        )
+    candidate_context = payload.get("candidate_context")
+    if not isinstance(candidate_context, dict):
+        raise RuntimeTelemetryHistoryError(
+            f"Orchestrator telemetry feed candidate_context must be an object: {source}"
+        )
+    run_id = payload.get("run_id") or candidate_context.get("run_id")
+    if not isinstance(run_id, str) or not run_id:
+        raise RuntimeTelemetryHistoryError(
+            f"Orchestrator telemetry feed run_id must be a string: {source}"
+        )
+    if payload.get("not_a_regression_judgement") is not True:
+        raise RuntimeTelemetryHistoryError(
+            "Orchestrator telemetry feed must declare "
+            "not_a_regression_judgement=true"
+        )
+    if payload.get("not_a_comparability_gate") is not True:
+        raise RuntimeTelemetryHistoryError(
+            "Orchestrator telemetry feed must declare not_a_comparability_gate=true"
+        )
+    return {
+        "schema_version": schema_version,
+        "role": payload.get("role"),
+        "source": payload.get("source"),
+        "run_id": run_id,
+        "not_a_regression_judgement": True,
+        "not_a_comparability_gate": True,
+        "decision_owner": payload.get("decision_owner"),
+        "regression_owner": payload.get("regression_owner"),
+        "candidate_context": deepcopy(candidate_context),
+        "edgeenv_mapping_hint": deepcopy(payload.get("edgeenv_mapping_hint", {})),
+    }
+
+
+def _validate_orchestrator_feed_scope(
+    orchestrator_contexts: dict[str, dict[str, Any]],
+    records: list[RegistryRecord],
+) -> None:
+    if not orchestrator_contexts:
+        return
+    selected_run_ids = {record.run_id for record in records}
+    for run_id in sorted(orchestrator_contexts):
+        if run_id not in selected_run_ids:
+            raise RuntimeTelemetryHistoryError(
+                "Orchestrator telemetry feed run is not selected in this history "
+                f"export: {run_id}"
+            )
 
 
 def _sequence_sort_value(value: Any) -> tuple[int, float | str]:

@@ -244,6 +244,7 @@ def _maybe_runtime_telemetry_context(
             "Runtime telemetry context is supplemental evidence, not a comparability gate.",
             "Missing telemetry is an evidence gap, not a failed benchmark run.",
             "Regression deltas are still gated by same-condition comparability.",
+            "Orchestrator operation context is supplemental evidence, not a regression judgement.",
         ],
     }
     if telemetry_history is not None:
@@ -321,9 +322,28 @@ def _telemetry_run_context(
         context["history_execution_sequence_id"] = history_entry.get(
             "execution_sequence_id"
         )
+        _attach_orchestrator_context(context, history_entry)
     if missing_entry is not None:
         context["history_missing_reason"] = missing_entry.get("reason")
+        _attach_orchestrator_context(context, missing_entry)
     return context
+
+
+def _attach_orchestrator_context(
+    context: dict[str, Any],
+    history_item: dict[str, Any],
+) -> None:
+    orchestrator_context = history_item.get("orchestrator_operation_context")
+    if not isinstance(orchestrator_context, dict):
+        return
+    candidate_context = orchestrator_context.get("candidate_context")
+    if not isinstance(candidate_context, dict):
+        candidate_context = {}
+    context["orchestrator_context_present"] = True
+    context["orchestrator_operation_context"] = orchestrator_context
+    context["orchestrator_available_sections"] = sorted(
+        str(key) for key in candidate_context.keys()
+    )
 
 
 def _telemetry_source(telemetry: dict[str, Any]) -> str | None:
