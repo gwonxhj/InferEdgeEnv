@@ -431,11 +431,27 @@ def test_cli_telemetry_replay_to_regression_smoke(
     assert history_payload["summary"]["missing_telemetry_runs"] == 1
     regression_payload = json.loads(regression_json.read_text(encoding="utf-8"))
     context = regression_payload["runtime_telemetry_context"]
+    assert context["role"] == "supplemental_runtime_telemetry_context"
+    assert context["source"] == "result_artifacts+runtime_telemetry_history"
     assert context["history"]["summary"]["missing_telemetry_runs"] == 1
+    assert context["history"]["summary"]["registered_runs"] == 3
+    assert context["history"]["summary"]["telemetry_runs"] == 2
+    assert context["baseline"]["run_id"] == "baseline"
     assert context["baseline"]["history_entry_present"] is True
+    assert context["baseline"]["execution_sequence_id"] == 1
+    assert context["baseline"]["history_execution_sequence_id"] == 1
+    assert context["candidate"]["run_id"] == "candidate"
     assert context["candidate"]["history_entry_present"] is True
+    assert context["candidate"]["execution_sequence_id"] == 2
+    assert context["candidate"]["history_execution_sequence_id"] == 2
+    assert context["evidence_gaps"] == []
+    assert (
+        "Regression deltas are still gated by same-condition comparability."
+        in context["notes"]
+    )
     assert regression_payload["mode"] == "same-condition"
     assert regression_payload["regression_detected"] is True
+    assert "guard_analysis" not in regression_payload
     markdown = regression_md.read_text(encoding="utf-8")
     assert "## Runtime Telemetry Context" in markdown
     assert "edgeenv.runtime-telemetry-history.v1" in markdown
