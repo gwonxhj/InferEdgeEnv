@@ -98,6 +98,7 @@ def build_run_result(
         ),
         resource_metrics=runner_result.resource_metrics,
         runtime_operation_summary=runner_result.runtime_operation_summary,
+        runtime_telemetry=runner_result.runtime_telemetry,
         env=captured_env,
     )
 
@@ -128,10 +129,17 @@ class ResultArtifactWriter:
             }
         if payload["runtime_operation_summary"] is None:
             del payload["runtime_operation_summary"]
+        if payload["runtime_telemetry"] is None:
+            del payload["runtime_telemetry"]
         (run_dir / "result.json").write_text(
             json.dumps(payload, indent=2),
             encoding="utf-8",
         )
+        if result.runtime_telemetry is not None:
+            (run_dir / "runtime_telemetry.json").write_text(
+                json.dumps(result.runtime_telemetry, indent=2, sort_keys=True),
+                encoding="utf-8",
+            )
         (run_dir / "config.yaml").write_text(
             Path(config_path).read_text(encoding="utf-8"),
             encoding="utf-8",

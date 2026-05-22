@@ -455,6 +455,25 @@ print("EDGEENV_RUNTIME_OPERATION_SUMMARY_JSON=" + json.dumps({
         }
     ],
 }))
+print("EDGEENV_RUNTIME_TELEMETRY_JSON=" + json.dumps({
+    "schema_version": "inferedge-runtime-telemetry-v1",
+    "evidence_role": "runtime_telemetry_seed",
+    "collection_mode": "single_result_export",
+    "telemetry_timestamp": "2026-05-22T00:00:00Z",
+    "execution_sequence_id": 0,
+    "latency": {
+        "mean_ms": 10.0,
+        "p99_ms": 12.0,
+    },
+    "resource": {
+        "telemetry_source": "runtime-result",
+    },
+    "operation": {
+        "timeout_observed": False,
+    },
+    "missing_fields": ["queue_depth"],
+    "production_monitoring": False,
+}))
 print("EDGEENV_METRICS_JSON=" + json.dumps({
     "latency_mean_ms": 10.0,
     "latency_p50_ms": 9.5,
@@ -527,8 +546,20 @@ runtime_tags: [local]
         "Runtime operation summary: stored (source=inferedge-runtime)"
         in run_result.output
     )
+    assert (
+        "Runtime telemetry: stored "
+        "(schema=inferedge-runtime-telemetry-v1, source=runtime-result)"
+        in run_result.output
+    )
     run_dirs = list((edgeenv_root / "runs").iterdir())
     payload = json.loads((run_dirs[0] / "result.json").read_text(encoding="utf-8"))
+    telemetry_sidecar = json.loads(
+        (run_dirs[0] / "runtime_telemetry.json").read_text(encoding="utf-8")
+    )
+    assert payload["runtime_telemetry"]["schema_version"] == (
+        "inferedge-runtime-telemetry-v1"
+    )
+    assert telemetry_sidecar["resource"]["telemetry_source"] == "runtime-result"
     show_result = runner.invoke(
         app,
         [
@@ -550,6 +581,12 @@ runtime_tags: [local]
     assert (
         shown["runtime_operation_summary"]["runtime_events"][0]["event"]
         == "runtime_operation_summary_recorded"
+    )
+    assert shown["runtime_telemetry"]["schema_version"] == (
+        "inferedge-runtime-telemetry-v1"
+    )
+    assert shown["runtime_telemetry"]["resource"]["telemetry_source"] == (
+        "runtime-result"
     )
     resources_result = runner.invoke(
         app,
@@ -642,6 +679,10 @@ runtime_tags: [local]
     assert imported_resources_payload["count"] == 1
     assert imported_resources_payload["results"][0]["run_id"] == payload["run_id"]
     assert imported_resources_payload["results"][0]["source"] == "benchmark-command"
+    imported_telemetry = (
+        imported_root / "runs" / payload["run_id"] / "runtime_telemetry.json"
+    )
+    assert imported_telemetry.is_file()
 
 
 def test_cli_runs_export_creates_evidence_zip(tmp_path, config_files):

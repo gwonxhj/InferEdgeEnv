@@ -20,6 +20,7 @@ class RunnerResult(BaseModel):
     throughput_fps: float
     resource_metrics: ResourceMetrics | None = None
     runtime_operation_summary: dict[str, Any] | None = None
+    runtime_telemetry: dict[str, Any] | None = None
     sampler_summary: SamplerSummary | None = None
     stdout: str
     stderr: str

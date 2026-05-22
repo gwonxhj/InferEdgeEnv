@@ -6,7 +6,7 @@
 
 This document defines the v1.1 design contract for exporting a successful run evidence bundle from `.edgeenv/runs/<run_id>/`, exporting a failed-run diagnostic bundle from `.edgeenv/failed-runs/<run_id>/`, and importing those bundles into another workspace as verifiable evidence.
 
-The current implementation supports successful-run export/import, optional sampler artifact export/import, and failed-run export/import. Replace/alias import policy and detached signatures remain future work.
+The current implementation supports successful-run export/import, optional runtime telemetry sidecar export/import, optional sampler artifact export/import, and failed-run export/import. Replace/alias import policy and detached signatures remain future work.
 
 ## 2. CONTENTS — Files And Stack
 
@@ -18,6 +18,7 @@ Related files:
 - `.edgeenv/runs/<run_id>/env.json` — captured environment evidence
 - `.edgeenv/runs/<run_id>/stdout.log` — captured benchmark stdout
 - `.edgeenv/runs/<run_id>/stderr.log` — captured benchmark stderr
+- `.edgeenv/runs/<run_id>/runtime_telemetry.json` — optional runtime telemetry sidecar evidence
 - `.edgeenv/runs/<run_id>/sampler/metadata.json` — optional sampler metadata extension evidence
 - `.edgeenv/failed-runs/<run_id>/failure.json` — canonical failed-run diagnostic metadata
 - `.edgeenv/runs.db` — local successful-run index, not canonical export evidence
@@ -51,6 +52,7 @@ Source artifact layout:
   env.json
   stdout.log
   stderr.log
+  runtime_telemetry.json  # optional
 ```
 
 The exported zip contains a single top-level directory named with the run id:
@@ -65,6 +67,7 @@ edgeenv-run-<run_id>.zip
     env.json
     stdout.log
     stderr.log
+    runtime_telemetry.json  # optional
 ```
 
 `manifest.json` is generated during export and is not part of the normal run artifact layout.
@@ -134,11 +137,12 @@ Import validates in this order:
 6. Reject path traversal, absolute paths, symlinks, and duplicate archive entries.
 7. Verify each required file exists.
 8. Verify each file checksum and byte size.
-9. Validate `result.json` against `RunResult`.
-10. Require `manifest.run_id == result.run_id`.
-11. Require the archive directory name to match `run_id`.
-12. Copy files into `.edgeenv/runs/<run_id>/` only if the destination does not already exist.
-13. Insert or rebuild the local registry row from `result.json`, with `result_path` pointing at the imported artifact.
+9. Validate optional extension evidence such as `runtime_telemetry.json` and sampler files when present.
+10. Validate `result.json` against `RunResult`.
+11. Require `manifest.run_id == result.run_id`.
+12. Require the archive directory name to match `run_id`.
+13. Copy files into `.edgeenv/runs/<run_id>/` only if the destination does not already exist.
+14. Insert or rebuild the local registry row from `result.json`, with `result_path` pointing at the imported artifact.
 
 ### Registry Policy
 
@@ -197,6 +201,25 @@ Rules:
 
 Detailed storage policy is defined in [Sampler Metadata Artifact Policy](sampler-metadata-artifact-policy.md).
 
+### Runtime Telemetry Extension
+
+Runtime telemetry is optional extension evidence, not a required successful-run file.
+
+Export/import includes this sidecar only when present:
+
+```text
+<run_id>/
+  runtime_telemetry.json
+```
+
+Rules:
+
+- `runtime_telemetry.json` is optional and must never be required for older bundles.
+- If present, it must be a JSON object and may include a string `schema_version`.
+- It must be listed in `manifest.files` with checksum and byte size.
+- Import applies the same path traversal, duplicate entry, checksum, and byte-size validation used for required files.
+- Registry rebuild still uses `result.json`; runtime telemetry must not become a registry source of truth or a live monitoring store.
+
 For real sampled Jetson evidence, [Jetson Sampled Evidence Bundle Handoff](jetson-sampled-evidence-bundle-handoff.md) exports and imports same-condition, runtime-conditional, and target-conditional run bundles, then compares the imported runs to confirm that bundle portability does not change comparability judgement.
 
 [Jetson Sampled Bundle Portability Review](jetson-sampled-bundle-portability-review.md) defines a short Markdown report for people reviewing those bundles. The report summarizes manifest and compare outcomes, but it is not required for import and is not canonical evidence.
@@ -216,6 +239,7 @@ For real sampled Jetson evidence, [Jetson Sampled Evidence Bundle Handoff](jetso
 - Do not export failed-run artifacts through the successful-run bundle contract.
 - Do not import failed-run artifacts into `runs.db` or allow `report compare` to compare them.
 - Do not make optional sampler artifacts required for successful-run import.
+- Do not make optional runtime telemetry required for successful-run import or use it as a comparability gate.
 
 ## 5. WHERE — Related Design Boundaries
 

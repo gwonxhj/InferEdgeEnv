@@ -78,7 +78,7 @@ edgeenv bench run --target examples/profiles/local.yaml --config examples/benche
 edgeenv bench run --target examples/profiles/local.yaml --config examples/benches/local_runtime_adapter.yaml
 ```
 
-The local target executes `command` on the current machine and reads an explicit `EDGEENV_METRICS_JSON=` line from stdout. Local commands may also emit an optional `EDGEENV_RESOURCE_METRICS_JSON=` line for memory, power, energy, or temperature evidence. `bench run` reports whether resource metrics were stored or omitted.
+The local target executes `command` on the current machine and reads an explicit `EDGEENV_METRICS_JSON=` line from stdout. Local commands may also emit optional `EDGEENV_RESOURCE_METRICS_JSON=`, `EDGEENV_RUNTIME_OPERATION_SUMMARY_JSON=`, or `EDGEENV_RUNTIME_TELEMETRY_JSON=` lines for supplemental evidence. `bench run` reports whether resource metrics and runtime telemetry were stored or omitted.
 
 To connect your own benchmark command, start from `examples/scripts/adapter_template.py` when wrapping an existing command, or `examples/scripts/local_benchmark_template.py` when writing the benchmark loop directly. Then review the adapter pattern in [Local Real Benchmark Example Guide](docs/local-real-benchmark-example.md).
 
@@ -130,8 +130,8 @@ edgeenv failed-runs import edgeenv-failed-run-<failed_run_id>.zip
 
 ### 5. Inspect Evidence
 
-`runs show` reads the result artifact and includes resource or runtime operation
-evidence when the local command emits it:
+`runs show` reads the result artifact and includes resource, runtime operation,
+or runtime telemetry evidence when the local command emits it:
 
 ```bash
 edgeenv runs show <run_id>
@@ -153,6 +153,13 @@ edgeenv runs resources list --metric memory_peak_mb --json
   "runtime_operation_summary": {
     "health_reason": "completed",
     "source": "inferedge-runtime"
+  },
+  "runtime_telemetry": {
+    "collection_mode": "single_result_export",
+    "resource": {
+      "telemetry_source": "runtime-result"
+    },
+    "schema_version": "inferedge-runtime-telemetry-v1"
   }
 }
 ```
@@ -170,6 +177,7 @@ English representative path:
 - [EdgeEnv v0.1.5 Follow-up Note](docs/release-follow-up-v0.1.5.md) — current v1-complete release baseline and trusted starting point
 - [Portfolio Demo Path](docs/portfolio-demo-path.md) — reviewer-facing fake/local/compare/export-import/bundle-summary demo path
 - [Local Command Contract Guide](docs/local-command-contract.md) — how to connect your own local benchmark command
+- [Runtime Telemetry History Seed](docs/runtime-telemetry-history.md) — optional runtime telemetry evidence ingestion and replay seed boundary
 - [Compare Workflow Guide](docs/compare-workflow-guide.md) — how to judge comparability before reading metric deltas
 - [Export/Import Design](docs/export-import-design.md) — portable evidence bundle contract
 - [Schema Versioning And Migration Policy](docs/schema-versioning-migration-policy.md) — evidence compatibility and future-version rejection policy
@@ -274,9 +282,12 @@ edgeenv report regression <baseline_run_id> <candidate_run_id> \
   --output-md /tmp/edgeenv-regression.md
 ```
 
-`runtime_operation_summary` remains supplemental run evidence. It is preserved
-in `result.json` and returned by `runs show`, but it is not a required
-same-condition comparability field.
+`runtime_operation_summary` and `runtime_telemetry` remain supplemental run
+evidence. They are preserved in `result.json` and returned by `runs show`, but
+they are not required same-condition comparability fields. Runtime telemetry is
+also written as `runtime_telemetry.json` when present so a run bundle can carry
+history/replay seed evidence without promoting telemetry into a production
+monitoring store.
 
 `report regression` reuses the same comparability gate. It only computes
 mean/p95/p99/FPS/resource deltas for `Comparable: Yes` with
@@ -320,6 +331,7 @@ Reason:
       env.json
       stdout.log
       stderr.log
+      runtime_telemetry.json  # optional
   failed-runs/
     <run_id>/
       failure.json
@@ -335,7 +347,7 @@ Failed local runs are stored under `failed-runs/` for debugging and are not inse
 
 Resource metrics remain canonical in `result.json`. `runs.db` also keeps a rebuildable `resource_metric_index` so `edgeenv runs resources list --metric <name>` can find runs by normalized memory, power, energy, or temperature evidence without turning those values into rankings or comparability gates. Add `--json` when scripts need the same supplemental lookup results with explicit filters, units, and source counts.
 
-Use `edgeenv runs export <run_id> --output edgeenv-run-<run_id>.zip` to create a portable successful-run evidence bundle. Use `edgeenv runs import edgeenv-run-<run_id>.zip` to validate the bundle, copy it into `.edgeenv/runs/`, and rebuild the local registry row.
+Use `edgeenv runs export <run_id> --output edgeenv-run-<run_id>.zip` to create a portable successful-run evidence bundle. Use `edgeenv runs import edgeenv-run-<run_id>.zip` to validate the bundle, copy it into `.edgeenv/runs/`, and rebuild the local registry row. Optional `runtime_telemetry.json` is exported/imported with manifest checksum validation when present.
 
 Use `edgeenv failed-runs export <run_id> --output edgeenv-failed-run-<run_id>.zip` and `edgeenv failed-runs import edgeenv-failed-run-<run_id>.zip` for portable failed-run diagnostic evidence. Failed-run import copies files into `.edgeenv/failed-runs/` and does not update `runs.db`. The artifact-first zip contract is described in [Export/Import Design](docs/export-import-design.md).
 

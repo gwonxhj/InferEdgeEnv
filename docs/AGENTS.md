@@ -14,6 +14,7 @@ README와 설계/운영 문서가 위치하는 영역이다. EdgeEnv가 무엇�
 - `docs/resource-metrics-design.md` — memory/power 같은 optional resource metrics 확장 설계 기준
 - `docs/registry-resource-query-design.md` — resource metrics artifact-first 정책과 rebuildable registry query index 기준
 - `docs/resource-query-rehearsal.md` — local/imported registry에서 `runs resources list` lookup 의미가 유지되는지 검증하는 기록
+- `docs/runtime-telemetry-history.md` — Runtime telemetry를 local-first history/replay seed evidence로 저장하는 기준
 - `docs/platform-sampler-design.md` — platform-specific resource sampler boundary와 future adapter 기준
 - `docs/sampler-adapter-api-design.md` — future `inferedge_env/samplers/` adapter API, metadata schema, failure taxonomy 기준
 - `docs/local-runner-sampler-wiring-design.md` — `LocalRunner`와 sampler adapter lifecycle 연결 방식 기준

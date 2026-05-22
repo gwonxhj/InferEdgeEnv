@@ -204,6 +204,7 @@ def run_benchmark(
         _runtime_operation_summary_status(result.runtime_operation_summary),
         soft_wrap=True,
     )
+    console.print(_runtime_telemetry_status(result.runtime_telemetry), soft_wrap=True)
     if sampler_metadata_path is not None:
         console.print(
             f"Sampler metadata: stored ({sampler_metadata_path})",
@@ -709,6 +710,8 @@ def _show_payload(record: RegistryRecord) -> dict:
         )
     if result.runtime_operation_summary is not None:
         payload["runtime_operation_summary"] = result.runtime_operation_summary
+    if result.runtime_telemetry is not None:
+        payload["runtime_telemetry"] = result.runtime_telemetry
     return payload
 
 
@@ -833,6 +836,19 @@ def _runtime_operation_summary_status(
     if source:
         return f"Runtime operation summary: stored (source={source})"
     return "Runtime operation summary: stored"
+
+
+def _runtime_telemetry_status(runtime_telemetry: dict[str, Any] | None) -> str:
+    if runtime_telemetry is None:
+        return "Runtime telemetry: omitted"
+    schema = runtime_telemetry.get("schema_version")
+    resource = runtime_telemetry.get("resource")
+    source = resource.get("telemetry_source") if isinstance(resource, dict) else None
+    if isinstance(schema, str) and schema and isinstance(source, str) and source:
+        return f"Runtime telemetry: stored (schema={schema}, source={source})"
+    if isinstance(schema, str) and schema:
+        return f"Runtime telemetry: stored (schema={schema})"
+    return "Runtime telemetry: stored"
 
 
 def _resource_metric_lookup_payload(

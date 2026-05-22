@@ -64,6 +64,18 @@ line. When present, it must be a JSON object. EdgeEnv preserves it as
 supplemental run evidence in `result.json` and `runs show`; it does not become a
 same-condition comparability gate.
 
+Optional runtime telemetry:
+
+```text
+EDGEENV_RUNTIME_TELEMETRY_JSON={"schema_version":"inferedge-runtime-telemetry-v1","collection_mode":"single_result_export","resource":{"telemetry_source":"runtime-result"}}
+```
+
+If the command cannot produce structured runtime telemetry, omit this line.
+When present, it must be a JSON object. EdgeEnv preserves it in `result.json`,
+writes an optional `runtime_telemetry.json` sidecar, and includes that sidecar
+in successful-run export/import bundles. This is local replay/regression seed
+evidence, not a cloud monitoring feed or a comparability gate.
+
 ### Template Flow
 
 ```bash
