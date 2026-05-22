@@ -136,6 +136,83 @@ def test_regression_attaches_runtime_telemetry_history_context(
     assert report.evidence["mean_delta_pct"] == 12.0
 
 
+def test_regression_attaches_orchestrator_feed_as_supplemental_context(
+    bench_config,
+    target_profile,
+):
+    baseline = make_result(
+        bench_config,
+        target_profile,
+        run_id="baseline",
+        runner_result=_runner_result(
+            mean=100.0,
+            p95=120.0,
+            p99=130.0,
+            fps=50.0,
+            runtime_telemetry=_runtime_telemetry(sequence_id=1),
+        ),
+    )
+    candidate = make_result(
+        bench_config,
+        target_profile,
+        run_id="candidate",
+        runner_result=_runner_result(
+            mean=112.0,
+            p95=125.0,
+            p99=135.0,
+            fps=48.0,
+            runtime_telemetry=_runtime_telemetry(sequence_id=2),
+        ),
+    )
+    telemetry_history = {
+        "schema_version": "edgeenv.runtime-telemetry-history.v1",
+        "summary": {
+            "registered_runs": 2,
+            "telemetry_runs": 2,
+            "missing_telemetry_runs": 0,
+            "orchestrator_feed_runs": 1,
+        },
+        "runs": [
+            {
+                "run_id": "baseline",
+                "telemetry_timestamp": "2026-05-22T00:00:01Z",
+                "execution_sequence_id": 1,
+            },
+            {
+                "run_id": "candidate",
+                "telemetry_timestamp": "2026-05-22T00:00:02Z",
+                "execution_sequence_id": 2,
+                "orchestrator_operation_context": _orchestrator_context(
+                    "candidate"
+                ),
+            },
+        ],
+        "missing_telemetry": [],
+    }
+
+    report = analyze_regression(
+        baseline,
+        candidate,
+        telemetry_history=telemetry_history,
+    )
+
+    context = report.to_dict()["runtime_telemetry_context"]
+    candidate_context = context["candidate"]
+    assert report.mode == "same-condition"
+    assert report.evidence["mean_delta_pct"] == 12.0
+    assert candidate_context["orchestrator_context_present"] is True
+    assert candidate_context["orchestrator_operation_context"][
+        "not_a_regression_judgement"
+    ] is True
+    assert candidate_context["orchestrator_operation_context"]["candidate_context"][
+        "operation"
+    ]["queue_depth"] == 7
+    assert (
+        "Orchestrator operation context is supplemental evidence, not a regression judgement."
+        in context["notes"]
+    )
+
+
 def test_regression_preserves_replay_sequence_order_mismatch_context(
     bench_config,
     target_profile,
@@ -796,5 +873,36 @@ def _runtime_telemetry(sequence_id: int) -> dict:
         },
         "operation": {
             "timeout_observed": False,
+        },
+    }
+
+
+def _orchestrator_context(run_id: str) -> dict:
+    return {
+        "schema_version": "inferedge-orchestrator-edgeenv-runtime-telemetry-feed-v1",
+        "role": "orchestrator_operation_context_for_edgeenv",
+        "source": "orchestration_summary",
+        "run_id": run_id,
+        "not_a_regression_judgement": True,
+        "not_a_comparability_gate": True,
+        "decision_owner": "lab",
+        "regression_owner": "edgeenv",
+        "candidate_context": {
+            "run_id": run_id,
+            "queue_depth": 7,
+            "operation": {
+                "queue_depth": 7,
+                "deadline_missed_count": 2,
+                "fallback_count": 1,
+            },
+            "resource": {
+                "source": "tegrastats_timeline",
+                "gpu_temperature": 78.5,
+                "ram_used_mb": 2048.0,
+            },
+        },
+        "edgeenv_mapping_hint": {
+            "runtime_telemetry_context_role": "candidate",
+            "copy_candidate_context_to": "runtime_telemetry_context.candidate",
         },
     }

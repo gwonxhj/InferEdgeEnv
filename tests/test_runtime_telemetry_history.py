@@ -10,6 +10,7 @@ from helpers import make_result
 from inferedge_env.cli import app
 from inferedge_env.registry.db import RunRegistry
 from inferedge_env.result.telemetry_history import (
+    ORCHESTRATOR_TELEMETRY_FEED_SCHEMA_VERSION,
     RUNTIME_TELEMETRY_HISTORY_SCHEMA_VERSION,
     RuntimeTelemetryHistoryError,
     build_runtime_telemetry_history,
@@ -56,6 +57,7 @@ def test_build_runtime_telemetry_history_records_entries_and_missing_gaps(
         "registered_runs": 2,
         "telemetry_runs": 1,
         "missing_telemetry_runs": 1,
+        "orchestrator_feed_runs": 0,
     }
     assert payload["runs"][0]["run_id"] == "run-with-telemetry"
     assert payload["runs"][0]["telemetry_timestamp"] == "2026-05-22T00:00:00Z"
@@ -113,6 +115,133 @@ def test_write_runtime_telemetry_history_filters_selected_runs(
     assert payload["runs"][0]["execution_sequence_id"] == 2
 
 
+def test_build_runtime_telemetry_history_attaches_orchestrator_feed_context(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    edgeenv_root = tmp_path / ".edgeenv"
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="candidate",
+        runtime_telemetry=_runtime_telemetry_payload(sequence_id=2),
+    )
+    feed_path = tmp_path / "orchestrator-feed.json"
+    feed_path.write_text(
+        json.dumps(_orchestrator_feed_payload("candidate")),
+        encoding="utf-8",
+    )
+
+    payload = build_runtime_telemetry_history(
+        edgeenv_root,
+        generated_at=datetime(2026, 5, 22, tzinfo=timezone.utc),
+        orchestrator_feeds=[feed_path],
+    )
+
+    assert payload["summary"]["orchestrator_feed_runs"] == 1
+    context = payload["runs"][0]["orchestrator_operation_context"]
+    assert context["schema_version"] == ORCHESTRATOR_TELEMETRY_FEED_SCHEMA_VERSION
+    assert context["not_a_regression_judgement"] is True
+    assert context["not_a_comparability_gate"] is True
+    assert context["decision_owner"] == "lab"
+    assert context["regression_owner"] == "edgeenv"
+    assert context["candidate_context"]["operation"]["queue_depth"] == 7
+    assert context["candidate_context"]["resource"]["gpu_temperature"] == 78.5
+    assert "not a regression judgement" in payload["notes"][3]
+
+
+def test_build_runtime_telemetry_history_rejects_feed_for_unselected_run(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    edgeenv_root = tmp_path / ".edgeenv"
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="candidate",
+        runtime_telemetry=_runtime_telemetry_payload(sequence_id=2),
+    )
+    feed_path = tmp_path / "orchestrator-feed.json"
+    feed_path.write_text(
+        json.dumps(_orchestrator_feed_payload("other-run")),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        RuntimeTelemetryHistoryError,
+        match="Orchestrator telemetry feed run is not selected",
+    ):
+        build_runtime_telemetry_history(
+            edgeenv_root,
+            orchestrator_feeds=[feed_path],
+        )
+
+
+def test_cli_runs_telemetry_export_history_attaches_orchestrator_feed(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    runner = CliRunner()
+    edgeenv_root = tmp_path / ".edgeenv"
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="candidate",
+        runtime_telemetry=_runtime_telemetry_payload(sequence_id=2),
+    )
+    output_path = tmp_path / "runtime-telemetry-history.json"
+    feed_path = tmp_path / "orchestrator-feed.json"
+    feed_path.write_text(
+        json.dumps(_orchestrator_feed_payload("candidate")),
+        encoding="utf-8",
+    )
+
+    export_result = runner.invoke(
+        app,
+        [
+            "runs",
+            "telemetry",
+            "export-history",
+            "--output",
+            str(output_path),
+            "--edgeenv-root",
+            str(edgeenv_root),
+            "--orchestrator-feed",
+            str(feed_path),
+        ],
+    )
+    inspect_result = runner.invoke(
+        app,
+        [
+            "runs",
+            "telemetry",
+            "inspect-history",
+            str(output_path),
+        ],
+    )
+
+    assert export_result.exit_code == 0, export_result.output
+    assert "Orchestrator context entries: 1" in export_result.output
+    assert inspect_result.exit_code == 0, inspect_result.output
+    assert "Orchestrator context runs: 1" in inspect_result.output
+    payload = json.loads(output_path.read_text(encoding="utf-8"))
+    assert payload["runs"][0]["orchestrator_operation_context"]["run_id"] == (
+        "candidate"
+    )
+
+
 def test_inspect_runtime_telemetry_history_reports_replay_summary(
     tmp_path,
     bench_config,
@@ -156,6 +285,7 @@ def test_inspect_runtime_telemetry_history_reports_replay_summary(
     assert summary["replay"]["missing_run_ids"] == ["run-without-telemetry"]
     assert "latency" in summary["replay"]["telemetry_fields"]
     assert "operation" in summary["replay"]["telemetry_fields"]
+    assert summary["replay"]["orchestrator_context_run_ids"] == []
     assert "not production monitoring" in summary["notes"][2]
 
 
@@ -359,4 +489,44 @@ def _runtime_telemetry_payload(sequence_id: int = 7) -> dict:
         },
         "missing_fields": ["queue_depth"],
         "production_monitoring": False,
+    }
+
+
+def _orchestrator_feed_payload(run_id: str) -> dict:
+    return {
+        "schema_version": ORCHESTRATOR_TELEMETRY_FEED_SCHEMA_VERSION,
+        "role": "orchestrator_operation_context_for_edgeenv",
+        "source": "orchestration_summary",
+        "run_id": run_id,
+        "not_a_regression_judgement": True,
+        "not_a_comparability_gate": True,
+        "decision_owner": "lab",
+        "regression_owner": "edgeenv",
+        "candidate_context": {
+            "run_id": run_id,
+            "result_telemetry_present": True,
+            "history_entry_present": True,
+            "telemetry_source": "inferedge_orchestrator_operation_summary",
+            "available_sections": [
+                "operation",
+                "resource",
+                "queue_state_summary",
+            ],
+            "queue_depth": 7,
+            "operation": {
+                "queue_depth": 7,
+                "deadline_missed_count": 2,
+                "fallback_count": 1,
+            },
+            "resource": {
+                "source": "tegrastats_timeline",
+                "resource_evidence_available": True,
+                "gpu_temperature": 78.5,
+                "ram_used_mb": 2048.0,
+            },
+        },
+        "edgeenv_mapping_hint": {
+            "runtime_telemetry_context_role": "candidate",
+            "copy_candidate_context_to": "runtime_telemetry_context.candidate",
+        },
     }
