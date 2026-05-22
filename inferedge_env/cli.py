@@ -625,6 +625,14 @@ def regression_report(
         "--output-md",
         help="Optional path to write the Markdown regression report.",
     ),
+    telemetry_history: Path | None = typer.Option(
+        None,
+        "--telemetry-history",
+        help=(
+            "Optional runtime telemetry history JSON artifact to attach as "
+            "supplemental regression context."
+        ),
+    ),
 ) -> None:
     """Generate comparability-first runtime regression evidence."""
     registry = RunRegistry(edgeenv_root / "runs.db")
@@ -636,7 +644,12 @@ def regression_report(
 
     baseline = load_result(baseline_record.result_path)
     candidate = load_result(candidate_record.result_path)
-    report = analyze_regression(baseline, candidate)
+    telemetry_history_payload = _load_telemetry_history_payload(telemetry_history)
+    report = analyze_regression(
+        baseline,
+        candidate,
+        telemetry_history=telemetry_history_payload,
+    )
     payload = report.to_dict()
 
     if output_json is not None:
@@ -673,6 +686,8 @@ def regression_report(
         console.print(f"- Mode: {report.comparability.mode}")
     for reason in report.comparability.reasons:
         console.print(f"- {reason}")
+    if report.runtime_telemetry_context is not None:
+        _print_runtime_telemetry_context(report.runtime_telemetry_context)
     if report.comparable and report.mode == "same-condition":
         console.print("Regression Evidence:")
         _print_regression_evidence(report.evidence)
@@ -758,6 +773,21 @@ def _show_payload(record: RegistryRecord) -> dict:
         payload["runtime_operation_summary"] = result.runtime_operation_summary
     if result.runtime_telemetry is not None:
         payload["runtime_telemetry"] = result.runtime_telemetry
+    return payload
+
+
+def _load_telemetry_history_payload(path: Path | None) -> dict[str, Any] | None:
+    if path is None:
+        return None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        _fail(str(exc), hint=_telemetry_history_input_error_hint(str(exc)))
+    if not isinstance(payload, dict):
+        _fail(
+            f"Runtime telemetry history must be a JSON object: {path}",
+            hint=_telemetry_history_input_error_hint("not a JSON object"),
+        )
     return payload
 
 
@@ -996,6 +1026,39 @@ def _print_regression_evidence(evidence: dict[str, Any]) -> None:
         )
 
 
+def _print_runtime_telemetry_context(context: dict[str, Any]) -> None:
+    console.print("Runtime Telemetry Context:")
+    baseline = context.get("baseline", {})
+    candidate = context.get("candidate", {})
+    if isinstance(baseline, dict):
+        console.print(
+            "- baseline: "
+            f"present={str(bool(baseline.get('result_telemetry_present'))).lower()}, "
+            f"history={str(bool(baseline.get('history_entry_present'))).lower()}",
+            soft_wrap=True,
+        )
+    if isinstance(candidate, dict):
+        console.print(
+            "- candidate: "
+            f"present={str(bool(candidate.get('result_telemetry_present'))).lower()}, "
+            f"history={str(bool(candidate.get('history_entry_present'))).lower()}",
+            soft_wrap=True,
+        )
+    gaps = context.get("evidence_gaps", [])
+    if gaps:
+        console.print("- evidence_gaps:")
+        for gap in gaps:
+            if not isinstance(gap, dict):
+                continue
+            console.print(
+                f"  - {gap.get('run_id')}: {gap.get('reason')}",
+                soft_wrap=True,
+            )
+    else:
+        console.print("- evidence_gaps: none")
+    console.print("- role: supplemental context, not a comparability gate")
+
+
 def _metric_delta_line(field: str, left: float, right: float, unit: str) -> str:
     delta = right - left
     percent = _format_percent_delta(left, delta)
@@ -1127,6 +1190,19 @@ def _telemetry_history_error_hint(message: str) -> str:
     return (
         "Telemetry history export reads local result artifacts and optional "
         "runtime_telemetry evidence; missing telemetry is recorded as an evidence gap."
+    )
+
+
+def _telemetry_history_input_error_hint(message: str) -> str:
+    if "No such file" in message:
+        return (
+            "Create a history artifact first with "
+            "`edgeenv runs telemetry export-history --output <path>`."
+        )
+    return (
+        "Pass a JSON artifact produced by "
+        "`edgeenv runs telemetry export-history`; telemetry context remains "
+        "supplemental and never bypasses comparability."
     )
 
 

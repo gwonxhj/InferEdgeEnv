@@ -65,6 +65,7 @@ runtime regression evidence가 필요하면 같은 comparability gate를 재사�
 
 ```bash
 edgeenv report regression <baseline_run_id> <candidate_run_id> \
+  --telemetry-history /tmp/edgeenv-runtime-telemetry-history.json \
   --output-json /tmp/edgeenv-regression.json \
   --output-md /tmp/edgeenv-regression.md
 ```
@@ -74,6 +75,10 @@ delta를 계산한다. runtime/provider 또는 target 차이는 각각
 `runtime-comparison`, `target-comparison`으로 표시하고, benchmark protocol
 mismatch는 `protocol_mismatch`로 표시한다. 이 기능은 local regression
 evidence이지 cloud monitoring, public leaderboard, production observability가 아니다.
+
+runtime telemetry history artifact가 있으면 `--telemetry-history`로 연결해
+report에 telemetry coverage와 evidence gap을 보조 context로 첨부할 수 있다.
+이 context는 same-condition comparability gate를 우회하지 않는다.
 
 ## EdgeEnv가 아닌 것
 

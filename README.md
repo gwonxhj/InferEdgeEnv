@@ -279,6 +279,7 @@ machine-readable evidence for a baseline/candidate pair:
 
 ```bash
 edgeenv report regression <baseline_run_id> <candidate_run_id> \
+  --telemetry-history /tmp/edgeenv-runtime-telemetry-history.json \
   --output-json /tmp/edgeenv-regression.json \
   --output-md /tmp/edgeenv-regression.md
 ```
@@ -303,6 +304,11 @@ as `protocol_mismatch` with a rerun recommendation. The default starter policy
 marks mean latency +15%, p99 +25%, FPS -20%, and memory peak +30% as review or
 warning evidence. This is local regression evidence, not cloud monitoring,
 ranking, or production observability.
+
+When `--telemetry-history` is provided, `report regression` attaches runtime
+telemetry coverage and evidence-gap context to the JSON/Markdown report. This
+context is supplemental; it does not make non-comparable runs eligible for
+regression delta calculation.
 
 If required fields differ, EdgeEnv reports:
 

@@ -25,9 +25,10 @@ class RegressionReport:
     evidence: dict[str, Any]
     recommendation: str
     comparability: ComparabilityReport
+    runtime_telemetry_context: dict[str, Any] | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        payload = {
             "baseline_run_id": self.baseline_run_id,
             "candidate_run_id": self.candidate_run_id,
             "regression_detected": self.regression_detected,
@@ -43,13 +44,23 @@ class RegressionReport:
                 "reasons": self.comparability.reasons,
             },
         }
+        if self.runtime_telemetry_context is not None:
+            payload["runtime_telemetry_context"] = self.runtime_telemetry_context
+        return payload
 
 
 def analyze_regression(
     baseline: RunResult,
     candidate: RunResult,
+    *,
+    telemetry_history: dict[str, Any] | None = None,
 ) -> RegressionReport:
     comparability = check_comparability(baseline, candidate)
+    runtime_telemetry_context = _maybe_runtime_telemetry_context(
+        baseline,
+        candidate,
+        telemetry_history,
+    )
     if comparability.comparable != "Yes" or comparability.mode != "same-condition":
         mode = _blocked_mode(comparability)
         return RegressionReport(
@@ -66,6 +77,7 @@ def analyze_regression(
             },
             recommendation=_blocked_recommendation(mode),
             comparability=comparability,
+            runtime_telemetry_context=runtime_telemetry_context,
         )
 
     evidence = _same_condition_evidence(baseline, candidate)
@@ -90,6 +102,7 @@ def analyze_regression(
         },
         recommendation=recommendation,
         comparability=comparability,
+        runtime_telemetry_context=runtime_telemetry_context,
     )
 
 
@@ -117,6 +130,17 @@ def render_regression_markdown(report: RegressionReport) -> str:
         "Reasons:",
     ]
     lines.extend(f"- {reason}" for reason in report.comparability.reasons)
+    if report.runtime_telemetry_context is not None:
+        lines.extend(
+            [
+                "",
+                "## Runtime Telemetry Context",
+                "",
+                "```json",
+                _json_dumps(report.runtime_telemetry_context),
+                "```",
+            ]
+        )
     lines.extend(
         [
             "",
@@ -178,6 +202,158 @@ def _metrics_payload(result: RunResult) -> dict[str, Any]:
     if result.resource_metrics is not None:
         payload["memory_peak_mb"] = result.resource_metrics.memory_peak_mb
     return payload
+
+
+def _maybe_runtime_telemetry_context(
+    baseline: RunResult,
+    candidate: RunResult,
+    telemetry_history: dict[str, Any] | None,
+) -> dict[str, Any] | None:
+    if (
+        telemetry_history is None
+        and baseline.runtime_telemetry is None
+        and candidate.runtime_telemetry is None
+    ):
+        return None
+    history_entries = _history_entries_by_run_id(telemetry_history)
+    history_missing = _history_missing_by_run_id(telemetry_history)
+    baseline_context = _telemetry_run_context(
+        baseline,
+        history_entries.get(baseline.run_id),
+        history_missing.get(baseline.run_id),
+    )
+    candidate_context = _telemetry_run_context(
+        candidate,
+        history_entries.get(candidate.run_id),
+        history_missing.get(candidate.run_id),
+    )
+    evidence_gaps = _telemetry_gaps(baseline_context) + _telemetry_gaps(
+        candidate_context
+    )
+    context: dict[str, Any] = {
+        "role": "supplemental_runtime_telemetry_context",
+        "source": (
+            "result_artifacts+runtime_telemetry_history"
+            if telemetry_history is not None
+            else "result_artifacts"
+        ),
+        "baseline": baseline_context,
+        "candidate": candidate_context,
+        "evidence_gaps": evidence_gaps,
+        "notes": [
+            "Runtime telemetry context is supplemental evidence, not a comparability gate.",
+            "Missing telemetry is an evidence gap, not a failed benchmark run.",
+            "Regression deltas are still gated by same-condition comparability.",
+        ],
+    }
+    if telemetry_history is not None:
+        context["history"] = {
+            "schema_version": telemetry_history.get("schema_version"),
+            "summary": telemetry_history.get("summary", {}),
+        }
+    return context
+
+
+def _history_entries_by_run_id(
+    telemetry_history: dict[str, Any] | None,
+) -> dict[str, dict[str, Any]]:
+    if telemetry_history is None:
+        return {}
+    entries: dict[str, dict[str, Any]] = {}
+    runs = telemetry_history.get("runs", [])
+    if not isinstance(runs, list):
+        return entries
+    for entry in runs:
+        if not isinstance(entry, dict):
+            continue
+        run_id = entry.get("run_id")
+        if isinstance(run_id, str):
+            entries[run_id] = entry
+    return entries
+
+
+def _history_missing_by_run_id(
+    telemetry_history: dict[str, Any] | None,
+) -> dict[str, dict[str, Any]]:
+    if telemetry_history is None:
+        return {}
+    missing: dict[str, dict[str, Any]] = {}
+    items = telemetry_history.get("missing_telemetry", [])
+    if not isinstance(items, list):
+        return missing
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        run_id = item.get("run_id")
+        if isinstance(run_id, str):
+            missing[run_id] = item
+    return missing
+
+
+def _telemetry_run_context(
+    result: RunResult,
+    history_entry: dict[str, Any] | None,
+    missing_entry: dict[str, Any] | None,
+) -> dict[str, Any]:
+    telemetry = result.runtime_telemetry
+    context: dict[str, Any] = {
+        "run_id": result.run_id,
+        "result_telemetry_present": telemetry is not None,
+        "history_entry_present": history_entry is not None,
+        "history_missing_recorded": missing_entry is not None,
+    }
+    if telemetry is not None:
+        context.update(
+            {
+                "schema_version": telemetry.get("schema_version"),
+                "telemetry_timestamp": telemetry.get("telemetry_timestamp"),
+                "execution_sequence_id": telemetry.get("execution_sequence_id"),
+                "telemetry_source": _telemetry_source(telemetry),
+                "available_sections": sorted(
+                    key for key in telemetry.keys() if key != "schema_version"
+                ),
+            }
+        )
+    if history_entry is not None:
+        context["history_telemetry_timestamp"] = history_entry.get(
+            "telemetry_timestamp"
+        )
+        context["history_execution_sequence_id"] = history_entry.get(
+            "execution_sequence_id"
+        )
+    if missing_entry is not None:
+        context["history_missing_reason"] = missing_entry.get("reason")
+    return context
+
+
+def _telemetry_source(telemetry: dict[str, Any]) -> str | None:
+    resource = telemetry.get("resource")
+    if not isinstance(resource, dict):
+        return None
+    source = resource.get("telemetry_source")
+    return source if isinstance(source, str) else None
+
+
+def _telemetry_gaps(context: dict[str, Any]) -> list[dict[str, str]]:
+    gaps: list[dict[str, str]] = []
+    if not context["result_telemetry_present"]:
+        gaps.append(
+            {
+                "run_id": context["run_id"],
+                "reason": "runtime_telemetry_missing_in_result",
+            }
+        )
+    if context["history_missing_recorded"]:
+        gaps.append(
+            {
+                "run_id": context["run_id"],
+                "reason": str(
+                    context.get("history_missing_reason")
+                    or "runtime_telemetry_missing_in_history"
+                ),
+            }
+        )
+    return gaps
 
 
 def _resource_percent_delta(

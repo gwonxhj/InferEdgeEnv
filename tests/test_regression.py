@@ -64,6 +64,109 @@ def test_regression_detects_same_condition_latency_and_resource_regression(
     assert "memory_peak_warning" in triggered
 
 
+def test_regression_attaches_runtime_telemetry_history_context(
+    bench_config,
+    target_profile,
+):
+    baseline = make_result(
+        bench_config,
+        target_profile,
+        run_id="baseline",
+        runner_result=_runner_result(
+            mean=100.0,
+            p95=120.0,
+            p99=130.0,
+            fps=50.0,
+            runtime_telemetry=_runtime_telemetry(sequence_id=1),
+        ),
+    )
+    candidate = make_result(
+        bench_config,
+        target_profile,
+        run_id="candidate",
+        runner_result=_runner_result(
+            mean=112.0,
+            p95=125.0,
+            p99=135.0,
+            fps=48.0,
+            runtime_telemetry=_runtime_telemetry(sequence_id=2),
+        ),
+    )
+    telemetry_history = {
+        "schema_version": "edgeenv.runtime-telemetry-history.v1",
+        "summary": {
+            "registered_runs": 2,
+            "telemetry_runs": 2,
+            "missing_telemetry_runs": 0,
+        },
+        "runs": [
+            {
+                "run_id": "baseline",
+                "telemetry_timestamp": "2026-05-22T00:00:01Z",
+                "execution_sequence_id": 1,
+            },
+            {
+                "run_id": "candidate",
+                "telemetry_timestamp": "2026-05-22T00:00:02Z",
+                "execution_sequence_id": 2,
+            },
+        ],
+        "missing_telemetry": [],
+    }
+
+    report = analyze_regression(
+        baseline,
+        candidate,
+        telemetry_history=telemetry_history,
+    )
+
+    payload = report.to_dict()
+    context = payload["runtime_telemetry_context"]
+    assert context["source"] == "result_artifacts+runtime_telemetry_history"
+    assert context["history"]["schema_version"] == (
+        "edgeenv.runtime-telemetry-history.v1"
+    )
+    assert context["baseline"]["result_telemetry_present"] is True
+    assert context["baseline"]["history_entry_present"] is True
+    assert context["candidate"]["execution_sequence_id"] == 2
+    assert context["evidence_gaps"] == []
+    assert report.evidence["mean_delta_pct"] == 12.0
+
+
+def test_regression_records_runtime_telemetry_evidence_gap(
+    bench_config,
+    target_profile,
+):
+    baseline = make_result(
+        bench_config,
+        target_profile,
+        run_id="baseline",
+        runner_result=_runner_result(
+            mean=100.0,
+            p95=120.0,
+            p99=130.0,
+            fps=50.0,
+            runtime_telemetry=_runtime_telemetry(sequence_id=1),
+        ),
+    )
+    candidate = make_result(
+        bench_config,
+        target_profile,
+        run_id="candidate",
+        runner_result=_runner_result(mean=112.0, p95=125.0, p99=135.0, fps=48.0),
+    )
+
+    report = analyze_regression(baseline, candidate)
+
+    assert report.runtime_telemetry_context is not None
+    assert report.runtime_telemetry_context["evidence_gaps"] == [
+        {
+            "run_id": "candidate",
+            "reason": "runtime_telemetry_missing_in_result",
+        }
+    ]
+
+
 def test_regression_suppresses_delta_for_protocol_mismatch(
     bench_config,
     target_profile,
@@ -80,6 +183,7 @@ def test_regression_suppresses_delta_for_protocol_mismatch(
     assert report.regression_type == "not_evaluated"
     assert report.recommendation == "rerun_with_matching_protocol"
     assert "Different repeat runs" in report.evidence["comparability_reasons"]
+    assert report.runtime_telemetry_context is None
 
 
 def test_regression_cli_writes_json_and_markdown_reports(
@@ -139,6 +243,93 @@ def test_regression_cli_writes_json_and_markdown_reports(
     assert "`review_required`" in markdown
 
 
+def test_regression_cli_attaches_runtime_telemetry_history_context(
+    tmp_path,
+    bench_config,
+    target_profile,
+):
+    runner = CliRunner()
+    edgeenv_root = tmp_path / ".edgeenv"
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        "baseline",
+        _runner_result(
+            mean=100.0,
+            p95=120.0,
+            p99=130.0,
+            fps=50.0,
+            runtime_telemetry=_runtime_telemetry(sequence_id=1),
+        ),
+    )
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        "candidate",
+        _runner_result(
+            mean=118.0,
+            p95=132.0,
+            p99=171.6,
+            fps=39.0,
+            runtime_telemetry=_runtime_telemetry(sequence_id=2),
+        ),
+    )
+    history_path = tmp_path / "runtime-telemetry-history.json"
+    history_path.write_text(
+        json.dumps(
+            {
+                "schema_version": "edgeenv.runtime-telemetry-history.v1",
+                "summary": {
+                    "registered_runs": 2,
+                    "telemetry_runs": 2,
+                    "missing_telemetry_runs": 0,
+                },
+                "runs": [
+                    {"run_id": "baseline", "execution_sequence_id": 1},
+                    {"run_id": "candidate", "execution_sequence_id": 2},
+                ],
+                "missing_telemetry": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    json_path = tmp_path / "regression.json"
+    md_path = tmp_path / "regression.md"
+
+    result = runner.invoke(
+        app,
+        [
+            "report",
+            "regression",
+            "baseline",
+            "candidate",
+            "--edgeenv-root",
+            str(edgeenv_root),
+            "--telemetry-history",
+            str(history_path),
+            "--output-json",
+            str(json_path),
+            "--output-md",
+            str(md_path),
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "Runtime Telemetry Context:" in result.output
+    assert "- baseline: present=true, history=true" in result.output
+    assert "- candidate: present=true, history=true" in result.output
+    assert "- evidence_gaps: none" in result.output
+    payload = json.loads(json_path.read_text(encoding="utf-8"))
+    assert payload["runtime_telemetry_context"]["candidate"][
+        "history_entry_present"
+    ] is True
+    markdown = md_path.read_text(encoding="utf-8")
+    assert "## Runtime Telemetry Context" in markdown
+    assert "edgeenv.runtime-telemetry-history.v1" in markdown
+
+
 def test_regression_cli_marks_runtime_comparison_not_evaluated(
     tmp_path,
     bench_config,
@@ -190,6 +381,7 @@ def _runner_result(
     p99: float,
     fps: float,
     memory_peak_mb: float | None = None,
+    runtime_telemetry: dict | None = None,
 ) -> RunnerResult:
     return RunnerResult(
         latency_mean_ms=mean,
@@ -202,6 +394,7 @@ def _runner_result(
             if memory_peak_mb is not None
             else None
         ),
+        runtime_telemetry=runtime_telemetry,
         stdout="stdout\n",
         stderr="",
     )
@@ -233,3 +426,21 @@ def _write_registered_run(
         stderr="stderr\n",
     )
     RunRegistry(edgeenv_root / "runs.db").insert(result, run_dir / "result.json")
+
+
+def _runtime_telemetry(sequence_id: int) -> dict:
+    return {
+        "schema_version": "inferedge-runtime-telemetry-v1",
+        "telemetry_timestamp": f"2026-05-22T00:00:0{sequence_id}Z",
+        "execution_sequence_id": sequence_id,
+        "latency": {
+            "mean_ms": 100.0 + sequence_id,
+            "p99_ms": 130.0 + sequence_id,
+        },
+        "resource": {
+            "telemetry_source": "runtime-result",
+        },
+        "operation": {
+            "timeout_observed": False,
+        },
+    }
