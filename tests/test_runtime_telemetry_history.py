@@ -13,6 +13,8 @@ from inferedge_env.result.telemetry_history import (
     RUNTIME_TELEMETRY_HISTORY_SCHEMA_VERSION,
     RuntimeTelemetryHistoryError,
     build_runtime_telemetry_history,
+    inspect_runtime_telemetry_history,
+    load_runtime_telemetry_history,
     write_runtime_telemetry_history,
 )
 from inferedge_env.result.writer import ResultArtifactWriter
@@ -111,6 +113,73 @@ def test_write_runtime_telemetry_history_filters_selected_runs(
     assert payload["runs"][0]["execution_sequence_id"] == 2
 
 
+def test_inspect_runtime_telemetry_history_reports_replay_summary(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    edgeenv_root = tmp_path / ".edgeenv"
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="run-without-telemetry",
+    )
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="run-a",
+        runtime_telemetry=_runtime_telemetry_payload(sequence_id=1),
+    )
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="run-b",
+        runtime_telemetry=_runtime_telemetry_payload(sequence_id=2),
+    )
+    payload = build_runtime_telemetry_history(edgeenv_root)
+
+    summary = inspect_runtime_telemetry_history(payload)
+
+    assert summary["valid"] is True
+    assert summary["schema_version"] == RUNTIME_TELEMETRY_HISTORY_SCHEMA_VERSION
+    assert summary["replay"]["run_ids"] == ["run-a", "run-b"]
+    assert summary["replay"]["execution_sequence_ids"] == [1, 2]
+    assert summary["replay"]["sequence_monotonic"] is True
+    assert summary["replay"]["evidence_gap_count"] == 1
+    assert summary["replay"]["missing_run_ids"] == ["run-without-telemetry"]
+    assert "latency" in summary["replay"]["telemetry_fields"]
+    assert "operation" in summary["replay"]["telemetry_fields"]
+    assert "not production monitoring" in summary["notes"][2]
+
+
+def test_load_runtime_telemetry_history_rejects_unknown_schema(tmp_path):
+    history_path = tmp_path / "history.json"
+    history_path.write_text(
+        json.dumps(
+            {
+                "schema_version": "edgeenv.runtime-telemetry-history.v0",
+                "summary": {},
+                "runs": [],
+                "missing_telemetry": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        RuntimeTelemetryHistoryError,
+        match="Unsupported runtime telemetry history schema",
+    ):
+        load_runtime_telemetry_history(history_path)
+
+
 def test_build_runtime_telemetry_history_rejects_unknown_selected_run(tmp_path):
     with pytest.raises(RuntimeTelemetryHistoryError, match="Run not found: missing-run"):
         build_runtime_telemetry_history(
@@ -157,6 +226,89 @@ def test_cli_runs_telemetry_export_history_writes_replay_artifact(
     payload = json.loads(output_path.read_text(encoding="utf-8"))
     assert payload["summary"]["telemetry_runs"] == 1
     assert payload["runs"][0]["run_id"] == "run-cli-telemetry"
+
+
+def test_cli_runs_telemetry_inspect_history_validates_replay_artifact(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    runner = CliRunner()
+    edgeenv_root = tmp_path / ".edgeenv"
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="run-cli-without-telemetry",
+    )
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="run-cli-telemetry",
+        runtime_telemetry=_runtime_telemetry_payload(),
+    )
+    output_path = tmp_path / "runtime-telemetry-history.json"
+    write_runtime_telemetry_history(edgeenv_root, output_path)
+
+    result = runner.invoke(
+        app,
+        [
+            "runs",
+            "telemetry",
+            "inspect-history",
+            str(output_path),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Runtime telemetry history valid" in result.output
+    assert "Replay runs: 1" in result.output
+    assert "Telemetry fields:" in result.output
+    assert "latency" in result.output
+    assert "Evidence gaps: 1" in result.output
+    assert "run-cli-without-telemetry" in result.output
+    assert "not production monitoring" in result.output
+
+
+def test_cli_runs_telemetry_inspect_history_json_output(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    runner = CliRunner()
+    edgeenv_root = tmp_path / ".edgeenv"
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="run-cli-json",
+        runtime_telemetry=_runtime_telemetry_payload(sequence_id=3),
+    )
+    output_path = tmp_path / "runtime-telemetry-history.json"
+    write_runtime_telemetry_history(edgeenv_root, output_path)
+
+    result = runner.invoke(
+        app,
+        [
+            "runs",
+            "telemetry",
+            "inspect-history",
+            str(output_path),
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads(result.output)
+    assert payload["valid"] is True
+    assert payload["replay"]["run_ids"] == ["run-cli-json"]
+    assert payload["replay"]["execution_sequence_ids"] == [3]
 
 
 def _write_registered_run(
