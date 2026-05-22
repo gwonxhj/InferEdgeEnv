@@ -116,6 +116,20 @@ If a runtime telemetry history artifact is available, pass
 regression report. Telemetry context remains supplemental evidence; it never
 bypasses the same-condition comparability gate.
 
+Committed replay-context examples are available when downstream tools need a
+small EdgeEnv-owned fixture without running a benchmark:
+
+- `examples/regression/edgeenv_candidate_telemetry_gap.json` shows a comparable
+  same-condition report where the candidate run is missing runtime telemetry in
+  both the result artifact and telemetry history.
+- `examples/regression/edgeenv_sequence_inversion.json` shows a comparable
+  same-condition report where baseline/candidate `execution_sequence_id` order
+  is inverted in the replay context.
+
+These examples intentionally do not include `guard_analysis` or a deployment
+decision. EdgeEnv owns the registry, replay context, comparability judgement,
+and regression evidence; AIGuard and Lab consume the artifact later.
+
 Default starter thresholds:
 
 | Signal | Threshold | Meaning |

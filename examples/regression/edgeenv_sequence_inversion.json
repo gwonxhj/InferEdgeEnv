@@ -1,0 +1,94 @@
+{
+  "baseline_run_id": "baseline",
+  "candidate_run_id": "candidate",
+  "regression_detected": false,
+  "regression_type": "none",
+  "severity": "none",
+  "comparable": true,
+  "mode": "same-condition",
+  "evidence": {
+    "mean_delta_pct": 12.0,
+    "p95_delta_pct": 4.166667,
+    "p99_delta_pct": 3.846154,
+    "fps_delta_pct": -4.0,
+    "memory_peak_delta_pct": 5.0,
+    "baseline": {
+      "latency_mean_ms": 100.0,
+      "latency_p95_ms": 120.0,
+      "latency_p99_ms": 130.0,
+      "throughput_fps": 50.0,
+      "memory_peak_mb": 512.0
+    },
+    "candidate": {
+      "latency_mean_ms": 112.0,
+      "latency_p95_ms": 125.0,
+      "latency_p99_ms": 135.0,
+      "throughput_fps": 48.0,
+      "memory_peak_mb": 537.6
+    },
+    "triggered_thresholds": []
+  },
+  "recommendation": "no_action_required",
+  "comparability": {
+    "comparable": "Yes",
+    "mode": "same-condition",
+    "reasons": [
+      "Required comparison fields match.",
+      "Runtime/provider/target fields match."
+    ]
+  },
+  "runtime_telemetry_context": {
+    "role": "supplemental_runtime_telemetry_context",
+    "source": "result_artifacts+runtime_telemetry_history",
+    "baseline": {
+      "run_id": "baseline",
+      "result_telemetry_present": true,
+      "history_entry_present": true,
+      "history_missing_recorded": false,
+      "schema_version": "edgeenv.runtime-telemetry.v1",
+      "telemetry_timestamp": "2026-05-22T00:00:05Z",
+      "execution_sequence_id": 5,
+      "telemetry_source": "synthetic_local_fixture",
+      "available_sections": [
+        "execution_sequence_id",
+        "latency",
+        "resource",
+        "telemetry_timestamp"
+      ],
+      "history_telemetry_timestamp": "2026-05-22T00:00:05Z",
+      "history_execution_sequence_id": 5
+    },
+    "candidate": {
+      "run_id": "candidate",
+      "result_telemetry_present": true,
+      "history_entry_present": true,
+      "history_missing_recorded": false,
+      "schema_version": "edgeenv.runtime-telemetry.v1",
+      "telemetry_timestamp": "2026-05-22T00:00:02Z",
+      "execution_sequence_id": 2,
+      "telemetry_source": "synthetic_local_fixture",
+      "available_sections": [
+        "execution_sequence_id",
+        "latency",
+        "resource",
+        "telemetry_timestamp"
+      ],
+      "history_telemetry_timestamp": "2026-05-22T00:00:02Z",
+      "history_execution_sequence_id": 2
+    },
+    "evidence_gaps": [],
+    "notes": [
+      "Runtime telemetry context is supplemental evidence, not a comparability gate.",
+      "Missing telemetry is an evidence gap, not a failed benchmark run.",
+      "Regression deltas are still gated by same-condition comparability."
+    ],
+    "history": {
+      "schema_version": "edgeenv.runtime-telemetry-history.v1",
+      "summary": {
+        "registered_runs": 2,
+        "telemetry_runs": 2,
+        "missing_telemetry_runs": 0
+      }
+    }
+  }
+}

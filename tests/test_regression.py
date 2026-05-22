@@ -16,6 +16,9 @@ from inferedge_env.runners.base import RunnerResult
 from helpers import make_result
 
 
+EXAMPLE_REGRESSION_DIR = Path("examples/regression")
+
+
 def test_regression_detects_same_condition_latency_and_resource_regression(
     bench_config,
     target_profile,
@@ -627,6 +630,58 @@ def test_cli_telemetry_replay_candidate_gap_to_regression_smoke(
     markdown = regression_md.read_text(encoding="utf-8")
     assert "runtime_telemetry_missing_in_result" in markdown
     assert "runtime_telemetry_missing" in markdown
+
+
+def test_committed_replay_warning_fixtures_preserve_edgeenv_owned_context():
+    candidate_gap = json.loads(
+        (EXAMPLE_REGRESSION_DIR / "edgeenv_candidate_telemetry_gap.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    sequence_inversion = json.loads(
+        (EXAMPLE_REGRESSION_DIR / "edgeenv_sequence_inversion.json").read_text(
+            encoding="utf-8"
+        )
+    )
+
+    assert "guard_analysis" not in candidate_gap
+    assert "guard_analysis" not in sequence_inversion
+    assert candidate_gap["comparable"] is True
+    assert sequence_inversion["mode"] == "same-condition"
+    assert candidate_gap["regression_detected"] is False
+    assert sequence_inversion["regression_detected"] is False
+
+    candidate_context = candidate_gap["runtime_telemetry_context"]
+    assert candidate_context["source"] == "result_artifacts+runtime_telemetry_history"
+    assert candidate_context["history"]["summary"]["missing_telemetry_runs"] == 1
+    assert candidate_context["candidate"]["result_telemetry_present"] is False
+    assert candidate_context["candidate"]["history_entry_present"] is False
+    assert candidate_context["candidate"]["history_missing_recorded"] is True
+    assert candidate_context["candidate"]["history_missing_reason"] == (
+        "runtime_telemetry_missing"
+    )
+    assert candidate_context["evidence_gaps"] == [
+        {
+            "run_id": "candidate",
+            "reason": "runtime_telemetry_missing_in_result",
+        },
+        {
+            "run_id": "candidate",
+            "reason": "runtime_telemetry_missing",
+        },
+    ]
+
+    sequence_context = sequence_inversion["runtime_telemetry_context"]
+    assert sequence_context["history"]["summary"]["missing_telemetry_runs"] == 0
+    assert sequence_context["baseline"]["execution_sequence_id"] == 5
+    assert sequence_context["baseline"]["history_execution_sequence_id"] == 5
+    assert sequence_context["candidate"]["execution_sequence_id"] == 2
+    assert sequence_context["candidate"]["history_execution_sequence_id"] == 2
+    assert sequence_context["evidence_gaps"] == []
+    assert any(
+        "not a comparability gate" in note
+        for note in sequence_context["notes"]
+    )
 
 
 def test_regression_cli_marks_runtime_comparison_not_evaluated(
