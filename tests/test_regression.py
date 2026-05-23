@@ -11,6 +11,12 @@ from inferedge_env.config.bench_config import BenchmarkConfig
 from inferedge_env.config.target_profile import TargetProfile
 from inferedge_env.registry.db import RunRegistry
 from inferedge_env.result.schema import ResourceMetrics
+from inferedge_env.result.telemetry_history import (
+    ORCHESTRATOR_EDGEENV_CANDIDATE_CONTEXT_PATH,
+    ORCHESTRATOR_EDGEENV_COVERAGE_SUMMARY_OWNER,
+    ORCHESTRATOR_EDGEENV_HISTORY_COVERAGE_PATH,
+    ORCHESTRATOR_EDGEENV_OPERATION_CONTEXT_ROLE,
+)
 from inferedge_env.result.writer import ResultArtifactWriter
 from inferedge_env.runners.base import RunnerResult
 from helpers import make_result
@@ -259,6 +265,12 @@ def test_regression_attaches_orchestrator_feed_as_supplemental_context(
     assert candidate_context["orchestrator_operation_context"][
         "not_a_regression_judgement"
     ] is True
+    assert candidate_context["orchestrator_operation_context"]["edgeenv_mapping_hint"][
+        "coverage_summary_owner"
+    ] == ORCHESTRATOR_EDGEENV_COVERAGE_SUMMARY_OWNER
+    assert candidate_context["orchestrator_operation_context"]["edgeenv_mapping_hint"][
+        "coverage_summary_path"
+    ] == ORCHESTRATOR_EDGEENV_HISTORY_COVERAGE_PATH
     assert candidate_context["orchestrator_operation_context"]["candidate_context"][
         "operation"
     ]["queue_depth"] == 7
@@ -963,6 +975,7 @@ def _orchestrator_context(run_id: str) -> dict:
         "regression_owner": "edgeenv",
         "candidate_context": {
             "run_id": run_id,
+            "telemetry_source": "inferedge_orchestrator_operation_summary",
             "queue_depth": 7,
             "operation": {
                 "queue_depth": 7,
@@ -977,6 +990,15 @@ def _orchestrator_context(run_id: str) -> dict:
         },
         "edgeenv_mapping_hint": {
             "runtime_telemetry_context_role": "candidate",
-            "copy_candidate_context_to": "runtime_telemetry_context.candidate",
+            "copy_candidate_context_to": ORCHESTRATOR_EDGEENV_CANDIDATE_CONTEXT_PATH,
+            "operation_context_role": ORCHESTRATOR_EDGEENV_OPERATION_CONTEXT_ROLE,
+            "coverage_summary_owner": ORCHESTRATOR_EDGEENV_COVERAGE_SUMMARY_OWNER,
+            "coverage_summary_path": ORCHESTRATOR_EDGEENV_HISTORY_COVERAGE_PATH,
+            "candidate_context_required_fields": [
+                "run_id",
+                "telemetry_source",
+                "operation",
+                "resource",
+            ],
         },
     }

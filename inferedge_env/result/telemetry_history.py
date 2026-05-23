@@ -16,6 +16,18 @@ RUNTIME_TELEMETRY_HISTORY_SCHEMA_VERSION = "edgeenv.runtime-telemetry-history.v1
 ORCHESTRATOR_TELEMETRY_FEED_SCHEMA_VERSION = (
     "inferedge-orchestrator-edgeenv-runtime-telemetry-feed-v1"
 )
+ORCHESTRATOR_EDGEENV_CANDIDATE_CONTEXT_PATH = "runtime_telemetry_context.candidate"
+ORCHESTRATOR_EDGEENV_HISTORY_COVERAGE_PATH = (
+    "runtime_telemetry_context.history.telemetry_coverage"
+)
+ORCHESTRATOR_EDGEENV_COVERAGE_SUMMARY_OWNER = "edgeenv"
+ORCHESTRATOR_EDGEENV_OPERATION_CONTEXT_ROLE = "supplemental"
+ORCHESTRATOR_EDGEENV_REQUIRED_CANDIDATE_FIELDS = (
+    "run_id",
+    "telemetry_source",
+    "operation",
+    "resource",
+)
 
 
 class RuntimeTelemetryHistoryError(ValueError):
@@ -358,6 +370,11 @@ def _load_orchestrator_feed(feed_path: Path | str) -> dict[str, Any]:
         raise RuntimeTelemetryHistoryError(
             "Orchestrator telemetry feed must declare not_a_comparability_gate=true"
         )
+    mapping_hint = _validate_orchestrator_mapping_hint(
+        payload.get("edgeenv_mapping_hint", {}),
+        candidate_context=candidate_context,
+        source=source,
+    )
     return {
         "schema_version": schema_version,
         "role": payload.get("role"),
@@ -368,8 +385,94 @@ def _load_orchestrator_feed(feed_path: Path | str) -> dict[str, Any]:
         "decision_owner": payload.get("decision_owner"),
         "regression_owner": payload.get("regression_owner"),
         "candidate_context": deepcopy(candidate_context),
-        "edgeenv_mapping_hint": deepcopy(payload.get("edgeenv_mapping_hint", {})),
+        "edgeenv_mapping_hint": mapping_hint,
     }
+
+
+def _validate_orchestrator_mapping_hint(
+    value: Any,
+    *,
+    candidate_context: dict[str, Any],
+    source: Path,
+) -> dict[str, Any]:
+    if value is None:
+        return {}
+    if not isinstance(value, dict):
+        raise RuntimeTelemetryHistoryError(
+            f"Orchestrator telemetry feed edgeenv_mapping_hint must be an object: {source}"
+        )
+    mapping_hint = deepcopy(value)
+    _validate_optional_mapping_value(
+        mapping_hint,
+        "copy_candidate_context_to",
+        ORCHESTRATOR_EDGEENV_CANDIDATE_CONTEXT_PATH,
+        source,
+    )
+    _validate_optional_mapping_value(
+        mapping_hint,
+        "operation_context_role",
+        ORCHESTRATOR_EDGEENV_OPERATION_CONTEXT_ROLE,
+        source,
+    )
+    _validate_optional_mapping_value(
+        mapping_hint,
+        "coverage_summary_owner",
+        ORCHESTRATOR_EDGEENV_COVERAGE_SUMMARY_OWNER,
+        source,
+    )
+    _validate_optional_mapping_value(
+        mapping_hint,
+        "coverage_summary_path",
+        ORCHESTRATOR_EDGEENV_HISTORY_COVERAGE_PATH,
+        source,
+    )
+    required_fields = mapping_hint.get("candidate_context_required_fields")
+    if required_fields is not None:
+        if not isinstance(required_fields, list) or not all(
+            isinstance(item, str) for item in required_fields
+        ):
+            raise RuntimeTelemetryHistoryError(
+                "Orchestrator telemetry feed "
+                f"edgeenv_mapping_hint.candidate_context_required_fields must be "
+                f"a string list: {source}"
+            )
+        missing_required = [
+            field
+            for field in ORCHESTRATOR_EDGEENV_REQUIRED_CANDIDATE_FIELDS
+            if field not in required_fields
+        ]
+        if missing_required:
+            raise RuntimeTelemetryHistoryError(
+                "Orchestrator telemetry feed "
+                "edgeenv_mapping_hint.candidate_context_required_fields must "
+                f"include {', '.join(missing_required)}: {source}"
+            )
+        missing_context = [
+            field
+            for field in ORCHESTRATOR_EDGEENV_REQUIRED_CANDIDATE_FIELDS
+            if field not in candidate_context
+        ]
+        if missing_context:
+            raise RuntimeTelemetryHistoryError(
+                "Orchestrator telemetry feed candidate_context must include "
+                f"{', '.join(missing_context)} when declared as required: {source}"
+            )
+    return mapping_hint
+
+
+def _validate_optional_mapping_value(
+    mapping_hint: dict[str, Any],
+    key: str,
+    expected: str,
+    source: Path,
+) -> None:
+    if key not in mapping_hint:
+        return
+    if mapping_hint.get(key) != expected:
+        raise RuntimeTelemetryHistoryError(
+            "Orchestrator telemetry feed "
+            f"edgeenv_mapping_hint.{key} must be {expected}: {source}"
+        )
 
 
 def _validate_orchestrator_feed_scope(

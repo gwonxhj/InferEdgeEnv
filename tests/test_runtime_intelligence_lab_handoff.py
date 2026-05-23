@@ -142,6 +142,30 @@ def test_runtime_intelligence_lab_handoff_rejects_bad_orchestrator_schema(tmp_pa
         )
 
 
+def test_runtime_intelligence_lab_handoff_rejects_bad_orchestrator_mapping(
+    tmp_path,
+):
+    baseline_path, candidate_path, regression_path, history_path = _write_handoff_files(
+        tmp_path
+    )
+    regression = json.loads(regression_path.read_text(encoding="utf-8"))
+    regression["runtime_telemetry_context"]["candidate"][
+        "orchestrator_operation_context"
+    ]["edgeenv_mapping_hint"]["coverage_summary_owner"] = "orchestrator"
+    regression_path.write_text(json.dumps(regression), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeIntelligenceLabHandoffError,
+        match="coverage_summary_owner must be edgeenv",
+    ):
+        build_runtime_intelligence_lab_handoff_manifest(
+            baseline_result_path=baseline_path,
+            candidate_result_path=candidate_path,
+            edgeenv_regression_report_path=regression_path,
+            telemetry_history_path=history_path,
+        )
+
+
 def _write_handoff_files(tmp_path):
     baseline_path = tmp_path / "baseline-result.json"
     candidate_path = tmp_path / "candidate-result.json"
@@ -199,7 +223,29 @@ def _write_handoff_files(tmp_path):
                             "regression_owner": "edgeenv",
                             "candidate_context": {
                                 "run_id": "candidate",
+                                "telemetry_source": (
+                                    "inferedge_orchestrator_operation_summary"
+                                ),
                                 "operation": {"queue_depth": 7},
+                                "resource": {"source": "tegrastats_timeline"},
+                            },
+                            "edgeenv_mapping_hint": {
+                                "runtime_telemetry_context_role": "candidate",
+                                "copy_candidate_context_to": (
+                                    "runtime_telemetry_context.candidate"
+                                ),
+                                "operation_context_role": "supplemental",
+                                "coverage_summary_owner": "edgeenv",
+                                "coverage_summary_path": (
+                                    "runtime_telemetry_context.history."
+                                    "telemetry_coverage"
+                                ),
+                                "candidate_context_required_fields": [
+                                    "run_id",
+                                    "telemetry_source",
+                                    "operation",
+                                    "resource",
+                                ],
                             },
                         },
                     },
