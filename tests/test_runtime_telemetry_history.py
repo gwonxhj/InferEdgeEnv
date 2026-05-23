@@ -65,6 +65,18 @@ def test_build_runtime_telemetry_history_records_entries_and_missing_gaps(
     assert payload["runs"][0]["runtime_telemetry"]["resource"] == {
         "telemetry_source": "runtime-result"
     }
+    assert payload["runs"][0]["runtime_telemetry"]["coverage"] == {
+        "schema_version": "inferedge-runtime-telemetry-coverage-v1",
+        "expected_fields": ["queue_depth", "gpu_temperature"],
+        "observed_fields": ["gpu_temperature"],
+        "missing_fields": ["queue_depth"],
+        "expected_field_count": 2,
+        "observed_field_count": 1,
+        "missing_field_count": 1,
+        "coverage_ratio": 0.5,
+        "comparability_owner": "edgeenv",
+        "missing_telemetry_is_failure": False,
+    }
     assert payload["runs"][0]["protocol"]["repeat_runs"] == 10
     assert payload["missing_telemetry"] == [
         {
@@ -285,6 +297,15 @@ def test_inspect_runtime_telemetry_history_reports_replay_summary(
     assert summary["replay"]["missing_run_ids"] == ["run-without-telemetry"]
     assert "latency" in summary["replay"]["telemetry_fields"]
     assert "operation" in summary["replay"]["telemetry_fields"]
+    assert summary["replay"]["telemetry_coverage"] == {
+        "runs_with_coverage": 2,
+        "expected_fields": ["gpu_temperature", "queue_depth"],
+        "observed_fields": ["gpu_temperature"],
+        "missing_fields": ["queue_depth"],
+        "coverage_ratio_min": 0.5,
+        "coverage_ratio_max": 0.5,
+        "missing_telemetry_is_failure_values": [False],
+    }
     assert summary["replay"]["orchestrator_context_run_ids"] == []
     assert "not production monitoring" in summary["notes"][2]
 
@@ -398,6 +419,8 @@ def test_cli_runs_telemetry_inspect_history_validates_replay_artifact(
     assert "Runtime telemetry history valid" in result.output
     assert "Replay runs: 1" in result.output
     assert "Telemetry fields:" in result.output
+    assert "Telemetry coverage runs: 1" in result.output
+    assert "Telemetry coverage missing fields: queue_depth" in result.output
     assert "latency" in result.output
     assert "Evidence gaps: 1" in result.output
     assert "run-cli-without-telemetry" in result.output
@@ -439,6 +462,10 @@ def test_cli_runs_telemetry_inspect_history_json_output(
     assert payload["valid"] is True
     assert payload["replay"]["run_ids"] == ["run-cli-json"]
     assert payload["replay"]["execution_sequence_ids"] == [3]
+    assert payload["replay"]["telemetry_coverage"]["runs_with_coverage"] == 1
+    assert payload["replay"]["telemetry_coverage"]["missing_fields"] == [
+        "queue_depth"
+    ]
 
 
 def _write_registered_run(
@@ -486,6 +513,18 @@ def _runtime_telemetry_payload(sequence_id: int = 7) -> dict:
         },
         "operation": {
             "timeout_observed": False,
+        },
+        "coverage": {
+            "schema_version": "inferedge-runtime-telemetry-coverage-v1",
+            "expected_fields": ["queue_depth", "gpu_temperature"],
+            "observed_fields": ["gpu_temperature"],
+            "missing_fields": ["queue_depth"],
+            "expected_field_count": 2,
+            "observed_field_count": 1,
+            "missing_field_count": 1,
+            "coverage_ratio": 0.5,
+            "comparability_owner": "edgeenv",
+            "missing_telemetry_is_failure": False,
         },
         "missing_fields": ["queue_depth"],
         "production_monitoring": False,

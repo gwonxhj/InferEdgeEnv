@@ -37,6 +37,9 @@ The payload is intentionally additive and minimally validated:
 - it must be a JSON object
 - `schema_version`, when present, must be a string
 - unknown telemetry fields are preserved instead of normalized into registry columns
+- Runtime telemetry `coverage`, when present, is preserved as evidence quality
+  metadata. Missing coverage fields are treated as an evidence gap, not as a
+  failed run or comparability failure.
 
 When present, EdgeEnv stores the payload in two places:
 
@@ -95,7 +98,16 @@ The history artifact uses this top-level shape:
     {
       "run_id": "run-20260522-000000-12345678",
       "runtime_telemetry": {
-        "schema_version": "inferedge-runtime-telemetry-v1"
+        "schema_version": "inferedge-runtime-telemetry-v1",
+        "coverage": {
+          "schema_version": "inferedge-runtime-telemetry-coverage-v1",
+          "expected_fields": ["queue_depth", "gpu_temperature"],
+          "observed_fields": ["gpu_temperature"],
+          "missing_fields": ["queue_depth"],
+          "coverage_ratio": 0.5,
+          "comparability_owner": "edgeenv",
+          "missing_telemetry_is_failure": false
+        }
       },
       "orchestrator_operation_context": {
         "schema_version": "inferedge-orchestrator-edgeenv-runtime-telemetry-feed-v1",
@@ -117,8 +129,9 @@ This is a replay dataset seed. It records evidence gaps explicitly and does not 
 
 `inspect-history` is a read-only validation step for that seed artifact. It
 checks the schema, summarizes replay run IDs, available telemetry fields,
-execution sequence IDs, and missing telemetry evidence gaps. It does not mutate
-the registry, change comparability judgement, or act as a monitoring alert.
+execution sequence IDs, telemetry coverage metadata, and missing telemetry
+evidence gaps. It does not mutate the registry, change comparability judgement,
+or act as a monitoring alert.
 
 Regression reports can attach this artifact as supplemental context:
 
@@ -145,6 +158,12 @@ edgeenv report regression <baseline_run_id> <candidate_run_id> \
 The regression report records telemetry coverage and evidence gaps for the
 baseline/candidate pair. It still calculates regression deltas only after the
 normal same-condition comparability gate passes.
+
+Runtime telemetry coverage context is copied into
+`runtime_telemetry_context.<baseline|candidate>.telemetry_coverage` and, when
+provided through the history artifact, `history_telemetry_coverage`. This makes
+coverage gaps visible to Lab or AIGuard consumers without allowing coverage to
+override EdgeEnv's comparability-first regression policy.
 
 Replay edge cases are preserved as evidence context:
 
@@ -195,6 +214,7 @@ and Lab remains the deployment decision owner.
 
 - Do not make runtime telemetry required for a successful run.
 - Do not treat missing telemetry as a comparability failure.
+- Do not treat missing telemetry coverage fields as a regression judgement.
 - Do not add telemetry columns to `runs.db` before a query/report requirement is proven.
 - Do not describe this as production observability, cloud monitoring, distributed tracing, or real-time data drift detection.
 - Do not use telemetry to bypass the existing comparability-first regression policy.

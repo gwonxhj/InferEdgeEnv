@@ -444,6 +444,17 @@ def inspect_runtime_telemetry_history_command(
     console.print(f"Schema: {summary['schema_version']}")
     console.print(f"Replay runs: {len(replay['run_ids'])}")
     console.print(f"Telemetry fields: {', '.join(replay['telemetry_fields']) or '-'}")
+    coverage = replay.get("telemetry_coverage", {})
+    if isinstance(coverage, dict):
+        console.print(
+            "Telemetry coverage runs: "
+            f"{coverage.get('runs_with_coverage', 0)}"
+        )
+        console.print(
+            "Telemetry coverage missing fields: "
+            f"{', '.join(coverage.get('missing_fields', [])) or '-'}",
+            soft_wrap=True,
+        )
     console.print(
         "Orchestrator context runs: "
         f"{len(replay.get('orchestrator_context_run_ids', []))}"
@@ -1159,6 +1170,7 @@ def _print_runtime_telemetry_context(context: dict[str, Any]) -> None:
             f"history={str(bool(baseline.get('history_entry_present'))).lower()}",
             soft_wrap=True,
         )
+        _print_runtime_telemetry_coverage("baseline", baseline)
     if isinstance(candidate, dict):
         console.print(
             "- candidate: "
@@ -1166,6 +1178,7 @@ def _print_runtime_telemetry_context(context: dict[str, Any]) -> None:
             f"history={str(bool(candidate.get('history_entry_present'))).lower()}",
             soft_wrap=True,
         )
+        _print_runtime_telemetry_coverage("candidate", candidate)
     gaps = context.get("evidence_gaps", [])
     if gaps:
         console.print("- evidence_gaps:")
@@ -1179,6 +1192,29 @@ def _print_runtime_telemetry_context(context: dict[str, Any]) -> None:
     else:
         console.print("- evidence_gaps: none")
     console.print("- role: supplemental context, not a comparability gate")
+
+
+def _print_runtime_telemetry_coverage(
+    label: str,
+    context: dict[str, Any],
+) -> None:
+    coverage = context.get("telemetry_coverage")
+    if not isinstance(coverage, dict):
+        coverage = context.get("history_telemetry_coverage")
+    if not isinstance(coverage, dict):
+        return
+    missing_fields = coverage.get("missing_fields")
+    if not isinstance(missing_fields, list):
+        missing_fields = []
+    console.print(
+        f"- {label} coverage: "
+        f"observed={coverage.get('observed_field_count', '-')}/"
+        f"{coverage.get('expected_field_count', '-')}, "
+        f"missing={', '.join(str(item) for item in missing_fields) or '-'}, "
+        f"missing_is_failure="
+        f"{str(bool(coverage.get('missing_telemetry_is_failure'))).lower()}",
+        soft_wrap=True,
+    )
 
 
 def _metric_delta_line(field: str, left: float, right: float, unit: str) -> str:

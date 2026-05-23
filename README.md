@@ -313,6 +313,10 @@ Use `edgeenv runs telemetry inspect-history <path>` to validate and summarize
 that replay artifact before attaching it to a regression report. The intended
 local flow is export history, inspect the replay artifact, then pass it to
 `report regression --telemetry-history`.
+If Runtime includes `runtime_telemetry.coverage`, EdgeEnv preserves it in the
+history artifact and inspect summary as evidence quality metadata. Missing
+coverage fields are visible as coverage gaps, but they do not fail the run or
+change comparability.
 
 `report regression` reuses the same comparability gate. It only computes
 mean/p95/p99/FPS/resource deltas for `Comparable: Yes` with

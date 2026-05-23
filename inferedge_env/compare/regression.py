@@ -315,6 +315,9 @@ def _telemetry_run_context(
                 ),
             }
         )
+        coverage = _telemetry_coverage_context(telemetry.get("coverage"))
+        if coverage is not None:
+            context["telemetry_coverage"] = coverage
     if history_entry is not None:
         context["history_telemetry_timestamp"] = history_entry.get(
             "telemetry_timestamp"
@@ -322,6 +325,11 @@ def _telemetry_run_context(
         context["history_execution_sequence_id"] = history_entry.get(
             "execution_sequence_id"
         )
+        history_telemetry = history_entry.get("runtime_telemetry")
+        if isinstance(history_telemetry, dict):
+            coverage = _telemetry_coverage_context(history_telemetry.get("coverage"))
+            if coverage is not None:
+                context["history_telemetry_coverage"] = coverage
         _attach_orchestrator_context(context, history_entry)
     if missing_entry is not None:
         context["history_missing_reason"] = missing_entry.get("reason")
@@ -352,6 +360,27 @@ def _telemetry_source(telemetry: dict[str, Any]) -> str | None:
         return None
     source = resource.get("telemetry_source")
     return source if isinstance(source, str) else None
+
+
+def _telemetry_coverage_context(value: Any) -> dict[str, Any] | None:
+    if not isinstance(value, dict):
+        return None
+    context: dict[str, Any] = {}
+    for key in (
+        "schema_version",
+        "expected_fields",
+        "observed_fields",
+        "missing_fields",
+        "expected_field_count",
+        "observed_field_count",
+        "missing_field_count",
+        "coverage_ratio",
+        "comparability_owner",
+        "missing_telemetry_is_failure",
+    ):
+        if key in value:
+            context[key] = value[key]
+    return context
 
 
 def _telemetry_gaps(context: dict[str, Any]) -> list[dict[str, str]]:

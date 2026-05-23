@@ -208,6 +208,7 @@ def inspect_runtime_telemetry_history(payload: dict[str, Any]) -> dict[str, Any]
         "replay": {
             "run_ids": run_ids,
             "telemetry_fields": _telemetry_fields(runs),
+            "telemetry_coverage": _telemetry_coverage_summary(runs),
             "orchestrator_context_run_ids": [
                 entry["run_id"]
                 for entry in runs
@@ -388,6 +389,51 @@ def _telemetry_fields(entries: list[dict[str, Any]]) -> list[str]:
             continue
         fields.update(str(key) for key in telemetry.keys())
     return sorted(fields)
+
+
+def _telemetry_coverage_summary(entries: list[dict[str, Any]]) -> dict[str, Any]:
+    coverage_entries: list[dict[str, Any]] = []
+    expected_fields: set[str] = set()
+    observed_fields: set[str] = set()
+    missing_fields: set[str] = set()
+    ratios: list[float] = []
+    missing_telemetry_failure_values: set[bool] = set()
+
+    for entry in entries:
+        telemetry = entry.get("runtime_telemetry")
+        if not isinstance(telemetry, dict):
+            continue
+        coverage = telemetry.get("coverage")
+        if not isinstance(coverage, dict):
+            continue
+        coverage_entries.append(coverage)
+        expected_fields.update(_string_items(coverage.get("expected_fields")))
+        observed_fields.update(_string_items(coverage.get("observed_fields")))
+        missing_fields.update(_string_items(coverage.get("missing_fields")))
+        ratio = coverage.get("coverage_ratio")
+        if isinstance(ratio, (int, float)):
+            ratios.append(float(ratio))
+        missing_telemetry_is_failure = coverage.get("missing_telemetry_is_failure")
+        if isinstance(missing_telemetry_is_failure, bool):
+            missing_telemetry_failure_values.add(missing_telemetry_is_failure)
+
+    return {
+        "runs_with_coverage": len(coverage_entries),
+        "expected_fields": sorted(expected_fields),
+        "observed_fields": sorted(observed_fields),
+        "missing_fields": sorted(missing_fields),
+        "coverage_ratio_min": min(ratios) if ratios else None,
+        "coverage_ratio_max": max(ratios) if ratios else None,
+        "missing_telemetry_is_failure_values": sorted(
+            missing_telemetry_failure_values
+        ),
+    }
+
+
+def _string_items(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [item for item in value if isinstance(item, str)]
 
 
 def _is_monotonic(values: list[int | float]) -> bool:
