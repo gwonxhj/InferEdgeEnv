@@ -78,6 +78,12 @@ is then preserved under the matching history entry as
 not turn missing telemetry into a successful telemetry run, and does not change
 the same-condition comparability gate.
 
+Newer Orchestrator feeds can also declare `edgeenv_mapping_hint` fields. EdgeEnv
+preserves these hints and validates them when present: Orchestrator may map only
+supplemental candidate operation context to
+`runtime_telemetry_context.candidate`, while EdgeEnv remains the owner of
+`runtime_telemetry_context.history.telemetry_coverage`.
+
 Replay validation command:
 
 ```bash
@@ -112,7 +118,12 @@ The history artifact uses this top-level shape:
       "orchestrator_operation_context": {
         "schema_version": "inferedge-orchestrator-edgeenv-runtime-telemetry-feed-v1",
         "not_a_regression_judgement": true,
-        "not_a_comparability_gate": true
+        "not_a_comparability_gate": true,
+        "edgeenv_mapping_hint": {
+          "copy_candidate_context_to": "runtime_telemetry_context.candidate",
+          "coverage_summary_owner": "edgeenv",
+          "coverage_summary_path": "runtime_telemetry_context.history.telemetry_coverage"
+        }
       }
     }
   ],

@@ -10,6 +10,10 @@ from helpers import make_result
 from inferedge_env.cli import app
 from inferedge_env.registry.db import RunRegistry
 from inferedge_env.result.telemetry_history import (
+    ORCHESTRATOR_EDGEENV_CANDIDATE_CONTEXT_PATH,
+    ORCHESTRATOR_EDGEENV_COVERAGE_SUMMARY_OWNER,
+    ORCHESTRATOR_EDGEENV_HISTORY_COVERAGE_PATH,
+    ORCHESTRATOR_EDGEENV_OPERATION_CONTEXT_ROLE,
     ORCHESTRATOR_TELEMETRY_FEED_SCHEMA_VERSION,
     RUNTIME_TELEMETRY_HISTORY_SCHEMA_VERSION,
     RuntimeTelemetryHistoryError,
@@ -185,7 +189,49 @@ def test_build_runtime_telemetry_history_attaches_orchestrator_feed_context(
     assert context["regression_owner"] == "edgeenv"
     assert context["candidate_context"]["operation"]["queue_depth"] == 7
     assert context["candidate_context"]["resource"]["gpu_temperature"] == 78.5
+    assert context["edgeenv_mapping_hint"]["copy_candidate_context_to"] == (
+        ORCHESTRATOR_EDGEENV_CANDIDATE_CONTEXT_PATH
+    )
+    assert context["edgeenv_mapping_hint"]["operation_context_role"] == (
+        ORCHESTRATOR_EDGEENV_OPERATION_CONTEXT_ROLE
+    )
+    assert context["edgeenv_mapping_hint"]["coverage_summary_owner"] == (
+        ORCHESTRATOR_EDGEENV_COVERAGE_SUMMARY_OWNER
+    )
+    assert context["edgeenv_mapping_hint"]["coverage_summary_path"] == (
+        ORCHESTRATOR_EDGEENV_HISTORY_COVERAGE_PATH
+    )
     assert "not a regression judgement" in payload["notes"][3]
+
+
+def test_build_runtime_telemetry_history_rejects_bad_feed_mapping_contract(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    edgeenv_root = tmp_path / ".edgeenv"
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="candidate",
+        runtime_telemetry=_runtime_telemetry_payload(sequence_id=2),
+    )
+    feed = _orchestrator_feed_payload("candidate")
+    feed["edgeenv_mapping_hint"]["coverage_summary_owner"] = "orchestrator"
+    feed_path = tmp_path / "orchestrator-feed.json"
+    feed_path.write_text(json.dumps(feed), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeTelemetryHistoryError,
+        match="coverage_summary_owner must be edgeenv",
+    ):
+        build_runtime_telemetry_history(
+            edgeenv_root,
+            orchestrator_feeds=[feed_path],
+        )
 
 
 def test_build_runtime_telemetry_history_rejects_feed_for_unselected_run(
@@ -639,6 +685,15 @@ def _orchestrator_feed_payload(run_id: str) -> dict:
         },
         "edgeenv_mapping_hint": {
             "runtime_telemetry_context_role": "candidate",
-            "copy_candidate_context_to": "runtime_telemetry_context.candidate",
+            "copy_candidate_context_to": ORCHESTRATOR_EDGEENV_CANDIDATE_CONTEXT_PATH,
+            "operation_context_role": ORCHESTRATOR_EDGEENV_OPERATION_CONTEXT_ROLE,
+            "coverage_summary_owner": ORCHESTRATOR_EDGEENV_COVERAGE_SUMMARY_OWNER,
+            "coverage_summary_path": ORCHESTRATOR_EDGEENV_HISTORY_COVERAGE_PATH,
+            "candidate_context_required_fields": [
+                "run_id",
+                "telemetry_source",
+                "operation",
+                "resource",
+            ],
         },
     }

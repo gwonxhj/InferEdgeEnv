@@ -5,6 +5,11 @@ from pathlib import Path
 from typing import Any
 
 from inferedge_env.result.telemetry_history import (
+    ORCHESTRATOR_EDGEENV_CANDIDATE_CONTEXT_PATH,
+    ORCHESTRATOR_EDGEENV_COVERAGE_SUMMARY_OWNER,
+    ORCHESTRATOR_EDGEENV_HISTORY_COVERAGE_PATH,
+    ORCHESTRATOR_EDGEENV_OPERATION_CONTEXT_ROLE,
+    ORCHESTRATOR_EDGEENV_REQUIRED_CANDIDATE_FIELDS,
     ORCHESTRATOR_TELEMETRY_FEED_SCHEMA_VERSION,
     RUNTIME_TELEMETRY_HISTORY_SCHEMA_VERSION,
 )
@@ -250,6 +255,76 @@ def _validate_orchestrator_context(
     if operation_context.get("regression_owner") != "edgeenv":
         raise RuntimeIntelligenceLabHandoffError(
             "orchestrator_operation_context.regression_owner must be edgeenv"
+        )
+    _validate_orchestrator_mapping_hint(
+        operation_context.get("edgeenv_mapping_hint"),
+        operation_context=operation_context,
+        regression_path=regression_path,
+    )
+
+
+def _validate_orchestrator_mapping_hint(
+    mapping_hint: Any,
+    *,
+    operation_context: dict[str, Any],
+    regression_path: Path,
+) -> None:
+    if mapping_hint is None:
+        return
+    if not isinstance(mapping_hint, dict):
+        raise RuntimeIntelligenceLabHandoffError(
+            f"orchestrator_operation_context.edgeenv_mapping_hint must be an object: "
+            f"{regression_path}"
+        )
+    expected_pairs = {
+        "copy_candidate_context_to": ORCHESTRATOR_EDGEENV_CANDIDATE_CONTEXT_PATH,
+        "operation_context_role": ORCHESTRATOR_EDGEENV_OPERATION_CONTEXT_ROLE,
+        "coverage_summary_owner": ORCHESTRATOR_EDGEENV_COVERAGE_SUMMARY_OWNER,
+        "coverage_summary_path": ORCHESTRATOR_EDGEENV_HISTORY_COVERAGE_PATH,
+    }
+    for key, expected in expected_pairs.items():
+        if key in mapping_hint and mapping_hint.get(key) != expected:
+            raise RuntimeIntelligenceLabHandoffError(
+                "orchestrator_operation_context.edgeenv_mapping_hint."
+                f"{key} must be {expected}: {regression_path}"
+            )
+    required_fields = mapping_hint.get("candidate_context_required_fields")
+    if required_fields is None:
+        return
+    if not isinstance(required_fields, list) or not all(
+        isinstance(item, str) for item in required_fields
+    ):
+        raise RuntimeIntelligenceLabHandoffError(
+            "orchestrator_operation_context.edgeenv_mapping_hint."
+            "candidate_context_required_fields must be a string list: "
+            f"{regression_path}"
+        )
+    missing_required = [
+        field
+        for field in ORCHESTRATOR_EDGEENV_REQUIRED_CANDIDATE_FIELDS
+        if field not in required_fields
+    ]
+    if missing_required:
+        raise RuntimeIntelligenceLabHandoffError(
+            "orchestrator_operation_context.edgeenv_mapping_hint."
+            "candidate_context_required_fields must include "
+            f"{', '.join(missing_required)}: {regression_path}"
+        )
+    candidate_context = operation_context.get("candidate_context")
+    if not isinstance(candidate_context, dict):
+        raise RuntimeIntelligenceLabHandoffError(
+            "orchestrator_operation_context.candidate_context must be an object: "
+            f"{regression_path}"
+        )
+    missing_context = [
+        field
+        for field in ORCHESTRATOR_EDGEENV_REQUIRED_CANDIDATE_FIELDS
+        if field not in candidate_context
+    ]
+    if missing_context:
+        raise RuntimeIntelligenceLabHandoffError(
+            "orchestrator_operation_context.candidate_context must include "
+            f"{', '.join(missing_context)}: {regression_path}"
         )
 
 
