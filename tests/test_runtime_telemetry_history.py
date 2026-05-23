@@ -77,6 +77,28 @@ def test_build_runtime_telemetry_history_records_entries_and_missing_gaps(
         "comparability_owner": "edgeenv",
         "missing_telemetry_is_failure": False,
     }
+    assert payload["telemetry_coverage"]["missing_field_runs"] == [
+        {
+            "run_id": "run-with-telemetry",
+            "missing_fields": ["queue_depth"],
+            "missing_field_count": 1,
+            "missing_telemetry_is_failure": False,
+        }
+    ]
+    assert payload["telemetry_coverage"]["run_summaries"] == [
+        {
+            "run_id": "run-with-telemetry",
+            "coverage_present": True,
+            "expected_fields": ["gpu_temperature", "queue_depth"],
+            "observed_fields": ["gpu_temperature"],
+            "missing_fields": ["queue_depth"],
+            "expected_field_count": 2,
+            "observed_field_count": 1,
+            "missing_field_count": 1,
+            "coverage_ratio": 0.5,
+            "missing_telemetry_is_failure": False,
+        }
+    ]
     assert payload["runs"][0]["protocol"]["repeat_runs"] == 10
     assert payload["missing_telemetry"] == [
         {
@@ -299,12 +321,55 @@ def test_inspect_runtime_telemetry_history_reports_replay_summary(
     assert "operation" in summary["replay"]["telemetry_fields"]
     assert summary["replay"]["telemetry_coverage"] == {
         "runs_with_coverage": 2,
+        "runs_without_coverage": 0,
         "expected_fields": ["gpu_temperature", "queue_depth"],
         "observed_fields": ["gpu_temperature"],
         "missing_fields": ["queue_depth"],
         "coverage_ratio_min": 0.5,
         "coverage_ratio_max": 0.5,
         "missing_telemetry_is_failure_values": [False],
+        "any_missing_telemetry_is_failure": False,
+        "missing_field_run_count": 2,
+        "missing_field_runs": [
+            {
+                "run_id": "run-a",
+                "missing_fields": ["queue_depth"],
+                "missing_field_count": 1,
+                "missing_telemetry_is_failure": False,
+            },
+            {
+                "run_id": "run-b",
+                "missing_fields": ["queue_depth"],
+                "missing_field_count": 1,
+                "missing_telemetry_is_failure": False,
+            },
+        ],
+        "run_summaries": [
+            {
+                "run_id": "run-a",
+                "coverage_present": True,
+                "expected_fields": ["gpu_temperature", "queue_depth"],
+                "observed_fields": ["gpu_temperature"],
+                "missing_fields": ["queue_depth"],
+                "expected_field_count": 2,
+                "observed_field_count": 1,
+                "missing_field_count": 1,
+                "coverage_ratio": 0.5,
+                "missing_telemetry_is_failure": False,
+            },
+            {
+                "run_id": "run-b",
+                "coverage_present": True,
+                "expected_fields": ["gpu_temperature", "queue_depth"],
+                "observed_fields": ["gpu_temperature"],
+                "missing_fields": ["queue_depth"],
+                "expected_field_count": 2,
+                "observed_field_count": 1,
+                "missing_field_count": 1,
+                "coverage_ratio": 0.5,
+                "missing_telemetry_is_failure": False,
+            },
+        ],
     }
     assert summary["replay"]["orchestrator_context_run_ids"] == []
     assert "not production monitoring" in summary["notes"][2]
@@ -465,6 +530,14 @@ def test_cli_runs_telemetry_inspect_history_json_output(
     assert payload["replay"]["telemetry_coverage"]["runs_with_coverage"] == 1
     assert payload["replay"]["telemetry_coverage"]["missing_fields"] == [
         "queue_depth"
+    ]
+    assert payload["replay"]["telemetry_coverage"]["missing_field_runs"] == [
+        {
+            "run_id": "run-cli-json",
+            "missing_fields": ["queue_depth"],
+            "missing_field_count": 1,
+            "missing_telemetry_is_failure": False,
+        }
     ]
 
 

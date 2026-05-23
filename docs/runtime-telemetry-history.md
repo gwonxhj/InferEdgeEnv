@@ -161,9 +161,12 @@ normal same-condition comparability gate passes.
 
 Runtime telemetry coverage context is copied into
 `runtime_telemetry_context.<baseline|candidate>.telemetry_coverage` and, when
-provided through the history artifact, `history_telemetry_coverage`. This makes
-coverage gaps visible to Lab or AIGuard consumers without allowing coverage to
-override EdgeEnv's comparability-first regression policy.
+provided through the history artifact, `history_telemetry_coverage`. The history
+artifact also exposes a producer-side `telemetry_coverage` summary with
+`run_summaries` and `missing_field_runs`, so Lab or AIGuard consumers can reuse
+EdgeEnv's replay summary instead of recomputing coverage gaps. This makes
+coverage gaps visible downstream without allowing coverage to override
+EdgeEnv's comparability-first regression policy.
 
 Replay edge cases are preserved as evidence context:
 

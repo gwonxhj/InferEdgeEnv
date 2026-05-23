@@ -252,6 +252,9 @@ def _maybe_runtime_telemetry_context(
             "schema_version": telemetry_history.get("schema_version"),
             "summary": telemetry_history.get("summary", {}),
         }
+        telemetry_coverage = telemetry_history.get("telemetry_coverage")
+        if isinstance(telemetry_coverage, dict):
+            context["history"]["telemetry_coverage"] = telemetry_coverage
     return context
 
 
