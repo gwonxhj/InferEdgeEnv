@@ -16,6 +16,7 @@ from inferedge_env.result.telemetry_history import (
     ORCHESTRATOR_EDGEENV_COVERAGE_SUMMARY_OWNER,
     ORCHESTRATOR_EDGEENV_HISTORY_COVERAGE_PATH,
     ORCHESTRATOR_EDGEENV_OPERATION_CONTEXT_ROLE,
+    ORCHESTRATOR_EDGEENV_REQUIRED_CANDIDATE_FIELDS,
 )
 from inferedge_env.result.writer import ResultArtifactWriter
 from inferedge_env.runners.base import RunnerResult
@@ -271,9 +272,18 @@ def test_regression_attaches_orchestrator_feed_as_supplemental_context(
     assert candidate_context["orchestrator_operation_context"]["edgeenv_mapping_hint"][
         "coverage_summary_path"
     ] == ORCHESTRATOR_EDGEENV_HISTORY_COVERAGE_PATH
+    assert candidate_context["orchestrator_operation_context"]["edgeenv_mapping_hint"][
+        "operation_context_role"
+    ] == ORCHESTRATOR_EDGEENV_OPERATION_CONTEXT_ROLE
+    assert candidate_context["orchestrator_operation_context"]["edgeenv_mapping_hint"][
+        "candidate_context_required_fields"
+    ] == [*ORCHESTRATOR_EDGEENV_REQUIRED_CANDIDATE_FIELDS]
     assert candidate_context["orchestrator_operation_context"]["candidate_context"][
         "operation"
     ]["queue_depth"] == 7
+    assert candidate_context["orchestrator_operation_context"]["candidate_context"][
+        "telemetry_source"
+    ] == "inferedge_orchestrator_operation_summary"
     assert (
         "Orchestrator operation context is supplemental evidence, not a regression judgement."
         in context["notes"]

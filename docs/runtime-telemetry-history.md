@@ -82,7 +82,11 @@ Newer Orchestrator feeds can also declare `edgeenv_mapping_hint` fields. EdgeEnv
 preserves these hints and validates them when present: Orchestrator may map only
 supplemental candidate operation context to
 `runtime_telemetry_context.candidate`, while EdgeEnv remains the owner of
-`runtime_telemetry_context.history.telemetry_coverage`.
+`runtime_telemetry_context.history.telemetry_coverage`. When the feed declares
+`candidate_context_required_fields`, EdgeEnv checks that the mapping hint and the
+candidate context still include `run_id`, `telemetry_source`, `operation`, and
+`resource` before the context can reach regression reports or Lab handoff
+manifests.
 
 Replay validation command:
 
@@ -121,8 +125,15 @@ The history artifact uses this top-level shape:
         "not_a_comparability_gate": true,
         "edgeenv_mapping_hint": {
           "copy_candidate_context_to": "runtime_telemetry_context.candidate",
+          "operation_context_role": "supplemental",
           "coverage_summary_owner": "edgeenv",
-          "coverage_summary_path": "runtime_telemetry_context.history.telemetry_coverage"
+          "coverage_summary_path": "runtime_telemetry_context.history.telemetry_coverage",
+          "candidate_context_required_fields": [
+            "run_id",
+            "telemetry_source",
+            "operation",
+            "resource"
+          ]
         }
       }
     }
