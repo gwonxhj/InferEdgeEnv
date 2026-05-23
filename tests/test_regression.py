@@ -92,7 +92,10 @@ def test_regression_attaches_runtime_telemetry_history_context(
             p95=125.0,
             p99=135.0,
             fps=48.0,
-            runtime_telemetry=_runtime_telemetry(sequence_id=2),
+            runtime_telemetry=_runtime_telemetry(
+                sequence_id=2,
+                missing_fields=["queue_depth"],
+            ),
         ),
     )
     telemetry_history = {
@@ -112,6 +115,7 @@ def test_regression_attaches_runtime_telemetry_history_context(
                 "run_id": "candidate",
                 "telemetry_timestamp": "2026-05-22T00:00:02Z",
                 "execution_sequence_id": 2,
+                "runtime_telemetry": candidate.runtime_telemetry,
             },
         ],
         "missing_telemetry": [],
@@ -132,6 +136,25 @@ def test_regression_attaches_runtime_telemetry_history_context(
     assert context["baseline"]["result_telemetry_present"] is True
     assert context["baseline"]["history_entry_present"] is True
     assert context["candidate"]["execution_sequence_id"] == 2
+    assert context["candidate"]["telemetry_coverage"] == {
+        "schema_version": "inferedge-runtime-telemetry-coverage-v1",
+        "expected_fields": [
+            "gpu_temperature",
+            "queue_depth",
+            "telemetry_timestamp",
+        ],
+        "observed_fields": ["gpu_temperature", "telemetry_timestamp"],
+        "missing_fields": ["queue_depth"],
+        "expected_field_count": 3,
+        "observed_field_count": 2,
+        "missing_field_count": 1,
+        "coverage_ratio": 0.666667,
+        "comparability_owner": "edgeenv",
+        "missing_telemetry_is_failure": False,
+    }
+    assert context["candidate"]["history_telemetry_coverage"]["missing_fields"] == [
+        "queue_depth"
+    ]
     assert context["evidence_gaps"] == []
     assert report.evidence["mean_delta_pct"] == 12.0
 
@@ -859,7 +882,14 @@ def _write_registered_run(
     RunRegistry(edgeenv_root / "runs.db").insert(result, run_dir / "result.json")
 
 
-def _runtime_telemetry(sequence_id: int) -> dict:
+def _runtime_telemetry(
+    sequence_id: int,
+    *,
+    missing_fields: list[str] | None = None,
+) -> dict:
+    missing = missing_fields or []
+    expected_fields = ["gpu_temperature", "queue_depth", "telemetry_timestamp"]
+    observed_fields = [field for field in expected_fields if field not in missing]
     return {
         "schema_version": "inferedge-runtime-telemetry-v1",
         "telemetry_timestamp": f"2026-05-22T00:00:0{sequence_id}Z",
@@ -873,6 +903,18 @@ def _runtime_telemetry(sequence_id: int) -> dict:
         },
         "operation": {
             "timeout_observed": False,
+        },
+        "coverage": {
+            "schema_version": "inferedge-runtime-telemetry-coverage-v1",
+            "expected_fields": expected_fields,
+            "observed_fields": observed_fields,
+            "missing_fields": missing,
+            "expected_field_count": len(expected_fields),
+            "observed_field_count": len(observed_fields),
+            "missing_field_count": len(missing),
+            "coverage_ratio": round(len(observed_fields) / len(expected_fields), 6),
+            "comparability_owner": "edgeenv",
+            "missing_telemetry_is_failure": False,
         },
     }
 
