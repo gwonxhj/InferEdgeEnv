@@ -328,6 +328,24 @@ telemetry coverage and evidence-gap context to the JSON/Markdown report. This
 context is supplemental; it does not make non-comparable runs eligible for
 regression delta calculation.
 
+After generating a regression report, write an EdgeEnv producer-side handoff
+manifest for Lab's Runtime Intelligence bundle:
+
+```bash
+edgeenv report runtime-intelligence-handoff \
+  --baseline-result .edgeenv/runs/<baseline_run_id>/result.json \
+  --candidate-result .edgeenv/runs/<candidate_run_id>/result.json \
+  --edgeenv-regression-report /tmp/edgeenv-regression.json \
+  --telemetry-history /tmp/edgeenv-runtime-telemetry-history.json \
+  --output /tmp/edgeenv-runtime-intelligence-lab-handoff.json
+```
+
+The handoff manifest records source repository mapping, artifact roles, and
+producer contract markers for the Runtime result, EdgeEnv regression report,
+optional Orchestrator feed context, and Lab-owned deployment report boundary.
+It does not include AIGuard `guard_analysis`; AIGuard remains a separate
+deterministic diagnosis provider.
+
 If required fields differ, EdgeEnv reports:
 
 ```text

@@ -173,6 +173,24 @@ EdgeEnv owns the local history, comparability judgement, and regression report.
 AIGuard may consume that report as deterministic warning evidence, while Lab
 remains the final deployment decision owner.
 
+Lab handoff manifest:
+
+```bash
+edgeenv report runtime-intelligence-handoff \
+  --baseline-result .edgeenv/runs/<baseline_run_id>/result.json \
+  --candidate-result .edgeenv/runs/<candidate_run_id>/result.json \
+  --edgeenv-regression-report /tmp/edgeenv-regression.json \
+  --telemetry-history /tmp/edgeenv-runtime-telemetry-history.json \
+  --output /tmp/edgeenv-runtime-intelligence-lab-handoff.json
+```
+
+This command writes an EdgeEnv producer-side manifest with source repository
+mapping, artifact roles, and producer contract markers for the Runtime result,
+EdgeEnv regression report, optional Orchestrator operation context, and
+Lab-owned report boundary. It intentionally does not produce AIGuard
+`guard_analysis`; AIGuard remains a separate deterministic diagnosis provider
+and Lab remains the deployment decision owner.
+
 ## 4. HOW NOT — What To Avoid
 
 - Do not make runtime telemetry required for a successful run.

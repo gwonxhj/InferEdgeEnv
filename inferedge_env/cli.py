@@ -34,6 +34,10 @@ from inferedge_env.result.exporter import (
     import_successful_run,
     validate_successful_run_import,
 )
+from inferedge_env.result.lab_handoff import (
+    RuntimeIntelligenceLabHandoffError,
+    write_runtime_intelligence_lab_handoff_manifest,
+)
 from inferedge_env.result.schema import (
     FAILED_RUN_SCHEMA_VERSION,
     ResourceMetrics,
@@ -749,6 +753,63 @@ def regression_report(
         console.print(f"Markdown report: {output_markdown}", soft_wrap=True)
 
 
+@report_app.command("runtime-intelligence-handoff")
+def runtime_intelligence_handoff_manifest(
+    baseline_result: Path = typer.Option(
+        ...,
+        "--baseline-result",
+        help="Baseline Runtime/EdgeEnv result JSON path.",
+    ),
+    candidate_result: Path = typer.Option(
+        ...,
+        "--candidate-result",
+        help="Candidate Runtime/EdgeEnv result JSON path.",
+    ),
+    edgeenv_regression_report: Path = typer.Option(
+        ...,
+        "--edgeenv-regression-report",
+        help="EdgeEnv runtime regression report JSON path.",
+    ),
+    output_path: Path = typer.Option(
+        ...,
+        "--output",
+        "-o",
+        help="Path to write the EdgeEnv-to-Lab handoff manifest JSON.",
+    ),
+    telemetry_history: Path
+    | None = typer.Option(
+        None,
+        "--telemetry-history",
+        help="Optional runtime telemetry history JSON path used by the report.",
+    ),
+) -> None:
+    """Write EdgeEnv producer-side Runtime Intelligence handoff metadata."""
+    try:
+        payload = write_runtime_intelligence_lab_handoff_manifest(
+            output_path=output_path,
+            baseline_result_path=baseline_result,
+            candidate_result_path=candidate_result,
+            edgeenv_regression_report_path=edgeenv_regression_report,
+            telemetry_history_path=telemetry_history,
+        )
+    except (RuntimeIntelligenceLabHandoffError, OSError) as exc:
+        _fail(str(exc), hint=_runtime_intelligence_handoff_error_hint(str(exc)))
+
+    summary = payload["edgeenv_report_summary"]
+    console.print(
+        "[bold green]Runtime Intelligence handoff manifest written[/bold green]"
+    )
+    console.print(f"Output: {output_path}", soft_wrap=True)
+    console.print(f"Baseline: {summary.get('baseline_run_id')}")
+    console.print(f"Candidate: {summary.get('candidate_run_id')}")
+    console.print(f"Mode: {summary.get('mode')}")
+    console.print(
+        "Orchestrator context: "
+        f"{str(summary.get('orchestrator_context_present')).lower()}"
+    )
+    console.print("Lab remains the final deployment decision owner.", soft_wrap=True)
+
+
 @report_app.command("bundle-summary")
 def bundle_summary(
     scenarios: list[str] = typer.Option(
@@ -833,6 +894,23 @@ def _load_telemetry_history_payload(path: Path | None) -> dict[str, Any] | None:
         return load_runtime_telemetry_history(path)
     except RuntimeTelemetryHistoryError as exc:
         _fail(str(exc), hint=_telemetry_history_input_error_hint(str(exc)))
+
+
+def _runtime_intelligence_handoff_error_hint(message: str) -> str:
+    if "schema_version" in message or "orchestrator_operation_context" in message:
+        return (
+            "Regenerate the telemetry history and regression report from the same "
+            "EdgeEnv evidence chain before creating the Lab handoff manifest."
+        )
+    if "run_id" in message:
+        return (
+            "Use the baseline/candidate result JSON files that produced the "
+            "EdgeEnv regression report."
+        )
+    return (
+        "Check the result JSON paths, EdgeEnv regression report path, and optional "
+        "telemetry history path."
+    )
 
 
 def _sampler_show_payload(record: RegistryRecord) -> dict[str, Any]:

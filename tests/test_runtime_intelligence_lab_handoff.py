@@ -1,0 +1,211 @@
+from __future__ import annotations
+
+import json
+
+import pytest
+from typer.testing import CliRunner
+
+from inferedge_env.cli import app
+from inferedge_env.result.lab_handoff import (
+    RUNTIME_INTELLIGENCE_LAB_HANDOFF_SCHEMA_VERSION,
+    RuntimeIntelligenceLabHandoffError,
+    build_runtime_intelligence_lab_handoff_manifest,
+)
+
+
+def test_runtime_intelligence_lab_handoff_manifest_records_producer_contracts(
+    tmp_path,
+):
+    baseline_path, candidate_path, regression_path, history_path = _write_handoff_files(
+        tmp_path
+    )
+
+    payload = build_runtime_intelligence_lab_handoff_manifest(
+        baseline_result_path=baseline_path,
+        candidate_result_path=candidate_path,
+        edgeenv_regression_report_path=regression_path,
+        telemetry_history_path=history_path,
+    )
+
+    assert payload["schema_version"] == RUNTIME_INTELLIGENCE_LAB_HANDOFF_SCHEMA_VERSION
+    assert payload["files"] == {
+        "baseline_result": str(baseline_path),
+        "candidate_result": str(candidate_path),
+        "edgeenv_regression_report": str(regression_path),
+        "runtime_telemetry_history": str(history_path),
+    }
+    assert payload["source_repositories"] == {
+        "runtime_result": "InferEdge-Runtime",
+        "edgeenv_regression_report": "InferEdgeEnv",
+        "orchestrator_operation_context": "InferEdgeOrchestrator",
+        "lab_report_owner": "InferEdgeLab",
+    }
+    assert payload["artifact_roles"]["edgeenv_regression_report"] == (
+        "edgeenv-comparability-first-runtime-regression-report"
+    )
+    assert payload["producer_contracts"] == {
+        "runtime_result_contract": "lab-compatible-runtime-result-json",
+        "edgeenv_history_schema": "edgeenv.runtime-telemetry-history.v1",
+        "orchestrator_feed_schema": (
+            "inferedge-orchestrator-edgeenv-runtime-telemetry-feed-v1"
+        ),
+    }
+    assert payload["boundaries"]["orchestrator_context_is_verdict"] is False
+    assert payload["boundaries"]["lab_is_final_decision_owner"] is True
+    assert payload["edgeenv_report_summary"] == {
+        "baseline_run_id": "baseline",
+        "candidate_run_id": "candidate",
+        "comparable": True,
+        "mode": "same-condition",
+        "regression_detected": True,
+        "regression_type": "mixed",
+        "severity": "high",
+        "runtime_telemetry_context_present": True,
+        "orchestrator_context_present": True,
+    }
+    assert "AIGuard guard_analysis is intentionally not produced by EdgeEnv." in (
+        payload["notes"]
+    )
+
+
+def test_runtime_intelligence_lab_handoff_cli_writes_manifest(tmp_path):
+    baseline_path, candidate_path, regression_path, history_path = _write_handoff_files(
+        tmp_path
+    )
+    output_path = tmp_path / "edgeenv-lab-handoff.json"
+    runner = CliRunner()
+
+    result = runner.invoke(
+        app,
+        [
+            "report",
+            "runtime-intelligence-handoff",
+            "--baseline-result",
+            str(baseline_path),
+            "--candidate-result",
+            str(candidate_path),
+            "--edgeenv-regression-report",
+            str(regression_path),
+            "--telemetry-history",
+            str(history_path),
+            "--output",
+            str(output_path),
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "Runtime Intelligence handoff manifest written" in result.output
+    assert "Lab remains the final deployment decision owner." in result.output
+    payload = json.loads(output_path.read_text(encoding="utf-8"))
+    assert payload["schema_version"] == RUNTIME_INTELLIGENCE_LAB_HANDOFF_SCHEMA_VERSION
+
+
+def test_runtime_intelligence_lab_handoff_rejects_mismatched_run_id(tmp_path):
+    baseline_path, candidate_path, regression_path, history_path = _write_handoff_files(
+        tmp_path
+    )
+    regression = json.loads(regression_path.read_text(encoding="utf-8"))
+    regression["candidate_run_id"] = "other-candidate"
+    regression_path.write_text(json.dumps(regression), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeIntelligenceLabHandoffError,
+        match="candidate_run_id does not match",
+    ):
+        build_runtime_intelligence_lab_handoff_manifest(
+            baseline_result_path=baseline_path,
+            candidate_result_path=candidate_path,
+            edgeenv_regression_report_path=regression_path,
+            telemetry_history_path=history_path,
+        )
+
+
+def test_runtime_intelligence_lab_handoff_rejects_bad_orchestrator_schema(tmp_path):
+    baseline_path, candidate_path, regression_path, history_path = _write_handoff_files(
+        tmp_path
+    )
+    regression = json.loads(regression_path.read_text(encoding="utf-8"))
+    regression["runtime_telemetry_context"]["candidate"][
+        "orchestrator_operation_context"
+    ]["schema_version"] = "unknown"
+    regression_path.write_text(json.dumps(regression), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeIntelligenceLabHandoffError,
+        match="orchestrator_operation_context.schema_version",
+    ):
+        build_runtime_intelligence_lab_handoff_manifest(
+            baseline_result_path=baseline_path,
+            candidate_result_path=candidate_path,
+            edgeenv_regression_report_path=regression_path,
+            telemetry_history_path=history_path,
+        )
+
+
+def _write_handoff_files(tmp_path):
+    baseline_path = tmp_path / "baseline-result.json"
+    candidate_path = tmp_path / "candidate-result.json"
+    regression_path = tmp_path / "edgeenv-regression.json"
+    history_path = tmp_path / "runtime-telemetry-history.json"
+    baseline_path.write_text(json.dumps({"run_id": "baseline"}), encoding="utf-8")
+    candidate_path.write_text(json.dumps({"run_id": "candidate"}), encoding="utf-8")
+    history_path.write_text(
+        json.dumps(
+            {
+                "schema_version": "edgeenv.runtime-telemetry-history.v1",
+                "summary": {
+                    "registered_runs": 2,
+                    "telemetry_runs": 2,
+                    "missing_telemetry_runs": 0,
+                    "orchestrator_feed_runs": 1,
+                },
+                "runs": [],
+                "missing_telemetry": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    regression_path.write_text(
+        json.dumps(
+            {
+                "baseline_run_id": "baseline",
+                "candidate_run_id": "candidate",
+                "comparable": True,
+                "mode": "same-condition",
+                "regression_detected": True,
+                "regression_type": "mixed",
+                "severity": "high",
+                "runtime_telemetry_context": {
+                    "history": {
+                        "schema_version": "edgeenv.runtime-telemetry-history.v1",
+                        "summary": {
+                            "registered_runs": 2,
+                            "telemetry_runs": 2,
+                            "missing_telemetry_runs": 0,
+                            "orchestrator_feed_runs": 1,
+                        },
+                    },
+                    "baseline": {"run_id": "baseline"},
+                    "candidate": {
+                        "run_id": "candidate",
+                        "orchestrator_operation_context": {
+                            "schema_version": (
+                                "inferedge-orchestrator-edgeenv-runtime-telemetry-"
+                                "feed-v1"
+                            ),
+                            "not_a_regression_judgement": True,
+                            "not_a_comparability_gate": True,
+                            "decision_owner": "lab",
+                            "regression_owner": "edgeenv",
+                            "candidate_context": {
+                                "run_id": "candidate",
+                                "operation": {"queue_depth": 7},
+                            },
+                        },
+                    },
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    return baseline_path, candidate_path, regression_path, history_path
