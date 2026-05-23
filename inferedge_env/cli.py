@@ -455,6 +455,10 @@ def inspect_runtime_telemetry_history_command(
             f"{', '.join(coverage.get('missing_fields', [])) or '-'}",
             soft_wrap=True,
         )
+        console.print(
+            "Telemetry coverage missing field runs: "
+            f"{coverage.get('missing_field_run_count', 0)}"
+        )
     console.print(
         "Orchestrator context runs: "
         f"{len(replay.get('orchestrator_context_run_ids', []))}"

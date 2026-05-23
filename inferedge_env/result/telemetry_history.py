@@ -68,6 +68,7 @@ def build_runtime_telemetry_history(
         )
     )
     missing.sort(key=lambda item: item["run_id"])
+    telemetry_coverage = _telemetry_coverage_summary(entries)
     return {
         "schema_version": RUNTIME_TELEMETRY_HISTORY_SCHEMA_VERSION,
         "generated_at": generated.isoformat(),
@@ -82,6 +83,7 @@ def build_runtime_telemetry_history(
             "missing_telemetry_runs": len(missing),
             "orchestrator_feed_runs": len(orchestrator_contexts),
         },
+        "telemetry_coverage": telemetry_coverage,
         "runs": entries,
         "missing_telemetry": missing,
         "notes": [
@@ -158,6 +160,13 @@ def validate_runtime_telemetry_history(
         raise RuntimeTelemetryHistoryError(
             f"Runtime telemetry history missing_telemetry must be a list: {label}"
         )
+    if "telemetry_coverage" in payload and not isinstance(
+        payload.get("telemetry_coverage"),
+        dict,
+    ):
+        raise RuntimeTelemetryHistoryError(
+            f"Runtime telemetry history telemetry_coverage must be an object: {label}"
+        )
     for index, entry in enumerate(payload["runs"]):
         if not isinstance(entry, dict):
             raise RuntimeTelemetryHistoryError(
@@ -200,6 +209,9 @@ def inspect_runtime_telemetry_history(payload: dict[str, Any]) -> dict[str, Any]
     numeric_sequence_ids = [
         value for value in sequence_ids if isinstance(value, (int, float))
     ]
+    telemetry_coverage = payload.get("telemetry_coverage")
+    if not isinstance(telemetry_coverage, dict):
+        telemetry_coverage = _telemetry_coverage_summary(runs)
     return {
         "schema_version": payload["schema_version"],
         "valid": True,
@@ -208,7 +220,7 @@ def inspect_runtime_telemetry_history(payload: dict[str, Any]) -> dict[str, Any]
         "replay": {
             "run_ids": run_ids,
             "telemetry_fields": _telemetry_fields(runs),
-            "telemetry_coverage": _telemetry_coverage_summary(runs),
+            "telemetry_coverage": telemetry_coverage,
             "orchestrator_context_run_ids": [
                 entry["run_id"]
                 for entry in runs
@@ -398,6 +410,8 @@ def _telemetry_coverage_summary(entries: list[dict[str, Any]]) -> dict[str, Any]
     missing_fields: set[str] = set()
     ratios: list[float] = []
     missing_telemetry_failure_values: set[bool] = set()
+    run_summaries: list[dict[str, Any]] = []
+    missing_field_runs: list[dict[str, Any]] = []
 
     for entry in entries:
         telemetry = entry.get("runtime_telemetry")
@@ -406,19 +420,48 @@ def _telemetry_coverage_summary(entries: list[dict[str, Any]]) -> dict[str, Any]
         coverage = telemetry.get("coverage")
         if not isinstance(coverage, dict):
             continue
+        run_id = entry.get("run_id")
+        run_id_value = run_id if isinstance(run_id, str) else ""
         coverage_entries.append(coverage)
-        expected_fields.update(_string_items(coverage.get("expected_fields")))
-        observed_fields.update(_string_items(coverage.get("observed_fields")))
-        missing_fields.update(_string_items(coverage.get("missing_fields")))
+        expected = _string_items(coverage.get("expected_fields"))
+        observed = _string_items(coverage.get("observed_fields"))
+        missing = _string_items(coverage.get("missing_fields"))
+        expected_fields.update(expected)
+        observed_fields.update(observed)
+        missing_fields.update(missing)
         ratio = coverage.get("coverage_ratio")
+        ratio_value = float(ratio) if isinstance(ratio, (int, float)) else None
         if isinstance(ratio, (int, float)):
             ratios.append(float(ratio))
         missing_telemetry_is_failure = coverage.get("missing_telemetry_is_failure")
         if isinstance(missing_telemetry_is_failure, bool):
             missing_telemetry_failure_values.add(missing_telemetry_is_failure)
+        run_summary = {
+            "run_id": run_id_value,
+            "coverage_present": True,
+            "expected_fields": sorted(expected),
+            "observed_fields": sorted(observed),
+            "missing_fields": sorted(missing),
+            "expected_field_count": coverage.get("expected_field_count"),
+            "observed_field_count": coverage.get("observed_field_count"),
+            "missing_field_count": coverage.get("missing_field_count"),
+            "coverage_ratio": ratio_value,
+            "missing_telemetry_is_failure": missing_telemetry_is_failure,
+        }
+        run_summaries.append(run_summary)
+        if missing:
+            missing_field_runs.append(
+                {
+                    "run_id": run_id_value,
+                    "missing_fields": sorted(missing),
+                    "missing_field_count": len(missing),
+                    "missing_telemetry_is_failure": missing_telemetry_is_failure,
+                }
+            )
 
     return {
         "runs_with_coverage": len(coverage_entries),
+        "runs_without_coverage": max(len(entries) - len(coverage_entries), 0),
         "expected_fields": sorted(expected_fields),
         "observed_fields": sorted(observed_fields),
         "missing_fields": sorted(missing_fields),
@@ -427,6 +470,10 @@ def _telemetry_coverage_summary(entries: list[dict[str, Any]]) -> dict[str, Any]
         "missing_telemetry_is_failure_values": sorted(
             missing_telemetry_failure_values
         ),
+        "any_missing_telemetry_is_failure": any(missing_telemetry_failure_values),
+        "missing_field_run_count": len(missing_field_runs),
+        "missing_field_runs": missing_field_runs,
+        "run_summaries": run_summaries,
     }
 
 

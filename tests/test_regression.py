@@ -105,6 +105,30 @@ def test_regression_attaches_runtime_telemetry_history_context(
             "telemetry_runs": 2,
             "missing_telemetry_runs": 0,
         },
+        "telemetry_coverage": {
+            "runs_with_coverage": 1,
+            "runs_without_coverage": 1,
+            "expected_fields": [
+                "gpu_temperature",
+                "queue_depth",
+                "telemetry_timestamp",
+            ],
+            "observed_fields": ["gpu_temperature", "telemetry_timestamp"],
+            "missing_fields": ["queue_depth"],
+            "coverage_ratio_min": 0.666667,
+            "coverage_ratio_max": 0.666667,
+            "missing_telemetry_is_failure_values": [False],
+            "any_missing_telemetry_is_failure": False,
+            "missing_field_run_count": 1,
+            "missing_field_runs": [
+                {
+                    "run_id": "candidate",
+                    "missing_fields": ["queue_depth"],
+                    "missing_field_count": 1,
+                    "missing_telemetry_is_failure": False,
+                }
+            ],
+        },
         "runs": [
             {
                 "run_id": "baseline",
@@ -133,6 +157,14 @@ def test_regression_attaches_runtime_telemetry_history_context(
     assert context["history"]["schema_version"] == (
         "edgeenv.runtime-telemetry-history.v1"
     )
+    assert context["history"]["telemetry_coverage"]["missing_field_runs"] == [
+        {
+            "run_id": "candidate",
+            "missing_fields": ["queue_depth"],
+            "missing_field_count": 1,
+            "missing_telemetry_is_failure": False,
+        }
+    ]
     assert context["baseline"]["result_telemetry_present"] is True
     assert context["baseline"]["history_entry_present"] is True
     assert context["candidate"]["execution_sequence_id"] == 2
