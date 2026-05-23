@@ -166,6 +166,34 @@ def test_runtime_intelligence_lab_handoff_rejects_bad_orchestrator_mapping(
         )
 
 
+def test_runtime_intelligence_lab_handoff_rejects_incomplete_mapping_required_fields(
+    tmp_path,
+):
+    baseline_path, candidate_path, regression_path, history_path = _write_handoff_files(
+        tmp_path
+    )
+    regression = json.loads(regression_path.read_text(encoding="utf-8"))
+    regression["runtime_telemetry_context"]["candidate"][
+        "orchestrator_operation_context"
+    ]["edgeenv_mapping_hint"]["candidate_context_required_fields"] = [
+        "run_id",
+        "operation",
+        "resource",
+    ]
+    regression_path.write_text(json.dumps(regression), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeIntelligenceLabHandoffError,
+        match="candidate_context_required_fields must include telemetry_source",
+    ):
+        build_runtime_intelligence_lab_handoff_manifest(
+            baseline_result_path=baseline_path,
+            candidate_result_path=candidate_path,
+            edgeenv_regression_report_path=regression_path,
+            telemetry_history_path=history_path,
+        )
+
+
 def _write_handoff_files(tmp_path):
     baseline_path = tmp_path / "baseline-result.json"
     candidate_path = tmp_path / "candidate-result.json"

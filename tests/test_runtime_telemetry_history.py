@@ -14,6 +14,7 @@ from inferedge_env.result.telemetry_history import (
     ORCHESTRATOR_EDGEENV_COVERAGE_SUMMARY_OWNER,
     ORCHESTRATOR_EDGEENV_HISTORY_COVERAGE_PATH,
     ORCHESTRATOR_EDGEENV_OPERATION_CONTEXT_ROLE,
+    ORCHESTRATOR_EDGEENV_REQUIRED_CANDIDATE_FIELDS,
     ORCHESTRATOR_TELEMETRY_FEED_SCHEMA_VERSION,
     RUNTIME_TELEMETRY_HISTORY_SCHEMA_VERSION,
     RuntimeTelemetryHistoryError,
@@ -201,6 +202,11 @@ def test_build_runtime_telemetry_history_attaches_orchestrator_feed_context(
     assert context["edgeenv_mapping_hint"]["coverage_summary_path"] == (
         ORCHESTRATOR_EDGEENV_HISTORY_COVERAGE_PATH
     )
+    assert context["edgeenv_mapping_hint"]["candidate_context_required_fields"] == [
+        *ORCHESTRATOR_EDGEENV_REQUIRED_CANDIDATE_FIELDS
+    ]
+    for field in ORCHESTRATOR_EDGEENV_REQUIRED_CANDIDATE_FIELDS:
+        assert field in context["candidate_context"]
     assert "not a regression judgement" in payload["notes"][3]
 
 
