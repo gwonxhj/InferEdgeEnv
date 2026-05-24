@@ -53,6 +53,42 @@ def test_runtime_intelligence_lab_handoff_manifest_records_producer_contracts(
             "inferedge-orchestrator-edgeenv-runtime-telemetry-feed-v1"
         ),
     }
+    assert payload["lab_bundle_alignment"]["bundle_schema_version"] == (
+        "inferedge.runtime-intelligence-artifact-bundle.v1"
+    )
+    assert payload["lab_bundle_alignment"]["required_file_keys"] == [
+        "baseline_result",
+        "candidate_result",
+        "edgeenv_regression_report",
+        "aiguard_guard_analysis",
+    ]
+    assert payload["lab_bundle_alignment"]["edgeenv_produced_file_keys"] == [
+        "baseline_result",
+        "candidate_result",
+        "edgeenv_regression_report",
+        "runtime_telemetry_history",
+    ]
+    assert payload["lab_bundle_alignment"]["external_file_keys"] == [
+        "aiguard_guard_analysis"
+    ]
+    assert payload["lab_bundle_alignment"]["source_repositories"][
+        "aiguard_guard_analysis"
+    ] == "InferEdgeAIGuard"
+    assert payload["lab_bundle_alignment"]["artifact_roles"][
+        "aiguard_guard_analysis"
+    ] == "aiguard-deterministic-runtime-anomaly-evidence"
+    assert payload["lab_bundle_alignment"]["producer_contracts"][
+        "aiguard_schema"
+    ] == "inferedge-aiguard-diagnosis-v1"
+    assert payload["lab_bundle_alignment"]["boundary_flags"] == {
+        "orchestrator_context_is_verdict": False,
+        "orchestrator_context_is_comparability_gate": False,
+        "aiguard_guard_analysis_is_external": True,
+        "aiguard_is_final_decision_owner": False,
+        "edgeenv_does_not_generate_guard_analysis": True,
+        "lab_is_final_decision_owner": True,
+        "production_observability_platform": False,
+    }
     assert payload["boundaries"]["orchestrator_context_is_verdict"] is False
     assert payload["boundaries"]["lab_is_final_decision_owner"] is True
     assert payload["edgeenv_report_summary"] == {
@@ -248,6 +284,32 @@ def test_runtime_intelligence_lab_handoff_rejects_incomplete_mapping_required_fi
         )
 
 
+def test_runtime_intelligence_lab_handoff_rejects_incomplete_aiguard_candidates(
+    tmp_path,
+):
+    baseline_path, candidate_path, regression_path, history_path = _write_handoff_files(
+        tmp_path
+    )
+    regression = json.loads(regression_path.read_text(encoding="utf-8"))
+    regression["runtime_telemetry_context"]["candidate"][
+        "orchestrator_operation_context"
+    ]["edgeenv_mapping_hint"]["aiguard_evidence_candidates"] = [
+        "runtime_queue_overload"
+    ]
+    regression_path.write_text(json.dumps(regression), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeIntelligenceLabHandoffError,
+        match="aiguard_evidence_candidates must include runtime_thermal_instability",
+    ):
+        build_runtime_intelligence_lab_handoff_manifest(
+            baseline_result_path=baseline_path,
+            candidate_result_path=candidate_path,
+            edgeenv_regression_report_path=regression_path,
+            telemetry_history_path=history_path,
+        )
+
+
 def _write_handoff_files(tmp_path):
     baseline_path = tmp_path / "baseline-result.json"
     candidate_path = tmp_path / "candidate-result.json"
@@ -364,6 +426,10 @@ def _write_handoff_files(tmp_path):
                                     "telemetry_source",
                                     "operation",
                                     "resource",
+                                ],
+                                "aiguard_evidence_candidates": [
+                                    "runtime_queue_overload",
+                                    "runtime_thermal_instability",
                                 ],
                             },
                         },

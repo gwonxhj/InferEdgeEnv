@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from inferedge_env.result.telemetry_history import (
+    ORCHESTRATOR_EDGEENV_AIGUARD_EVIDENCE_CANDIDATES,
     ORCHESTRATOR_EDGEENV_CANDIDATE_CONTEXT_PATH,
     ORCHESTRATOR_EDGEENV_COVERAGE_SUMMARY_OWNER,
     ORCHESTRATOR_EDGEENV_HISTORY_COVERAGE_PATH,
@@ -21,6 +22,10 @@ from inferedge_env.result.telemetry_history import (
 RUNTIME_INTELLIGENCE_LAB_HANDOFF_SCHEMA_VERSION = (
     "edgeenv.runtime-intelligence-lab-handoff.v1"
 )
+LAB_RUNTIME_INTELLIGENCE_BUNDLE_SCHEMA_VERSION = (
+    "inferedge.runtime-intelligence-artifact-bundle.v1"
+)
+AIGUARD_DIAGNOSIS_SCHEMA_VERSION = "inferedge-aiguard-diagnosis-v1"
 
 SOURCE_REPOSITORIES = {
     "runtime_result": "InferEdge-Runtime",
@@ -47,6 +52,20 @@ PRODUCER_CONTRACTS = {
     ),
     "orchestrator_feed_schema": ORCHESTRATOR_TELEMETRY_FEED_SCHEMA_VERSION,
 }
+
+LAB_BUNDLE_SOURCE_REPOSITORIES = {
+    **SOURCE_REPOSITORIES,
+    "aiguard_guard_analysis": "InferEdgeAIGuard",
+}
+LAB_BUNDLE_ARTIFACT_ROLES = {
+    **ARTIFACT_ROLES,
+    "aiguard_guard_analysis": "aiguard-deterministic-runtime-anomaly-evidence",
+}
+LAB_BUNDLE_PRODUCER_CONTRACTS = {
+    **PRODUCER_CONTRACTS,
+    "aiguard_schema": AIGUARD_DIAGNOSIS_SCHEMA_VERSION,
+}
+LAB_BUNDLE_EXTERNAL_FILE_KEYS = ("aiguard_guard_analysis",)
 
 BOUNDARIES = {
     "orchestrator_context_is_verdict": False,
@@ -118,6 +137,7 @@ def build_runtime_intelligence_lab_handoff_manifest(
             "deployment_decision_owner": "lab",
         },
         "boundaries": dict(BOUNDARIES),
+        "lab_bundle_alignment": _lab_bundle_alignment(files),
         "edgeenv_report_summary": _edgeenv_report_summary(regression_report),
         "notes": [
             "This manifest is EdgeEnv producer-side handoff metadata.",
@@ -320,6 +340,27 @@ def _validate_orchestrator_mapping_hint(
             "candidate_context_required_fields must include "
             f"{', '.join(missing_required)}: {regression_path}"
         )
+    evidence_candidates = mapping_hint.get("aiguard_evidence_candidates")
+    if evidence_candidates is not None:
+        if not isinstance(evidence_candidates, list) or not all(
+            isinstance(item, str) for item in evidence_candidates
+        ):
+            raise RuntimeIntelligenceLabHandoffError(
+                "orchestrator_operation_context.edgeenv_mapping_hint."
+                "aiguard_evidence_candidates must be a string list: "
+                f"{regression_path}"
+            )
+        missing_candidates = [
+            candidate
+            for candidate in ORCHESTRATOR_EDGEENV_AIGUARD_EVIDENCE_CANDIDATES
+            if candidate not in evidence_candidates
+        ]
+        if missing_candidates:
+            raise RuntimeIntelligenceLabHandoffError(
+                "orchestrator_operation_context.edgeenv_mapping_hint."
+                "aiguard_evidence_candidates must include "
+                f"{', '.join(missing_candidates)}: {regression_path}"
+            )
     candidate_context = operation_context.get("candidate_context")
     if not isinstance(candidate_context, dict):
         raise RuntimeIntelligenceLabHandoffError(
@@ -428,4 +469,32 @@ def _edgeenv_report_summary(regression_report: dict[str, Any]) -> dict[str, Any]
                 dict,
             )
         ),
+    }
+
+
+def _lab_bundle_alignment(files: dict[str, str]) -> dict[str, Any]:
+    produced_file_keys = tuple(sorted(files))
+    required_file_keys = (
+        "baseline_result",
+        "candidate_result",
+        "edgeenv_regression_report",
+        *LAB_BUNDLE_EXTERNAL_FILE_KEYS,
+    )
+    return {
+        "bundle_schema_version": LAB_RUNTIME_INTELLIGENCE_BUNDLE_SCHEMA_VERSION,
+        "required_file_keys": list(required_file_keys),
+        "edgeenv_produced_file_keys": list(produced_file_keys),
+        "external_file_keys": list(LAB_BUNDLE_EXTERNAL_FILE_KEYS),
+        "source_repositories": dict(LAB_BUNDLE_SOURCE_REPOSITORIES),
+        "artifact_roles": dict(LAB_BUNDLE_ARTIFACT_ROLES),
+        "producer_contracts": dict(LAB_BUNDLE_PRODUCER_CONTRACTS),
+        "boundary_flags": {
+            "orchestrator_context_is_verdict": False,
+            "orchestrator_context_is_comparability_gate": False,
+            "aiguard_guard_analysis_is_external": True,
+            "aiguard_is_final_decision_owner": False,
+            "edgeenv_does_not_generate_guard_analysis": True,
+            "lab_is_final_decision_owner": True,
+            "production_observability_platform": False,
+        },
     }

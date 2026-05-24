@@ -12,6 +12,7 @@ from inferedge_env.config.target_profile import TargetProfile
 from inferedge_env.registry.db import RunRegistry
 from inferedge_env.result.schema import ResourceMetrics
 from inferedge_env.result.telemetry_history import (
+    ORCHESTRATOR_EDGEENV_AIGUARD_EVIDENCE_CANDIDATES,
     ORCHESTRATOR_EDGEENV_CANDIDATE_CONTEXT_PATH,
     ORCHESTRATOR_EDGEENV_COVERAGE_SUMMARY_OWNER,
     ORCHESTRATOR_EDGEENV_HISTORY_COVERAGE_PATH,
@@ -278,6 +279,9 @@ def test_regression_attaches_orchestrator_feed_as_supplemental_context(
     assert candidate_context["orchestrator_operation_context"]["edgeenv_mapping_hint"][
         "candidate_context_required_fields"
     ] == [*ORCHESTRATOR_EDGEENV_REQUIRED_CANDIDATE_FIELDS]
+    assert candidate_context["orchestrator_operation_context"]["edgeenv_mapping_hint"][
+        "aiguard_evidence_candidates"
+    ] == [*ORCHESTRATOR_EDGEENV_AIGUARD_EVIDENCE_CANDIDATES]
     assert candidate_context["orchestrator_operation_context"]["candidate_context"][
         "operation"
     ]["queue_depth"] == 7
@@ -1009,6 +1013,9 @@ def _orchestrator_context(run_id: str) -> dict:
                 "telemetry_source",
                 "operation",
                 "resource",
+            ],
+            "aiguard_evidence_candidates": [
+                *ORCHESTRATOR_EDGEENV_AIGUARD_EVIDENCE_CANDIDATES
             ],
         },
     }

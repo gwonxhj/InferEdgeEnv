@@ -269,8 +269,11 @@ EdgeEnv regression report, optional Orchestrator operation context, and
 Lab-owned report boundary. When `runtime_telemetry_history_seed` entries are
 present, the handoff validates their schema, `registry_owner=edgeenv`,
 `decision_owner=lab`, non-production marker, and replay points before exposing
-the seed count in `edgeenv_report_summary.history_seed_runs`. It intentionally
-does not produce AIGuard
+the seed count in `edgeenv_report_summary.history_seed_runs`. The manifest also
+includes `lab_bundle_alignment` metadata for Lab's Runtime Intelligence bundle:
+required file keys, EdgeEnv-produced file keys, external AIGuard file keys,
+source repository mapping, artifact roles, and producer contract names. It
+intentionally does not produce AIGuard
 `guard_analysis`; AIGuard remains a separate deterministic diagnosis provider
 and Lab remains the deployment decision owner.
 

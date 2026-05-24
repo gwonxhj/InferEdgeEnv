@@ -10,6 +10,7 @@ from helpers import make_result
 from inferedge_env.cli import app
 from inferedge_env.registry.db import RunRegistry
 from inferedge_env.result.telemetry_history import (
+    ORCHESTRATOR_EDGEENV_AIGUARD_EVIDENCE_CANDIDATES,
     ORCHESTRATOR_EDGEENV_CANDIDATE_CONTEXT_PATH,
     ORCHESTRATOR_EDGEENV_COVERAGE_SUMMARY_OWNER,
     ORCHESTRATOR_EDGEENV_HISTORY_COVERAGE_PATH,
@@ -216,6 +217,9 @@ def test_build_runtime_telemetry_history_attaches_orchestrator_feed_context(
     assert context["edgeenv_mapping_hint"]["candidate_context_required_fields"] == [
         *ORCHESTRATOR_EDGEENV_REQUIRED_CANDIDATE_FIELDS
     ]
+    assert context["edgeenv_mapping_hint"]["aiguard_evidence_candidates"] == [
+        *ORCHESTRATOR_EDGEENV_AIGUARD_EVIDENCE_CANDIDATES
+    ]
     for field in ORCHESTRATOR_EDGEENV_REQUIRED_CANDIDATE_FIELDS:
         assert field in context["candidate_context"]
     assert "not a regression judgement" in payload["notes"][3]
@@ -244,6 +248,38 @@ def test_build_runtime_telemetry_history_rejects_bad_feed_mapping_contract(
     with pytest.raises(
         RuntimeTelemetryHistoryError,
         match="coverage_summary_owner must be edgeenv",
+    ):
+        build_runtime_telemetry_history(
+            edgeenv_root,
+            orchestrator_feeds=[feed_path],
+        )
+
+
+def test_build_runtime_telemetry_history_rejects_incomplete_aiguard_candidates(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    edgeenv_root = tmp_path / ".edgeenv"
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="candidate",
+        runtime_telemetry=_runtime_telemetry_payload(sequence_id=2),
+    )
+    feed = _orchestrator_feed_payload("candidate")
+    feed["edgeenv_mapping_hint"]["aiguard_evidence_candidates"] = [
+        "runtime_queue_overload"
+    ]
+    feed_path = tmp_path / "orchestrator-feed.json"
+    feed_path.write_text(json.dumps(feed), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeTelemetryHistoryError,
+        match="aiguard_evidence_candidates must include runtime_thermal_instability",
     ):
         build_runtime_telemetry_history(
             edgeenv_root,
@@ -792,6 +828,9 @@ def _orchestrator_feed_payload(run_id: str) -> dict:
                 "telemetry_source",
                 "operation",
                 "resource",
+            ],
+            "aiguard_evidence_candidates": [
+                *ORCHESTRATOR_EDGEENV_AIGUARD_EVIDENCE_CANDIDATES
             ],
         },
     }
