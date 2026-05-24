@@ -19,6 +19,13 @@ RUNTIME_TELEMETRY_HISTORY_SEED_SCHEMA_VERSION = (
 ORCHESTRATOR_TELEMETRY_FEED_SCHEMA_VERSION = (
     "inferedge-orchestrator-edgeenv-runtime-telemetry-feed-v1"
 )
+ORCHESTRATOR_TELEMETRY_FEED_SOURCE_REPOSITORY = "InferEdgeOrchestrator"
+ORCHESTRATOR_TELEMETRY_FEED_ARTIFACT_ROLE = (
+    "orchestrator-supplemental-operation-context"
+)
+ORCHESTRATOR_TELEMETRY_FEED_PRODUCER_CONTRACT = (
+    ORCHESTRATOR_TELEMETRY_FEED_SCHEMA_VERSION
+)
 ORCHESTRATOR_EDGEENV_CANDIDATE_CONTEXT_PATH = "runtime_telemetry_context.candidate"
 ORCHESTRATOR_EDGEENV_HISTORY_COVERAGE_PATH = (
     "runtime_telemetry_context.history.telemetry_coverage"
@@ -210,14 +217,22 @@ def validate_runtime_telemetry_history(
                 label=f"{label} runs[{index}].runtime_telemetry_history_seed",
             )
         orchestrator_context = entry.get("orchestrator_operation_context")
-        if orchestrator_context is not None and not isinstance(
-            orchestrator_context,
-            dict,
-        ):
-            raise RuntimeTelemetryHistoryError(
-                "Runtime telemetry history "
-                f"runs[{index}].orchestrator_operation_context must be an object: "
-                f"{label}"
+        if orchestrator_context is not None:
+            if not isinstance(
+                orchestrator_context,
+                dict,
+            ):
+                raise RuntimeTelemetryHistoryError(
+                    "Runtime telemetry history "
+                    f"runs[{index}].orchestrator_operation_context must be an object: "
+                    f"{label}"
+                )
+            _validate_orchestrator_context_markers(
+                orchestrator_context,
+                label=(
+                    "Runtime telemetry history "
+                    f"runs[{index}].orchestrator_operation_context"
+                ),
             )
 
 
@@ -392,6 +407,7 @@ def _load_orchestrator_feed(feed_path: Path | str) -> dict[str, Any]:
         raise RuntimeTelemetryHistoryError(
             "Orchestrator telemetry feed must declare not_a_comparability_gate=true"
         )
+    _validate_orchestrator_producer_markers(payload, source)
     mapping_hint = _validate_orchestrator_mapping_hint(
         payload.get("edgeenv_mapping_hint", {}),
         candidate_context=candidate_context,
@@ -400,6 +416,9 @@ def _load_orchestrator_feed(feed_path: Path | str) -> dict[str, Any]:
     return {
         "schema_version": schema_version,
         "role": payload.get("role"),
+        "source_repository": payload.get("source_repository"),
+        "artifact_role": payload.get("artifact_role"),
+        "producer_contract": payload.get("producer_contract"),
         "source": payload.get("source"),
         "run_id": run_id,
         "not_a_regression_judgement": True,
@@ -409,6 +428,37 @@ def _load_orchestrator_feed(feed_path: Path | str) -> dict[str, Any]:
         "candidate_context": deepcopy(candidate_context),
         "edgeenv_mapping_hint": mapping_hint,
     }
+
+
+def _validate_orchestrator_producer_markers(
+    payload: dict[str, Any],
+    source: Path,
+) -> None:
+    expected_pairs = {
+        "source_repository": ORCHESTRATOR_TELEMETRY_FEED_SOURCE_REPOSITORY,
+        "artifact_role": ORCHESTRATOR_TELEMETRY_FEED_ARTIFACT_ROLE,
+        "producer_contract": ORCHESTRATOR_TELEMETRY_FEED_PRODUCER_CONTRACT,
+    }
+    for key, expected in expected_pairs.items():
+        if payload.get(key) != expected:
+            raise RuntimeTelemetryHistoryError(
+                f"Orchestrator telemetry feed {key} must be {expected}: {source}"
+            )
+
+
+def _validate_orchestrator_context_markers(
+    context: dict[str, Any],
+    *,
+    label: str,
+) -> None:
+    expected_pairs = {
+        "source_repository": ORCHESTRATOR_TELEMETRY_FEED_SOURCE_REPOSITORY,
+        "artifact_role": ORCHESTRATOR_TELEMETRY_FEED_ARTIFACT_ROLE,
+        "producer_contract": ORCHESTRATOR_TELEMETRY_FEED_PRODUCER_CONTRACT,
+    }
+    for key, expected in expected_pairs.items():
+        if context.get(key) != expected:
+            raise RuntimeTelemetryHistoryError(f"{label}.{key} must be {expected}")
 
 
 def _validate_orchestrator_mapping_hint(

@@ -11,7 +11,10 @@ from inferedge_env.result.telemetry_history import (
     ORCHESTRATOR_EDGEENV_HISTORY_COVERAGE_PATH,
     ORCHESTRATOR_EDGEENV_OPERATION_CONTEXT_ROLE,
     ORCHESTRATOR_EDGEENV_REQUIRED_CANDIDATE_FIELDS,
+    ORCHESTRATOR_TELEMETRY_FEED_ARTIFACT_ROLE,
+    ORCHESTRATOR_TELEMETRY_FEED_PRODUCER_CONTRACT,
     ORCHESTRATOR_TELEMETRY_FEED_SCHEMA_VERSION,
+    ORCHESTRATOR_TELEMETRY_FEED_SOURCE_REPOSITORY,
     RuntimeTelemetryHistoryError,
     RUNTIME_TELEMETRY_HISTORY_SCHEMA_VERSION,
     RUNTIME_TELEMETRY_HISTORY_SEED_SCHEMA_VERSION,
@@ -270,6 +273,10 @@ def _validate_orchestrator_context(
             "orchestrator_operation_context.schema_version must be "
             f"{ORCHESTRATOR_TELEMETRY_FEED_SCHEMA_VERSION}"
         )
+    _validate_orchestrator_producer_markers(
+        operation_context,
+        regression_path=regression_path,
+    )
     if operation_context.get("not_a_regression_judgement") is not True:
         raise RuntimeIntelligenceLabHandoffError(
             "orchestrator_operation_context.not_a_regression_judgement must be true"
@@ -291,6 +298,24 @@ def _validate_orchestrator_context(
         operation_context=operation_context,
         regression_path=regression_path,
     )
+
+
+def _validate_orchestrator_producer_markers(
+    operation_context: dict[str, Any],
+    *,
+    regression_path: Path,
+) -> None:
+    expected_pairs = {
+        "source_repository": ORCHESTRATOR_TELEMETRY_FEED_SOURCE_REPOSITORY,
+        "artifact_role": ORCHESTRATOR_TELEMETRY_FEED_ARTIFACT_ROLE,
+        "producer_contract": ORCHESTRATOR_TELEMETRY_FEED_PRODUCER_CONTRACT,
+    }
+    for key, expected in expected_pairs.items():
+        if operation_context.get(key) != expected:
+            raise RuntimeIntelligenceLabHandoffError(
+                f"orchestrator_operation_context.{key} must be {expected}: "
+                f"{regression_path}"
+            )
 
 
 def _validate_orchestrator_mapping_hint(

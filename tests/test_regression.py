@@ -18,6 +18,9 @@ from inferedge_env.result.telemetry_history import (
     ORCHESTRATOR_EDGEENV_HISTORY_COVERAGE_PATH,
     ORCHESTRATOR_EDGEENV_OPERATION_CONTEXT_ROLE,
     ORCHESTRATOR_EDGEENV_REQUIRED_CANDIDATE_FIELDS,
+    ORCHESTRATOR_TELEMETRY_FEED_ARTIFACT_ROLE,
+    ORCHESTRATOR_TELEMETRY_FEED_PRODUCER_CONTRACT,
+    ORCHESTRATOR_TELEMETRY_FEED_SOURCE_REPOSITORY,
 )
 from inferedge_env.result.writer import ResultArtifactWriter
 from inferedge_env.runners.base import RunnerResult
@@ -267,6 +270,15 @@ def test_regression_attaches_orchestrator_feed_as_supplemental_context(
     assert candidate_context["orchestrator_operation_context"][
         "not_a_regression_judgement"
     ] is True
+    assert candidate_context["orchestrator_operation_context"][
+        "source_repository"
+    ] == ORCHESTRATOR_TELEMETRY_FEED_SOURCE_REPOSITORY
+    assert candidate_context["orchestrator_operation_context"]["artifact_role"] == (
+        ORCHESTRATOR_TELEMETRY_FEED_ARTIFACT_ROLE
+    )
+    assert candidate_context["orchestrator_operation_context"][
+        "producer_contract"
+    ] == ORCHESTRATOR_TELEMETRY_FEED_PRODUCER_CONTRACT
     assert candidate_context["orchestrator_operation_context"]["edgeenv_mapping_hint"][
         "coverage_summary_owner"
     ] == ORCHESTRATOR_EDGEENV_COVERAGE_SUMMARY_OWNER
@@ -981,6 +993,9 @@ def _orchestrator_context(run_id: str) -> dict:
     return {
         "schema_version": "inferedge-orchestrator-edgeenv-runtime-telemetry-feed-v1",
         "role": "orchestrator_operation_context_for_edgeenv",
+        "source_repository": ORCHESTRATOR_TELEMETRY_FEED_SOURCE_REPOSITORY,
+        "artifact_role": ORCHESTRATOR_TELEMETRY_FEED_ARTIFACT_ROLE,
+        "producer_contract": ORCHESTRATOR_TELEMETRY_FEED_PRODUCER_CONTRACT,
         "source": "orchestration_summary",
         "run_id": run_id,
         "not_a_regression_judgement": True,

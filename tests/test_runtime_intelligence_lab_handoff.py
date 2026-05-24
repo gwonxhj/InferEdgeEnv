@@ -11,6 +11,11 @@ from inferedge_env.result.lab_handoff import (
     RuntimeIntelligenceLabHandoffError,
     build_runtime_intelligence_lab_handoff_manifest,
 )
+from inferedge_env.result.telemetry_history import (
+    ORCHESTRATOR_TELEMETRY_FEED_ARTIFACT_ROLE,
+    ORCHESTRATOR_TELEMETRY_FEED_PRODUCER_CONTRACT,
+    ORCHESTRATOR_TELEMETRY_FEED_SOURCE_REPOSITORY,
+)
 
 
 def test_runtime_intelligence_lab_handoff_manifest_records_producer_contracts(
@@ -232,6 +237,30 @@ def test_runtime_intelligence_lab_handoff_rejects_bad_orchestrator_schema(tmp_pa
         )
 
 
+def test_runtime_intelligence_lab_handoff_rejects_bad_orchestrator_producer_marker(
+    tmp_path,
+):
+    baseline_path, candidate_path, regression_path, history_path = _write_handoff_files(
+        tmp_path
+    )
+    regression = json.loads(regression_path.read_text(encoding="utf-8"))
+    regression["runtime_telemetry_context"]["candidate"][
+        "orchestrator_operation_context"
+    ]["artifact_role"] = "lab-owned-deployment-risk-report"
+    regression_path.write_text(json.dumps(regression), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeIntelligenceLabHandoffError,
+        match="artifact_role must be orchestrator-supplemental-operation-context",
+    ):
+        build_runtime_intelligence_lab_handoff_manifest(
+            baseline_result_path=baseline_path,
+            candidate_result_path=candidate_path,
+            edgeenv_regression_report_path=regression_path,
+            telemetry_history_path=history_path,
+        )
+
+
 def test_runtime_intelligence_lab_handoff_rejects_bad_orchestrator_mapping(
     tmp_path,
 ):
@@ -397,6 +426,13 @@ def _write_handoff_files(tmp_path):
                             "schema_version": (
                                 "inferedge-orchestrator-edgeenv-runtime-telemetry-"
                                 "feed-v1"
+                            ),
+                            "source_repository": (
+                                ORCHESTRATOR_TELEMETRY_FEED_SOURCE_REPOSITORY
+                            ),
+                            "artifact_role": ORCHESTRATOR_TELEMETRY_FEED_ARTIFACT_ROLE,
+                            "producer_contract": (
+                                ORCHESTRATOR_TELEMETRY_FEED_PRODUCER_CONTRACT
                             ),
                             "not_a_regression_judgement": True,
                             "not_a_comparability_gate": True,

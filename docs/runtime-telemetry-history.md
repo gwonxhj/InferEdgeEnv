@@ -85,6 +85,13 @@ is then preserved under the matching history entry as
 not turn missing telemetry into a successful telemetry run, and does not change
 the same-condition comparability gate.
 
+EdgeEnv also requires the Orchestrator producer identity markers before
+preserving the feed:
+
+- `source_repository=InferEdgeOrchestrator`
+- `artifact_role=orchestrator-supplemental-operation-context`
+- `producer_contract=inferedge-orchestrator-edgeenv-runtime-telemetry-feed-v1`
+
 Newer Orchestrator feeds can also declare `edgeenv_mapping_hint` fields. EdgeEnv
 preserves these hints and validates them when present: Orchestrator may map only
 supplemental candidate operation context to
@@ -149,6 +156,9 @@ The history artifact uses this top-level shape:
       },
       "orchestrator_operation_context": {
         "schema_version": "inferedge-orchestrator-edgeenv-runtime-telemetry-feed-v1",
+        "source_repository": "InferEdgeOrchestrator",
+        "artifact_role": "orchestrator-supplemental-operation-context",
+        "producer_contract": "inferedge-orchestrator-edgeenv-runtime-telemetry-feed-v1",
         "not_a_regression_judgement": true,
         "not_a_comparability_gate": true,
         "edgeenv_mapping_hint": {
