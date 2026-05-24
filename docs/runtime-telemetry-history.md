@@ -40,6 +40,13 @@ The payload is intentionally additive and minimally validated:
 - Runtime telemetry `coverage`, when present, is preserved as evidence quality
   metadata. Missing coverage fields are treated as an evidence gap, not as a
   failed run or comparability failure.
+- Runtime telemetry `history_seed`, when present with schema
+  `inferedge-runtime-telemetry-history-seed-v1`, is copied into the history
+  entry as `runtime_telemetry_history_seed`. EdgeEnv validates that the seed
+  keeps `registry_owner=edgeenv`, `decision_owner=lab`,
+  `production_monitoring=false`, and `missing_telemetry_is_failure=false`.
+  This proves Runtime is only the telemetry evidence producer while EdgeEnv owns
+  local history accumulation.
 
 When present, EdgeEnv stores the payload in two places:
 
@@ -102,6 +109,7 @@ The history artifact uses this top-level shape:
   "summary": {
     "registered_runs": 2,
     "telemetry_runs": 1,
+    "history_seed_runs": 1,
     "missing_telemetry_runs": 1
   },
   "runs": [
@@ -109,6 +117,19 @@ The history artifact uses this top-level shape:
       "run_id": "run-20260522-000000-12345678",
       "runtime_telemetry": {
         "schema_version": "inferedge-runtime-telemetry-v1",
+        "history_seed": {
+          "schema_version": "inferedge-runtime-telemetry-history-seed-v1",
+          "registry_owner": "edgeenv",
+          "decision_owner": "lab",
+          "production_monitoring": false,
+          "missing_telemetry_is_failure": false,
+          "points": [
+            {
+              "execution_sequence_id": 0,
+              "telemetry_timestamp": "2026-05-22T00:00:00Z"
+            }
+          ]
+        },
         "coverage": {
           "schema_version": "inferedge-runtime-telemetry-coverage-v1",
           "expected_fields": ["queue_depth", "gpu_temperature"],
@@ -118,6 +139,13 @@ The history artifact uses this top-level shape:
           "comparability_owner": "edgeenv",
           "missing_telemetry_is_failure": false
         }
+      },
+      "runtime_telemetry_history_seed": {
+        "schema_version": "inferedge-runtime-telemetry-history-seed-v1",
+        "registry_owner": "edgeenv",
+        "decision_owner": "lab",
+        "production_monitoring": false,
+        "missing_telemetry_is_failure": false
       },
       "orchestrator_operation_context": {
         "schema_version": "inferedge-orchestrator-edgeenv-runtime-telemetry-feed-v1",
@@ -190,6 +218,13 @@ EdgeEnv's replay summary instead of recomputing coverage gaps. This makes
 coverage gaps visible downstream without allowing coverage to override
 EdgeEnv's comparability-first regression policy.
 
+Runtime `history_seed` context is preserved as
+`runtime_telemetry_history_seed` in the exported history artifact and counted in
+`summary.history_seed_runs`. It is a one-result replay seed for EdgeEnv history
+accumulation, not a live telemetry stream or a production monitoring contract.
+If the seed is malformed or tries to move registry/decision ownership away from
+EdgeEnv/Lab, export fails rather than silently rewriting the ownership markers.
+
 Replay edge cases are preserved as evidence context:
 
 - If the compared candidate is missing runtime telemetry, the regression report
@@ -255,6 +290,7 @@ Current flow:
 ```text
 Runtime result
 -> EdgeEnv result.json + runtime_telemetry.json
+-> EdgeEnv runtime_telemetry_history_seed preservation
 -> optional Orchestrator edgeenv_runtime_telemetry_feed context
 -> EdgeEnv export/import replay seed
 -> EdgeEnv runtime telemetry history artifact

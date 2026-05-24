@@ -12,6 +12,7 @@ from inferedge_env.result.telemetry_history import (
     ORCHESTRATOR_EDGEENV_REQUIRED_CANDIDATE_FIELDS,
     ORCHESTRATOR_TELEMETRY_FEED_SCHEMA_VERSION,
     RUNTIME_TELEMETRY_HISTORY_SCHEMA_VERSION,
+    RUNTIME_TELEMETRY_HISTORY_SEED_SCHEMA_VERSION,
 )
 
 
@@ -39,6 +40,9 @@ ARTIFACT_ROLES = {
 PRODUCER_CONTRACTS = {
     "runtime_result_contract": "lab-compatible-runtime-result-json",
     "edgeenv_history_schema": RUNTIME_TELEMETRY_HISTORY_SCHEMA_VERSION,
+    "runtime_telemetry_history_seed_schema": (
+        RUNTIME_TELEMETRY_HISTORY_SEED_SCHEMA_VERSION
+    ),
     "orchestrator_feed_schema": ORCHESTRATOR_TELEMETRY_FEED_SCHEMA_VERSION,
 }
 

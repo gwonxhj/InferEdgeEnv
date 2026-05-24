@@ -84,6 +84,10 @@ replay run, telemetry field, coverage metadata, evidence gap을 먼저 확인할
 있다. Runtime이 `runtime_telemetry.coverage`를 제공하면 EdgeEnv는 이를
 evidence quality metadata로 보존하지만, coverage 누락을 run 실패나 regression
 judgement로 승격하지 않는다.
+Runtime이 `runtime_telemetry.history_seed`를 제공하면 EdgeEnv는 이를
+`runtime_telemetry_history_seed`로 보존하고 `registry_owner=edgeenv`,
+`decision_owner=lab` 경계를 검증한다. 이는 local replay/history evidence이며
+production monitoring stream이 아니다.
 
 ## EdgeEnv가 아닌 것
 

@@ -61,6 +61,7 @@ def test_build_runtime_telemetry_history_records_entries_and_missing_gaps(
         "requested_runs": None,
         "registered_runs": 2,
         "telemetry_runs": 1,
+        "history_seed_runs": 1,
         "missing_telemetry_runs": 1,
         "orchestrator_feed_runs": 0,
     }
@@ -82,6 +83,15 @@ def test_build_runtime_telemetry_history_records_entries_and_missing_gaps(
         "comparability_owner": "edgeenv",
         "missing_telemetry_is_failure": False,
     }
+    assert payload["runs"][0]["runtime_telemetry_history_seed"] == (
+        payload["runs"][0]["runtime_telemetry"]["history_seed"]
+    )
+    assert payload["runs"][0]["runtime_telemetry_history_seed"]["registry_owner"] == (
+        "edgeenv"
+    )
+    assert payload["runs"][0]["runtime_telemetry_history_seed"]["decision_owner"] == (
+        "lab"
+    )
     assert payload["telemetry_coverage"]["missing_field_runs"] == [
         {
             "run_id": "run-with-telemetry",
@@ -150,6 +160,7 @@ def test_write_runtime_telemetry_history_filters_selected_runs(
     assert payload["summary"]["requested_runs"] == 2
     assert payload["summary"]["registered_runs"] == 1
     assert payload["summary"]["telemetry_runs"] == 1
+    assert payload["summary"]["history_seed_runs"] == 1
     assert payload["runs"][0]["run_id"] == "run-b"
     assert payload["runs"][0]["execution_sequence_id"] == 2
 
@@ -271,6 +282,31 @@ def test_build_runtime_telemetry_history_rejects_feed_for_unselected_run(
         )
 
 
+def test_build_runtime_telemetry_history_rejects_bad_runtime_history_seed(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    edgeenv_root = tmp_path / ".edgeenv"
+    telemetry = _runtime_telemetry_payload(sequence_id=2)
+    telemetry["history_seed"]["registry_owner"] = "runtime"
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="run-with-bad-seed",
+        runtime_telemetry=telemetry,
+    )
+
+    with pytest.raises(
+        RuntimeTelemetryHistoryError,
+        match="history seed registry_owner must be edgeenv",
+    ):
+        build_runtime_telemetry_history(edgeenv_root)
+
+
 def test_cli_runs_telemetry_export_history_attaches_orchestrator_feed(
     tmp_path,
     bench_config,
@@ -369,6 +405,7 @@ def test_inspect_runtime_telemetry_history_reports_replay_summary(
     assert summary["replay"]["sequence_monotonic"] is True
     assert summary["replay"]["evidence_gap_count"] == 1
     assert summary["replay"]["missing_run_ids"] == ["run-without-telemetry"]
+    assert summary["replay"]["history_seed_run_ids"] == ["run-a", "run-b"]
     assert "latency" in summary["replay"]["telemetry_fields"]
     assert "operation" in summary["replay"]["telemetry_fields"]
     assert summary["replay"]["telemetry_coverage"] == {
@@ -490,10 +527,15 @@ def test_cli_runs_telemetry_export_history_writes_replay_artifact(
     assert result.exit_code == 0
     assert "Runtime telemetry history exported" in result.output
     assert "Telemetry entries: 1" in result.output
+    assert "History seed entries: 1" in result.output
     assert "not production monitoring" in result.output
     payload = json.loads(output_path.read_text(encoding="utf-8"))
     assert payload["summary"]["telemetry_runs"] == 1
+    assert payload["summary"]["history_seed_runs"] == 1
     assert payload["runs"][0]["run_id"] == "run-cli-telemetry"
+    assert payload["runs"][0]["runtime_telemetry_history_seed"]["registry_owner"] == (
+        "edgeenv"
+    )
 
 
 def test_cli_runs_telemetry_inspect_history_validates_replay_artifact(
@@ -538,6 +580,7 @@ def test_cli_runs_telemetry_inspect_history_validates_replay_artifact(
     assert "Telemetry fields:" in result.output
     assert "Telemetry coverage runs: 1" in result.output
     assert "Telemetry coverage missing fields: queue_depth" in result.output
+    assert "Runtime history seed runs: 1" in result.output
     assert "latency" in result.output
     assert "Evidence gaps: 1" in result.output
     assert "run-cli-without-telemetry" in result.output
@@ -579,6 +622,7 @@ def test_cli_runs_telemetry_inspect_history_json_output(
     assert payload["valid"] is True
     assert payload["replay"]["run_ids"] == ["run-cli-json"]
     assert payload["replay"]["execution_sequence_ids"] == [3]
+    assert payload["replay"]["history_seed_run_ids"] == ["run-cli-json"]
     assert payload["replay"]["telemetry_coverage"]["runs_with_coverage"] == 1
     assert payload["replay"]["telemetry_coverage"]["missing_fields"] == [
         "queue_depth"
@@ -624,7 +668,7 @@ def _write_registered_run(
 
 
 def _runtime_telemetry_payload(sequence_id: int = 7) -> dict:
-    return {
+    payload = {
         "schema_version": "inferedge-runtime-telemetry-v1",
         "collection_mode": "single_result_export",
         "telemetry_timestamp": "2026-05-22T00:00:00Z",
@@ -653,6 +697,54 @@ def _runtime_telemetry_payload(sequence_id: int = 7) -> dict:
         },
         "missing_fields": ["queue_depth"],
         "production_monitoring": False,
+    }
+    payload["history_seed"] = _runtime_history_seed_payload(sequence_id)
+    return payload
+
+
+def _runtime_history_seed_payload(sequence_id: int) -> dict:
+    return {
+        "schema_version": "inferedge-runtime-telemetry-history-seed-v1",
+        "evidence_role": "runtime_telemetry_history_seed",
+        "registry_owner": "edgeenv",
+        "decision_owner": "lab",
+        "source_result_schema_version": "inferedge-runtime-result-v1",
+        "source_telemetry_schema_version": "inferedge-runtime-telemetry-v1",
+        "replay_scope": "single_result_to_history",
+        "replay_ready": True,
+        "production_monitoring": False,
+        "missing_telemetry_is_failure": False,
+        "source_result": {
+            "compare_key": "demo__b1__h224w224__fp32",
+            "backend_key": "onnxruntime__cpu",
+            "engine_backend": "onnxruntime",
+            "device": "cpu",
+            "precision": "fp32",
+            "power_mode": "unknown",
+        },
+        "recommended_registry_key_fields": [
+            "compare_key",
+            "backend_key",
+            "device",
+            "precision",
+            "power_mode",
+            "run_config",
+        ],
+        "time_series_fields": [
+            "telemetry_timestamp",
+            "execution_sequence_id",
+            "latency.mean_ms",
+            "operation.timeout_observed",
+        ],
+        "points": [
+            {
+                "execution_sequence_id": sequence_id,
+                "telemetry_timestamp": "2026-05-22T00:00:00Z",
+                "mean_ms": 10.0,
+                "p99_ms": 12.0,
+                "timeout_observed": False,
+            }
+        ],
     }
 
 
