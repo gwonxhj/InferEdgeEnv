@@ -13,6 +13,9 @@ from inferedge_env.result.writer import load_result
 
 
 RUNTIME_TELEMETRY_HISTORY_SCHEMA_VERSION = "edgeenv.runtime-telemetry-history.v1"
+RUNTIME_TELEMETRY_HISTORY_SEED_SCHEMA_VERSION = (
+    "inferedge-runtime-telemetry-history-seed-v1"
+)
 ORCHESTRATOR_TELEMETRY_FEED_SCHEMA_VERSION = (
     "inferedge-orchestrator-edgeenv-runtime-telemetry-feed-v1"
 )
@@ -92,6 +95,7 @@ def build_runtime_telemetry_history(
             "requested_runs": len(run_ids) if run_ids is not None else None,
             "registered_runs": len(records),
             "telemetry_runs": len(entries),
+            "history_seed_runs": _history_seed_run_count(entries),
             "missing_telemetry_runs": len(missing),
             "orchestrator_feed_runs": len(orchestrator_contexts),
         },
@@ -195,6 +199,12 @@ def validate_runtime_telemetry_history(
                 "Runtime telemetry history "
                 f"runs[{index}].runtime_telemetry must be an object: {label}"
             )
+        history_seed = entry.get("runtime_telemetry_history_seed")
+        if history_seed is not None:
+            _validate_runtime_history_seed(
+                history_seed,
+                label=f"{label} runs[{index}].runtime_telemetry_history_seed",
+            )
         orchestrator_context = entry.get("orchestrator_operation_context")
         if orchestrator_context is not None and not isinstance(
             orchestrator_context,
@@ -233,6 +243,11 @@ def inspect_runtime_telemetry_history(payload: dict[str, Any]) -> dict[str, Any]
             "run_ids": run_ids,
             "telemetry_fields": _telemetry_fields(runs),
             "telemetry_coverage": telemetry_coverage,
+            "history_seed_run_ids": [
+                entry["run_id"]
+                for entry in runs
+                if isinstance(entry.get("runtime_telemetry_history_seed"), dict)
+            ],
             "orchestrator_context_run_ids": [
                 entry["run_id"]
                 for entry in runs
@@ -309,6 +324,9 @@ def _history_entry(
         "metrics": result.metrics.model_dump(mode="json"),
         "runtime_telemetry": telemetry,
     }
+    history_seed = _runtime_telemetry_history_seed(telemetry, run_id=result.run_id)
+    if history_seed is not None:
+        entry["runtime_telemetry_history_seed"] = history_seed
     if orchestrator_context is not None:
         entry["orchestrator_operation_context"] = orchestrator_context
     return entry
@@ -578,6 +596,69 @@ def _telemetry_coverage_summary(entries: list[dict[str, Any]]) -> dict[str, Any]
         "missing_field_runs": missing_field_runs,
         "run_summaries": run_summaries,
     }
+
+
+def _runtime_telemetry_history_seed(
+    telemetry: dict[str, Any],
+    *,
+    run_id: str,
+) -> dict[str, Any] | None:
+    history_seed = telemetry.get("history_seed")
+    if history_seed is None:
+        return None
+    _validate_runtime_history_seed(
+        history_seed,
+        label=f"runtime_telemetry.history_seed for run {run_id}",
+    )
+    return deepcopy(history_seed)
+
+
+def _validate_runtime_history_seed(value: Any, *, label: str) -> None:
+    if not isinstance(value, dict):
+        raise RuntimeTelemetryHistoryError(
+            f"Runtime telemetry history seed must be an object: {label}"
+        )
+    schema_version = value.get("schema_version")
+    if schema_version != RUNTIME_TELEMETRY_HISTORY_SEED_SCHEMA_VERSION:
+        raise RuntimeTelemetryHistoryError(
+            "Unsupported Runtime telemetry history seed schema: "
+            f"{schema_version or '<missing>'}: {label}"
+        )
+    if value.get("registry_owner") != "edgeenv":
+        raise RuntimeTelemetryHistoryError(
+            f"Runtime telemetry history seed registry_owner must be edgeenv: {label}"
+        )
+    if value.get("decision_owner") != "lab":
+        raise RuntimeTelemetryHistoryError(
+            f"Runtime telemetry history seed decision_owner must be lab: {label}"
+        )
+    if value.get("production_monitoring") is not False:
+        raise RuntimeTelemetryHistoryError(
+            f"Runtime telemetry history seed production_monitoring must be false: {label}"
+        )
+    if value.get("missing_telemetry_is_failure") is not False:
+        raise RuntimeTelemetryHistoryError(
+            "Runtime telemetry history seed missing_telemetry_is_failure must be "
+            f"false: {label}"
+        )
+    points = value.get("points")
+    if not isinstance(points, list) or not points:
+        raise RuntimeTelemetryHistoryError(
+            f"Runtime telemetry history seed points must be a non-empty list: {label}"
+        )
+    source_result = value.get("source_result")
+    if source_result is not None and not isinstance(source_result, dict):
+        raise RuntimeTelemetryHistoryError(
+            f"Runtime telemetry history seed source_result must be an object: {label}"
+        )
+
+
+def _history_seed_run_count(entries: list[dict[str, Any]]) -> int:
+    return sum(
+        1
+        for entry in entries
+        if isinstance(entry.get("runtime_telemetry_history_seed"), dict)
+    )
 
 
 def _string_items(value: Any) -> list[str]:

@@ -410,6 +410,7 @@ def export_runtime_telemetry_history(
     console.print(f"Output: {output_path}", soft_wrap=True)
     console.print(f"Runs scanned: {summary['registered_runs']}")
     console.print(f"Telemetry entries: {summary['telemetry_runs']}")
+    console.print(f"History seed entries: {summary.get('history_seed_runs', 0)}")
     console.print(f"Missing telemetry: {summary['missing_telemetry_runs']}")
     console.print(
         f"Orchestrator context entries: {summary.get('orchestrator_feed_runs', 0)}"
@@ -459,6 +460,10 @@ def inspect_runtime_telemetry_history_command(
             "Telemetry coverage missing field runs: "
             f"{coverage.get('missing_field_run_count', 0)}"
         )
+    console.print(
+        "Runtime history seed runs: "
+        f"{len(replay.get('history_seed_run_ids', []))}"
+    )
     console.print(
         "Orchestrator context runs: "
         f"{len(replay.get('orchestrator_context_run_ids', []))}"

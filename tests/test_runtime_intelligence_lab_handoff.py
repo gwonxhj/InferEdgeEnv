@@ -46,6 +46,9 @@ def test_runtime_intelligence_lab_handoff_manifest_records_producer_contracts(
     assert payload["producer_contracts"] == {
         "runtime_result_contract": "lab-compatible-runtime-result-json",
         "edgeenv_history_schema": "edgeenv.runtime-telemetry-history.v1",
+        "runtime_telemetry_history_seed_schema": (
+            "inferedge-runtime-telemetry-history-seed-v1"
+        ),
         "orchestrator_feed_schema": (
             "inferedge-orchestrator-edgeenv-runtime-telemetry-feed-v1"
         ),

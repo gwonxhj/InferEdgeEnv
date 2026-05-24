@@ -317,6 +317,11 @@ If Runtime includes `runtime_telemetry.coverage`, EdgeEnv preserves it in the
 history artifact and inspect summary as evidence quality metadata. Missing
 coverage fields are visible as coverage gaps, but they do not fail the run or
 change comparability.
+If Runtime includes `runtime_telemetry.history_seed`, EdgeEnv preserves it as
+`runtime_telemetry_history_seed`, validates the EdgeEnv/Lab ownership markers,
+and counts it as `summary.history_seed_runs` for local replay/history
+accumulation. This remains local-first artifact evidence, not production
+monitoring.
 
 `report regression` reuses the same comparability gate. It only computes
 mean/p95/p99/FPS/resource deltas for `Comparable: Yes` with
