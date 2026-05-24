@@ -355,6 +355,9 @@ optional Orchestrator feed context, and Lab-owned deployment report boundary.
 When Runtime history seeds are present, the handoff step validates the preserved
 `runtime_telemetry_history_seed` schema, `registry_owner=edgeenv`,
 `decision_owner=lab`, and replay point evidence before writing the manifest.
+It also exposes a `lab_bundle_alignment` block so Lab can align file keys,
+source repositories, artifact roles, and producer contracts while treating
+AIGuard `guard_analysis` as an external artifact produced by InferEdgeAIGuard.
 It does not include AIGuard `guard_analysis`; AIGuard remains a separate
 deterministic diagnosis provider.
 

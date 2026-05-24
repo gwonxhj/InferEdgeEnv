@@ -31,6 +31,10 @@ ORCHESTRATOR_EDGEENV_REQUIRED_CANDIDATE_FIELDS = (
     "operation",
     "resource",
 )
+ORCHESTRATOR_EDGEENV_AIGUARD_EVIDENCE_CANDIDATES = (
+    "runtime_queue_overload",
+    "runtime_thermal_instability",
+)
 
 
 class RuntimeTelemetryHistoryError(ValueError):
@@ -474,6 +478,27 @@ def _validate_orchestrator_mapping_hint(
             raise RuntimeTelemetryHistoryError(
                 "Orchestrator telemetry feed candidate_context must include "
                 f"{', '.join(missing_context)} when declared as required: {source}"
+            )
+    evidence_candidates = mapping_hint.get("aiguard_evidence_candidates")
+    if evidence_candidates is not None:
+        if not isinstance(evidence_candidates, list) or not all(
+            isinstance(item, str) for item in evidence_candidates
+        ):
+            raise RuntimeTelemetryHistoryError(
+                "Orchestrator telemetry feed "
+                "edgeenv_mapping_hint.aiguard_evidence_candidates must be "
+                f"a string list: {source}"
+            )
+        missing_candidates = [
+            candidate
+            for candidate in ORCHESTRATOR_EDGEENV_AIGUARD_EVIDENCE_CANDIDATES
+            if candidate not in evidence_candidates
+        ]
+        if missing_candidates:
+            raise RuntimeTelemetryHistoryError(
+                "Orchestrator telemetry feed "
+                "edgeenv_mapping_hint.aiguard_evidence_candidates must include "
+                f"{', '.join(missing_candidates)}: {source}"
             )
     return mapping_hint
 
