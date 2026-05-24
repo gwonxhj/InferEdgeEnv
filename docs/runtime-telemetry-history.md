@@ -266,7 +266,11 @@ edgeenv report runtime-intelligence-handoff \
 This command writes an EdgeEnv producer-side manifest with source repository
 mapping, artifact roles, and producer contract markers for the Runtime result,
 EdgeEnv regression report, optional Orchestrator operation context, and
-Lab-owned report boundary. It intentionally does not produce AIGuard
+Lab-owned report boundary. When `runtime_telemetry_history_seed` entries are
+present, the handoff validates their schema, `registry_owner=edgeenv`,
+`decision_owner=lab`, non-production marker, and replay points before exposing
+the seed count in `edgeenv_report_summary.history_seed_runs`. It intentionally
+does not produce AIGuard
 `guard_analysis`; AIGuard remains a separate deterministic diagnosis provider
 and Lab remains the deployment decision owner.
 

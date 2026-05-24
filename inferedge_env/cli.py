@@ -827,6 +827,8 @@ def runtime_intelligence_handoff_manifest(
         "Orchestrator context: "
         f"{str(summary.get('orchestrator_context_present')).lower()}"
     )
+    if summary.get("history_seed_runs") is not None:
+        console.print(f"History seed entries: {summary.get('history_seed_runs')}")
     console.print("Lab remains the final deployment decision owner.", soft_wrap=True)
 
 

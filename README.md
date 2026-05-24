@@ -352,6 +352,9 @@ edgeenv report runtime-intelligence-handoff \
 The handoff manifest records source repository mapping, artifact roles, and
 producer contract markers for the Runtime result, EdgeEnv regression report,
 optional Orchestrator feed context, and Lab-owned deployment report boundary.
+When Runtime history seeds are present, the handoff step validates the preserved
+`runtime_telemetry_history_seed` schema, `registry_owner=edgeenv`,
+`decision_owner=lab`, and replay point evidence before writing the manifest.
 It does not include AIGuard `guard_analysis`; AIGuard remains a separate
 deterministic diagnosis provider.
 
