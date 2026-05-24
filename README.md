@@ -308,7 +308,11 @@ edgeenv runs telemetry export-history \
 
 The feed is stored as supplemental operation context for the matching run ID.
 It does not replace Runtime telemetry, change comparability, or act as a
-regression judgement.
+regression judgement. EdgeEnv also validates the Orchestrator producer markers
+`source_repository=InferEdgeOrchestrator`,
+`artifact_role=orchestrator-supplemental-operation-context`, and
+`producer_contract=inferedge-orchestrator-edgeenv-runtime-telemetry-feed-v1`
+before preserving the feed in telemetry history.
 Use `edgeenv runs telemetry inspect-history <path>` to validate and summarize
 that replay artifact before attaching it to a regression report. The intended
 local flow is export history, inspect the replay artifact, then pass it to

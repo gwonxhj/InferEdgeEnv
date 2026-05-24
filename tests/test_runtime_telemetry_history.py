@@ -16,7 +16,10 @@ from inferedge_env.result.telemetry_history import (
     ORCHESTRATOR_EDGEENV_HISTORY_COVERAGE_PATH,
     ORCHESTRATOR_EDGEENV_OPERATION_CONTEXT_ROLE,
     ORCHESTRATOR_EDGEENV_REQUIRED_CANDIDATE_FIELDS,
+    ORCHESTRATOR_TELEMETRY_FEED_ARTIFACT_ROLE,
+    ORCHESTRATOR_TELEMETRY_FEED_PRODUCER_CONTRACT,
     ORCHESTRATOR_TELEMETRY_FEED_SCHEMA_VERSION,
+    ORCHESTRATOR_TELEMETRY_FEED_SOURCE_REPOSITORY,
     RUNTIME_TELEMETRY_HISTORY_SCHEMA_VERSION,
     RuntimeTelemetryHistoryError,
     build_runtime_telemetry_history,
@@ -196,6 +199,9 @@ def test_build_runtime_telemetry_history_attaches_orchestrator_feed_context(
     assert payload["summary"]["orchestrator_feed_runs"] == 1
     context = payload["runs"][0]["orchestrator_operation_context"]
     assert context["schema_version"] == ORCHESTRATOR_TELEMETRY_FEED_SCHEMA_VERSION
+    assert context["source_repository"] == ORCHESTRATOR_TELEMETRY_FEED_SOURCE_REPOSITORY
+    assert context["artifact_role"] == ORCHESTRATOR_TELEMETRY_FEED_ARTIFACT_ROLE
+    assert context["producer_contract"] == ORCHESTRATOR_TELEMETRY_FEED_PRODUCER_CONTRACT
     assert context["not_a_regression_judgement"] is True
     assert context["not_a_comparability_gate"] is True
     assert context["decision_owner"] == "lab"
@@ -248,6 +254,36 @@ def test_build_runtime_telemetry_history_rejects_bad_feed_mapping_contract(
     with pytest.raises(
         RuntimeTelemetryHistoryError,
         match="coverage_summary_owner must be edgeenv",
+    ):
+        build_runtime_telemetry_history(
+            edgeenv_root,
+            orchestrator_feeds=[feed_path],
+        )
+
+
+def test_build_runtime_telemetry_history_rejects_bad_orchestrator_producer_marker(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    edgeenv_root = tmp_path / ".edgeenv"
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="candidate",
+        runtime_telemetry=_runtime_telemetry_payload(sequence_id=2),
+    )
+    feed = _orchestrator_feed_payload("candidate")
+    feed["artifact_role"] = "lab-owned-deployment-risk-report"
+    feed_path = tmp_path / "orchestrator-feed.json"
+    feed_path.write_text(json.dumps(feed), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeTelemetryHistoryError,
+        match="artifact_role must be orchestrator-supplemental-operation-context",
     ):
         build_runtime_telemetry_history(
             edgeenv_root,
@@ -398,6 +434,9 @@ def test_cli_runs_telemetry_export_history_attaches_orchestrator_feed(
     assert payload["runs"][0]["orchestrator_operation_context"]["run_id"] == (
         "candidate"
     )
+    assert payload["runs"][0]["orchestrator_operation_context"][
+        "source_repository"
+    ] == ORCHESTRATOR_TELEMETRY_FEED_SOURCE_REPOSITORY
 
 
 def test_inspect_runtime_telemetry_history_reports_replay_summary(
@@ -788,6 +827,9 @@ def _orchestrator_feed_payload(run_id: str) -> dict:
     return {
         "schema_version": ORCHESTRATOR_TELEMETRY_FEED_SCHEMA_VERSION,
         "role": "orchestrator_operation_context_for_edgeenv",
+        "source_repository": ORCHESTRATOR_TELEMETRY_FEED_SOURCE_REPOSITORY,
+        "artifact_role": ORCHESTRATOR_TELEMETRY_FEED_ARTIFACT_ROLE,
+        "producer_contract": ORCHESTRATOR_TELEMETRY_FEED_PRODUCER_CONTRACT,
         "source": "orchestration_summary",
         "run_id": run_id,
         "not_a_regression_judgement": True,
