@@ -64,6 +64,7 @@ def test_runtime_intelligence_lab_handoff_manifest_records_producer_contracts(
         "regression_type": "mixed",
         "severity": "high",
         "runtime_telemetry_context_present": True,
+        "history_seed_runs": 2,
         "orchestrator_context_present": True,
     }
     assert "AIGuard guard_analysis is intentionally not produced by EdgeEnv." in (
@@ -101,6 +102,8 @@ def test_runtime_intelligence_lab_handoff_cli_writes_manifest(tmp_path):
     assert "Lab remains the final deployment decision owner." in result.output
     payload = json.loads(output_path.read_text(encoding="utf-8"))
     assert payload["schema_version"] == RUNTIME_INTELLIGENCE_LAB_HANDOFF_SCHEMA_VERSION
+    assert payload["edgeenv_report_summary"]["history_seed_runs"] == 2
+    assert "History seed entries: 2" in result.output
 
 
 def test_runtime_intelligence_lab_handoff_rejects_mismatched_run_id(tmp_path):
@@ -114,6 +117,54 @@ def test_runtime_intelligence_lab_handoff_rejects_mismatched_run_id(tmp_path):
     with pytest.raises(
         RuntimeIntelligenceLabHandoffError,
         match="candidate_run_id does not match",
+    ):
+        build_runtime_intelligence_lab_handoff_manifest(
+            baseline_result_path=baseline_path,
+            candidate_result_path=candidate_path,
+            edgeenv_regression_report_path=regression_path,
+            telemetry_history_path=history_path,
+        )
+
+
+def test_runtime_intelligence_lab_handoff_rejects_bad_regression_history_seed(
+    tmp_path,
+):
+    baseline_path, candidate_path, regression_path, history_path = _write_handoff_files(
+        tmp_path
+    )
+    regression = json.loads(regression_path.read_text(encoding="utf-8"))
+    candidate_seed = regression["runtime_telemetry_context"]["history"]["runs"][1][
+        "runtime_telemetry_history_seed"
+    ]
+    candidate_seed["registry_owner"] = "runtime"
+    candidate_seed["decision_owner"] = "aiguard"
+    regression_path.write_text(json.dumps(regression), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeIntelligenceLabHandoffError,
+        match="registry_owner must be edgeenv",
+    ):
+        build_runtime_intelligence_lab_handoff_manifest(
+            baseline_result_path=baseline_path,
+            candidate_result_path=candidate_path,
+            edgeenv_regression_report_path=regression_path,
+            telemetry_history_path=history_path,
+        )
+
+
+def test_runtime_intelligence_lab_handoff_rejects_seed_count_mismatch(tmp_path):
+    baseline_path, candidate_path, regression_path, history_path = _write_handoff_files(
+        tmp_path
+    )
+    regression = json.loads(regression_path.read_text(encoding="utf-8"))
+    regression["runtime_telemetry_context"]["history"]["summary"][
+        "history_seed_runs"
+    ] = 1
+    regression_path.write_text(json.dumps(regression), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeIntelligenceLabHandoffError,
+        match="history_seed_runs must match preserved seed count",
     ):
         build_runtime_intelligence_lab_handoff_manifest(
             baseline_result_path=baseline_path,
@@ -213,8 +264,24 @@ def _write_handoff_files(tmp_path):
                     "telemetry_runs": 2,
                     "missing_telemetry_runs": 0,
                     "orchestrator_feed_runs": 1,
+                    "history_seed_runs": 2,
                 },
-                "runs": [],
+                "runs": [
+                    {
+                        "run_id": "baseline",
+                        "runtime_telemetry_history_seed": _runtime_history_seed(
+                            "baseline",
+                            sequence_id=1,
+                        ),
+                    },
+                    {
+                        "run_id": "candidate",
+                        "runtime_telemetry_history_seed": _runtime_history_seed(
+                            "candidate",
+                            sequence_id=2,
+                        ),
+                    },
+                ],
                 "missing_telemetry": [],
             }
         ),
@@ -238,7 +305,28 @@ def _write_handoff_files(tmp_path):
                             "telemetry_runs": 2,
                             "missing_telemetry_runs": 0,
                             "orchestrator_feed_runs": 1,
+                            "history_seed_runs": 2,
                         },
+                        "runs": [
+                            {
+                                "run_id": "baseline",
+                                "runtime_telemetry_history_seed": (
+                                    _runtime_history_seed(
+                                        "baseline",
+                                        sequence_id=1,
+                                    )
+                                ),
+                            },
+                            {
+                                "run_id": "candidate",
+                                "runtime_telemetry_history_seed": (
+                                    _runtime_history_seed(
+                                        "candidate",
+                                        sequence_id=2,
+                                    )
+                                ),
+                            },
+                        ],
                     },
                     "baseline": {"run_id": "baseline"},
                     "candidate": {
@@ -286,3 +374,36 @@ def _write_handoff_files(tmp_path):
         encoding="utf-8",
     )
     return baseline_path, candidate_path, regression_path, history_path
+
+
+def _runtime_history_seed(run_id: str, *, sequence_id: int) -> dict:
+    return {
+        "schema_version": "inferedge-runtime-telemetry-history-seed-v1",
+        "evidence_role": "runtime_telemetry_history_seed",
+        "registry_owner": "edgeenv",
+        "decision_owner": "lab",
+        "source_result_schema_version": "inferedge-runtime-result-v1",
+        "source_telemetry_schema_version": "inferedge-runtime-telemetry-v1",
+        "replay_scope": "single_result_to_history",
+        "replay_ready": True,
+        "production_monitoring": False,
+        "missing_telemetry_is_failure": False,
+        "source_result": {
+            "run_id": run_id,
+            "compare_key": "yolov8n__b1__h640w640__fp32",
+            "backend_key": "onnxruntime__cpu",
+            "engine_backend": "onnxruntime",
+            "device": "cpu",
+            "precision": "fp32",
+            "power_mode": "unknown",
+        },
+        "points": [
+            {
+                "execution_sequence_id": sequence_id,
+                "telemetry_timestamp": f"2026-05-21T00:00:0{sequence_id}Z",
+                "mean_ms": 100.0 + sequence_id,
+                "p99_ms": 130.0 + sequence_id,
+                "timeout_observed": False,
+            }
+        ],
+    }

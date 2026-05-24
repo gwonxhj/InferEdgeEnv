@@ -11,8 +11,10 @@ from inferedge_env.result.telemetry_history import (
     ORCHESTRATOR_EDGEENV_OPERATION_CONTEXT_ROLE,
     ORCHESTRATOR_EDGEENV_REQUIRED_CANDIDATE_FIELDS,
     ORCHESTRATOR_TELEMETRY_FEED_SCHEMA_VERSION,
+    RuntimeTelemetryHistoryError,
     RUNTIME_TELEMETRY_HISTORY_SCHEMA_VERSION,
     RUNTIME_TELEMETRY_HISTORY_SEED_SCHEMA_VERSION,
+    validate_runtime_telemetry_history,
 )
 
 
@@ -217,6 +219,10 @@ def _validate_regression_context(
                 "runtime_telemetry_context.history.schema_version must be "
                 f"{RUNTIME_TELEMETRY_HISTORY_SCHEMA_VERSION}"
             )
+        _validate_history_seed_summary(
+            history,
+            label=f"runtime_telemetry_context.history: {regression_path}",
+        )
 
     for label in ("baseline", "candidate"):
         run_context = context.get(label)
@@ -337,14 +343,63 @@ def _validate_telemetry_history(
     *,
     history_path: Path,
 ) -> None:
-    if (
-        history_payload.get("schema_version")
-        != RUNTIME_TELEMETRY_HISTORY_SCHEMA_VERSION
-    ):
+    try:
+        validate_runtime_telemetry_history(history_payload, source=history_path)
+    except RuntimeTelemetryHistoryError as exc:
         raise RuntimeIntelligenceLabHandoffError(
-            "runtime telemetry history schema_version must be "
-            f"{RUNTIME_TELEMETRY_HISTORY_SCHEMA_VERSION}: {history_path}"
+            f"runtime telemetry history is invalid for Lab handoff: {exc}"
+        ) from exc
+    _validate_history_seed_summary(
+        history_payload,
+        label=f"runtime telemetry history: {history_path}",
+    )
+
+
+def _validate_history_seed_summary(history: dict[str, Any], *, label: str) -> None:
+    runs = history.get("runs")
+    summary = history.get("summary")
+    if not isinstance(summary, dict):
+        return
+    expected_seed_runs = summary.get("history_seed_runs")
+    if expected_seed_runs is None and runs is None:
+        return
+    if runs is None:
+        if expected_seed_runs in (None, 0):
+            return
+        raise RuntimeIntelligenceLabHandoffError(
+            f"{label} must include runs when history_seed_runs is non-zero"
         )
+    if not isinstance(runs, list):
+        raise RuntimeIntelligenceLabHandoffError(f"{label}.runs must be a list")
+    seed_count = sum(
+        1
+        for item in runs
+        if isinstance(item, dict)
+        and isinstance(item.get("runtime_telemetry_history_seed"), dict)
+    )
+    if expected_seed_runs is not None and expected_seed_runs != seed_count:
+        raise RuntimeIntelligenceLabHandoffError(
+            f"{label}.summary.history_seed_runs must match preserved seed count"
+        )
+    if seed_count:
+        _validate_embedded_runtime_history(history, label=label)
+
+
+def _validate_embedded_runtime_history(history: dict[str, Any], *, label: str) -> None:
+    payload = {
+        "schema_version": history.get("schema_version"),
+        "summary": history.get("summary", {}),
+        "runs": history.get("runs", []),
+        "missing_telemetry": history.get("missing_telemetry", []),
+    }
+    if "telemetry_coverage" in history:
+        payload["telemetry_coverage"] = history.get("telemetry_coverage")
+    try:
+        validate_runtime_telemetry_history(payload, source=label)
+    except RuntimeTelemetryHistoryError as exc:
+        raise RuntimeIntelligenceLabHandoffError(
+            f"runtime telemetry history seed is invalid for Lab handoff: {exc}"
+        ) from exc
 
 
 def _edgeenv_report_summary(regression_report: dict[str, Any]) -> dict[str, Any]:
@@ -352,6 +407,8 @@ def _edgeenv_report_summary(regression_report: dict[str, Any]) -> dict[str, Any]
     candidate_context = (
         context.get("candidate", {}) if isinstance(context, dict) else {}
     )
+    history = context.get("history", {}) if isinstance(context, dict) else {}
+    history_summary = history.get("summary", {}) if isinstance(history, dict) else {}
     return {
         "baseline_run_id": regression_report.get("baseline_run_id"),
         "candidate_run_id": regression_report.get("candidate_run_id"),
@@ -361,6 +418,9 @@ def _edgeenv_report_summary(regression_report: dict[str, Any]) -> dict[str, Any]
         "regression_type": regression_report.get("regression_type"),
         "severity": regression_report.get("severity"),
         "runtime_telemetry_context_present": isinstance(context, dict),
+        "history_seed_runs": history_summary.get("history_seed_runs")
+        if isinstance(history_summary, dict)
+        else None,
         "orchestrator_context_present": (
             isinstance(candidate_context, dict)
             and isinstance(
