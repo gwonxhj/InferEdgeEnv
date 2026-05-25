@@ -227,13 +227,35 @@ def validate_runtime_telemetry_history(
                     f"runs[{index}].orchestrator_operation_context must be an object: "
                     f"{label}"
                 )
-            _validate_orchestrator_context_markers(
+            _validate_preserved_orchestrator_context(
                 orchestrator_context,
                 label=(
                     "Runtime telemetry history "
                     f"runs[{index}].orchestrator_operation_context"
                 ),
             )
+    for index, item in enumerate(payload.get("missing_telemetry", [])):
+        if not isinstance(item, dict):
+            raise RuntimeTelemetryHistoryError(
+                "Runtime telemetry history "
+                f"missing_telemetry[{index}] must be an object: {label}"
+            )
+        orchestrator_context = item.get("orchestrator_operation_context")
+        if orchestrator_context is None:
+            continue
+        if not isinstance(orchestrator_context, dict):
+            raise RuntimeTelemetryHistoryError(
+                "Runtime telemetry history "
+                f"missing_telemetry[{index}].orchestrator_operation_context "
+                f"must be an object: {label}"
+            )
+        _validate_preserved_orchestrator_context(
+            orchestrator_context,
+            label=(
+                "Runtime telemetry history "
+                f"missing_telemetry[{index}].orchestrator_operation_context"
+            ),
+        )
 
 
 def inspect_runtime_telemetry_history(payload: dict[str, Any]) -> dict[str, Any]:
@@ -241,6 +263,13 @@ def inspect_runtime_telemetry_history(payload: dict[str, Any]) -> dict[str, Any]
     runs = payload.get("runs", [])
     missing = payload.get("missing_telemetry", [])
     run_ids = [entry["run_id"] for entry in runs]
+    missing_orchestrator_context_run_ids = [
+        item["run_id"]
+        for item in missing
+        if isinstance(item, dict)
+        and isinstance(item.get("run_id"), str)
+        and isinstance(item.get("orchestrator_operation_context"), dict)
+    ]
     timestamps = [
         entry.get("telemetry_timestamp")
         for entry in runs
@@ -271,7 +300,11 @@ def inspect_runtime_telemetry_history(payload: dict[str, Any]) -> dict[str, Any]
                 entry["run_id"]
                 for entry in runs
                 if isinstance(entry.get("orchestrator_operation_context"), dict)
-            ],
+            ]
+            + missing_orchestrator_context_run_ids,
+            "missing_orchestrator_context_run_ids": (
+                missing_orchestrator_context_run_ids
+            ),
             "first_telemetry_timestamp": min(timestamps) if timestamps else None,
             "last_telemetry_timestamp": max(timestamps) if timestamps else None,
             "execution_sequence_ids": sequence_ids,
@@ -459,6 +492,24 @@ def _validate_orchestrator_context_markers(
     for key, expected in expected_pairs.items():
         if context.get(key) != expected:
             raise RuntimeTelemetryHistoryError(f"{label}.{key} must be {expected}")
+
+
+def _validate_preserved_orchestrator_context(
+    context: dict[str, Any],
+    *,
+    label: str,
+) -> None:
+    _validate_orchestrator_context_markers(context, label=label)
+    candidate_context = context.get("candidate_context")
+    if not isinstance(candidate_context, dict):
+        raise RuntimeTelemetryHistoryError(
+            f"{label}.candidate_context must be an object"
+        )
+    _validate_orchestrator_mapping_hint(
+        context.get("edgeenv_mapping_hint", {}),
+        candidate_context=candidate_context,
+        source=Path(label),
+    )
 
 
 def _validate_orchestrator_mapping_hint(

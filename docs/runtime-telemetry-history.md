@@ -101,6 +101,10 @@ supplemental candidate operation context to
 candidate context still include `run_id`, `telemetry_source`, `operation`, and
 `resource` before the context can reach regression reports or Lab handoff
 manifests.
+The same marker and mapping validation is applied when a selected run has no
+`runtime_telemetry` and the Orchestrator context is preserved under
+`missing_telemetry[].orchestrator_operation_context`; missing telemetry remains
+an evidence gap, but the supplemental operation context stays traceable.
 
 Replay validation command:
 
@@ -171,6 +175,10 @@ The history artifact uses this top-level shape:
             "telemetry_source",
             "operation",
             "resource"
+          ],
+          "aiguard_evidence_candidates": [
+            "runtime_queue_overload",
+            "runtime_thermal_instability"
           ]
         }
       }
