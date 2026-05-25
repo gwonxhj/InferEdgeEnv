@@ -231,6 +231,87 @@ def test_build_runtime_telemetry_history_attaches_orchestrator_feed_context(
     assert "not a regression judgement" in payload["notes"][3]
 
 
+def test_build_runtime_telemetry_history_preserves_missing_orchestrator_feed_context(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    edgeenv_root = tmp_path / ".edgeenv"
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="candidate",
+    )
+    feed_path = tmp_path / "orchestrator-feed.json"
+    feed_path.write_text(
+        json.dumps(_orchestrator_feed_payload("candidate")),
+        encoding="utf-8",
+    )
+
+    payload = build_runtime_telemetry_history(
+        edgeenv_root,
+        generated_at=datetime(2026, 5, 22, tzinfo=timezone.utc),
+        orchestrator_feeds=[feed_path],
+    )
+    summary = inspect_runtime_telemetry_history(payload)
+
+    assert payload["summary"]["telemetry_runs"] == 0
+    assert payload["summary"]["missing_telemetry_runs"] == 1
+    assert payload["summary"]["orchestrator_feed_runs"] == 1
+    context = payload["missing_telemetry"][0]["orchestrator_operation_context"]
+    assert context["source_repository"] == ORCHESTRATOR_TELEMETRY_FEED_SOURCE_REPOSITORY
+    assert context["artifact_role"] == ORCHESTRATOR_TELEMETRY_FEED_ARTIFACT_ROLE
+    assert context["producer_contract"] == ORCHESTRATOR_TELEMETRY_FEED_PRODUCER_CONTRACT
+    assert context["edgeenv_mapping_hint"]["aiguard_evidence_candidates"] == [
+        *ORCHESTRATOR_EDGEENV_AIGUARD_EVIDENCE_CANDIDATES
+    ]
+    assert summary["replay"]["orchestrator_context_run_ids"] == ["candidate"]
+    assert summary["replay"]["missing_orchestrator_context_run_ids"] == [
+        "candidate"
+    ]
+
+
+def test_load_runtime_telemetry_history_rejects_bad_missing_orchestrator_marker(
+    tmp_path,
+):
+    history_path = tmp_path / "history.json"
+    payload = {
+        "schema_version": RUNTIME_TELEMETRY_HISTORY_SCHEMA_VERSION,
+        "summary": {
+            "registered_runs": 1,
+            "telemetry_runs": 0,
+            "missing_telemetry_runs": 1,
+            "orchestrator_feed_runs": 1,
+        },
+        "runs": [],
+        "missing_telemetry": [
+            {
+                "run_id": "candidate",
+                "reason": "runtime_telemetry_missing",
+                "orchestrator_operation_context": _orchestrator_feed_payload(
+                    "candidate"
+                ),
+            }
+        ],
+    }
+    payload["missing_telemetry"][0]["orchestrator_operation_context"][
+        "artifact_role"
+    ] = "lab-owned-deployment-risk-report"
+    history_path.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeTelemetryHistoryError,
+        match=(
+            "missing_telemetry\\[0\\].orchestrator_operation_context."
+            "artifact_role must be orchestrator-supplemental-operation-context"
+        ),
+    ):
+        load_runtime_telemetry_history(history_path)
+
+
 def test_build_runtime_telemetry_history_rejects_bad_feed_mapping_contract(
     tmp_path,
     bench_config,
