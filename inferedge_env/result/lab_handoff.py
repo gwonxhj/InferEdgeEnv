@@ -608,11 +608,63 @@ def _validate_device_local_producer_lineage(
                 f"{label}.producer.{field} must be a non-empty string list: "
                 f"{source}"
             )
-    for field in ("producer_sources_by_task", "producer_stage_by_task"):
-        values = producer.get(field)
-        if not isinstance(values, dict) or not values:
+    producer_sources = producer.get("producer_sources")
+    device_local_sources = producer.get("device_local_producer_sources")
+    if isinstance(producer_sources, list) and isinstance(device_local_sources, list):
+        missing_from_sources = sorted(set(device_local_sources) - set(producer_sources))
+        if missing_from_sources:
             raise RuntimeIntelligenceLabHandoffError(
-                f"{label}.producer.{field} must be a non-empty object: {source}"
+                f"{label}.producer.device_local_producer_sources must also "
+                "appear in producer_sources: "
+                f"{', '.join(missing_from_sources)}: {source}"
+            )
+    sources_by_task = producer.get("producer_sources_by_task")
+    if not isinstance(sources_by_task, dict) or not sources_by_task:
+        raise RuntimeIntelligenceLabHandoffError(
+            f"{label}.producer.producer_sources_by_task must be a non-empty "
+            f"object: {source}"
+        )
+    task_sources: set[str] = set()
+    for task_name, sources in sources_by_task.items():
+        if not isinstance(task_name, str) or not task_name:
+            raise RuntimeIntelligenceLabHandoffError(
+                f"{label}.producer.producer_sources_by_task keys must be "
+                f"non-empty strings: {source}"
+            )
+        if (
+            not isinstance(sources, list)
+            or not sources
+            or not all(isinstance(item, str) and item for item in sources)
+        ):
+            raise RuntimeIntelligenceLabHandoffError(
+                f"{label}.producer.producer_sources_by_task.{task_name} "
+                f"must be a non-empty string list: {source}"
+            )
+        task_sources.update(sources)
+    if isinstance(device_local_sources, list):
+        missing_from_task_sources = sorted(set(device_local_sources) - task_sources)
+        if missing_from_task_sources:
+            raise RuntimeIntelligenceLabHandoffError(
+                f"{label}.producer.device_local_producer_sources must also "
+                "appear in producer_sources_by_task: "
+                f"{', '.join(missing_from_task_sources)}: {source}"
+            )
+    stage_by_task = producer.get("producer_stage_by_task")
+    if not isinstance(stage_by_task, dict) or not stage_by_task:
+        raise RuntimeIntelligenceLabHandoffError(
+            f"{label}.producer.producer_stage_by_task must be a non-empty "
+            f"object: {source}"
+        )
+    for task_name, stage in stage_by_task.items():
+        if not isinstance(task_name, str) or not task_name:
+            raise RuntimeIntelligenceLabHandoffError(
+                f"{label}.producer.producer_stage_by_task keys must be "
+                f"non-empty strings: {source}"
+            )
+        if not isinstance(stage, str) or not stage:
+            raise RuntimeIntelligenceLabHandoffError(
+                f"{label}.producer.producer_stage_by_task.{task_name} "
+                f"must be a non-empty string: {source}"
             )
     if (
         producer.get("operation_context_role")

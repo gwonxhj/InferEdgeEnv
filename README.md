@@ -364,8 +364,10 @@ When Runtime history seeds are present, the handoff step validates the preserved
 `runtime_telemetry_history_seed` schema, `registry_owner=edgeenv`,
 `decision_owner=lab`, and replay point evidence before writing the manifest.
 When preserved Orchestrator context is present, the handoff step also validates
-device-local `candidate_context.producer` lineage and reports the matching run
-IDs as EdgeEnv producer-side traceability evidence.
+device-local `candidate_context.producer` lineage, including per-task source
+mapping, per-task stage mapping, and positive producer/device-local event
+counts. It reports the matching run IDs as EdgeEnv producer-side traceability
+evidence.
 It also exposes a `lab_bundle_alignment` block so Lab can align file keys,
 source repositories, artifact roles, and producer contracts while treating
 AIGuard `guard_analysis` as an external artifact produced by InferEdgeAIGuard.
