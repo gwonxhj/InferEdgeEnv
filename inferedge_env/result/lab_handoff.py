@@ -298,6 +298,11 @@ def _validate_orchestrator_context(
         operation_context=operation_context,
         regression_path=regression_path,
     )
+    _validate_device_local_producer_lineage(
+        operation_context.get("candidate_context"),
+        label="orchestrator_operation_context.candidate_context",
+        source=regression_path,
+    )
 
 
 def _validate_orchestrator_producer_markers(
@@ -409,8 +414,13 @@ def _validate_telemetry_history(
     *,
     history_path: Path,
 ) -> None:
+    require_device_local_producer = _requires_device_local_producer(history_payload)
     try:
-        validate_runtime_telemetry_history(history_payload, source=history_path)
+        validate_runtime_telemetry_history(
+            history_payload,
+            source=history_path,
+            require_device_local_producer=require_device_local_producer,
+        )
     except RuntimeTelemetryHistoryError as exc:
         raise RuntimeIntelligenceLabHandoffError(
             f"runtime telemetry history is invalid for Lab handoff: {exc}"
@@ -460,8 +470,13 @@ def _validate_embedded_runtime_history(history: dict[str, Any], *, label: str) -
     }
     if "telemetry_coverage" in history:
         payload["telemetry_coverage"] = history.get("telemetry_coverage")
+    require_device_local_producer = _requires_device_local_producer(payload)
     try:
-        validate_runtime_telemetry_history(payload, source=label)
+        validate_runtime_telemetry_history(
+            payload,
+            source=label,
+            require_device_local_producer=require_device_local_producer,
+        )
     except RuntimeTelemetryHistoryError as exc:
         raise RuntimeIntelligenceLabHandoffError(
             f"runtime telemetry history seed is invalid for Lab handoff: {exc}"
@@ -475,6 +490,7 @@ def _edgeenv_report_summary(regression_report: dict[str, Any]) -> dict[str, Any]
     )
     history = context.get("history", {}) if isinstance(context, dict) else {}
     history_summary = history.get("summary", {}) if isinstance(history, dict) else {}
+    device_local_context_run_ids = _device_local_producer_context_run_ids(context)
     return {
         "baseline_run_id": regression_report.get("baseline_run_id"),
         "candidate_run_id": regression_report.get("candidate_run_id"),
@@ -494,7 +510,128 @@ def _edgeenv_report_summary(regression_report: dict[str, Any]) -> dict[str, Any]
                 dict,
             )
         ),
+        "device_local_producer_context_present": bool(
+            device_local_context_run_ids
+        ),
+        "device_local_producer_context_run_ids": device_local_context_run_ids,
     }
+
+
+def _requires_device_local_producer(history: dict[str, Any]) -> bool:
+    summary = history.get("summary", {})
+    orchestrator_feed_runs = (
+        summary.get("orchestrator_feed_runs") if isinstance(summary, dict) else None
+    )
+    if (
+        isinstance(orchestrator_feed_runs, (int, float))
+        and not isinstance(orchestrator_feed_runs, bool)
+        and orchestrator_feed_runs > 0
+    ):
+        return True
+    for entry in history.get("runs", []):
+        if (
+            isinstance(entry, dict)
+            and isinstance(entry.get("orchestrator_operation_context"), dict)
+        ):
+            return True
+    for entry in history.get("missing_telemetry", []):
+        if (
+            isinstance(entry, dict)
+            and isinstance(entry.get("orchestrator_operation_context"), dict)
+        ):
+            return True
+    return False
+
+
+def _device_local_producer_context_run_ids(context: Any) -> list[str]:
+    if not isinstance(context, dict):
+        return []
+    run_ids: list[str] = []
+    for run_context in (context.get("baseline"), context.get("candidate")):
+        if not isinstance(run_context, dict):
+            continue
+        operation_context = run_context.get("orchestrator_operation_context")
+        if _has_device_local_producer_context(operation_context):
+            run_id = run_context.get("run_id")
+            if isinstance(run_id, str) and run_id and run_id not in run_ids:
+                run_ids.append(run_id)
+    history = context.get("history")
+    if isinstance(history, dict):
+        for section in ("runs", "missing_telemetry"):
+            for entry in history.get(section, []):
+                if not isinstance(entry, dict):
+                    continue
+                operation_context = entry.get("orchestrator_operation_context")
+                if _has_device_local_producer_context(operation_context):
+                    run_id = entry.get("run_id")
+                    if isinstance(run_id, str) and run_id and run_id not in run_ids:
+                        run_ids.append(run_id)
+    return run_ids
+
+
+def _has_device_local_producer_context(operation_context: Any) -> bool:
+    if not isinstance(operation_context, dict):
+        return False
+    candidate_context = operation_context.get("candidate_context")
+    if not isinstance(candidate_context, dict):
+        return False
+    producer = candidate_context.get("producer")
+    if not isinstance(producer, dict):
+        return False
+    sources = producer.get("device_local_producer_sources")
+    return isinstance(sources, list) and bool(sources)
+
+
+def _validate_device_local_producer_lineage(
+    candidate_context: Any,
+    *,
+    label: str,
+    source: Path,
+) -> None:
+    if not isinstance(candidate_context, dict):
+        raise RuntimeIntelligenceLabHandoffError(
+            f"{label} must be an object: {source}"
+        )
+    producer = candidate_context.get("producer")
+    if not isinstance(producer, dict):
+        raise RuntimeIntelligenceLabHandoffError(
+            f"{label}.producer is required for device-local lineage: {source}"
+        )
+    for field in ("producer_sources", "device_local_producer_sources"):
+        values = producer.get(field)
+        if (
+            not isinstance(values, list)
+            or not values
+            or not all(isinstance(item, str) and item for item in values)
+        ):
+            raise RuntimeIntelligenceLabHandoffError(
+                f"{label}.producer.{field} must be a non-empty string list: "
+                f"{source}"
+            )
+    for field in ("producer_sources_by_task", "producer_stage_by_task"):
+        values = producer.get(field)
+        if not isinstance(values, dict) or not values:
+            raise RuntimeIntelligenceLabHandoffError(
+                f"{label}.producer.{field} must be a non-empty object: {source}"
+            )
+    if (
+        producer.get("operation_context_role")
+        != ORCHESTRATOR_EDGEENV_OPERATION_CONTEXT_ROLE
+    ):
+        raise RuntimeIntelligenceLabHandoffError(
+            f"{label}.producer.operation_context_role must be "
+            f"{ORCHESTRATOR_EDGEENV_OPERATION_CONTEXT_ROLE}: {source}"
+        )
+    for field in (
+        "producer_event_count",
+        "device_local_event_count",
+        "device_local_task_count",
+    ):
+        value = producer.get(field)
+        if type(value) is not int or value <= 0:
+            raise RuntimeIntelligenceLabHandoffError(
+                f"{label}.producer.{field} must be a positive integer: {source}"
+            )
 
 
 def _lab_bundle_alignment(files: dict[str, str]) -> dict[str, Any]:
