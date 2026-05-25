@@ -314,9 +314,13 @@ regression judgement. EdgeEnv also validates the Orchestrator producer markers
 `producer_contract=inferedge-orchestrator-edgeenv-runtime-telemetry-feed-v1`
 before preserving the feed in telemetry history.
 Use `edgeenv runs telemetry inspect-history <path>` to validate and summarize
-that replay artifact before attaching it to a regression report. The intended
-local flow is export history, inspect the replay artifact, then pass it to
-`report regression --telemetry-history`.
+that replay artifact before attaching it to a regression report. Add
+`--require-device-local-producer` when the handoff must prove that preserved
+Orchestrator context still carries device-local `candidate_context.producer`
+lineage through EdgeEnv history/replay. This gate validates lineage only; it
+does not change comparability, compute regression, or make Orchestrator the
+deployment decision owner. The intended local flow is export history, inspect
+the replay artifact, then pass it to `report regression --telemetry-history`.
 If Runtime includes `runtime_telemetry.coverage`, EdgeEnv preserves it in the
 history artifact and inspect summary as evidence quality metadata. Missing
 coverage fields are visible as coverage gaps, but they do not fail the run or

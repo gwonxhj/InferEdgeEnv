@@ -107,6 +107,12 @@ The producer trace may include producer sources, per-task producer stages,
 producer source mappings, and device-local event counts. EdgeEnv validates this
 block when present, but it does not make Orchestrator the comparability owner or
 runtime regression owner.
+For device-local handoff smokes, `inspect-history` can enforce that lineage with
+`--require-device-local-producer`. The stricter check fails when the preserved
+history artifact has no Orchestrator context, or when preserved
+`candidate_context.producer` metadata lacks device-local producer sources,
+producer source mappings, producer stage mappings, or positive event/task
+counts. This remains an artifact integrity gate, not a deployment decision.
 The same marker and mapping validation is applied when a selected run has no
 `runtime_telemetry` and the Orchestrator context is preserved under
 `missing_telemetry[].orchestrator_operation_context`; missing telemetry remains
@@ -116,6 +122,9 @@ Replay validation command:
 
 ```bash
 edgeenv runs telemetry inspect-history /tmp/edgeenv-runtime-telemetry-history.json
+edgeenv runs telemetry inspect-history \
+  /tmp/edgeenv-runtime-telemetry-history.json \
+  --require-device-local-producer
 ```
 
 The history artifact uses this top-level shape:
@@ -204,8 +213,10 @@ This is a replay dataset seed. It records evidence gaps explicitly and does not 
 `inspect-history` is a read-only validation step for that seed artifact. It
 checks the schema, summarizes replay run IDs, available telemetry fields,
 execution sequence IDs, telemetry coverage metadata, and missing telemetry
-evidence gaps. It does not mutate the registry, change comparability judgement,
-or act as a monitoring alert.
+evidence gaps. When `--require-device-local-producer` is set, it also confirms
+that preserved Orchestrator operation context still includes device-local
+producer lineage. It does not mutate the registry, change comparability
+judgement, compute regression, or act as a monitoring alert.
 
 Regression reports can attach this artifact as supplemental context:
 

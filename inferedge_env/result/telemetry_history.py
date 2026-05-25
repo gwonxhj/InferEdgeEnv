@@ -163,6 +163,7 @@ def validate_runtime_telemetry_history(
     payload: Any,
     *,
     source: Path | str | None = None,
+    require_device_local_producer: bool = False,
 ) -> None:
     label = str(source) if source is not None else "runtime telemetry history"
     if not isinstance(payload, dict):
@@ -233,6 +234,7 @@ def validate_runtime_telemetry_history(
                     "Runtime telemetry history "
                     f"runs[{index}].orchestrator_operation_context"
                 ),
+                require_device_local_producer=require_device_local_producer,
             )
     for index, item in enumerate(payload.get("missing_telemetry", [])):
         if not isinstance(item, dict):
@@ -255,11 +257,25 @@ def validate_runtime_telemetry_history(
                 "Runtime telemetry history "
                 f"missing_telemetry[{index}].orchestrator_operation_context"
             ),
+            require_device_local_producer=require_device_local_producer,
+        )
+    if require_device_local_producer and not _has_orchestrator_context(payload):
+        raise RuntimeTelemetryHistoryError(
+            "Runtime telemetry history must include at least one "
+            "orchestrator_operation_context when device-local producer lineage "
+            "is required"
         )
 
 
-def inspect_runtime_telemetry_history(payload: dict[str, Any]) -> dict[str, Any]:
-    validate_runtime_telemetry_history(payload)
+def inspect_runtime_telemetry_history(
+    payload: dict[str, Any],
+    *,
+    require_device_local_producer: bool = False,
+) -> dict[str, Any]:
+    validate_runtime_telemetry_history(
+        payload,
+        require_device_local_producer=require_device_local_producer,
+    )
     runs = payload.get("runs", [])
     missing = payload.get("missing_telemetry", [])
     run_ids = [entry["run_id"] for entry in runs]
@@ -270,6 +286,9 @@ def inspect_runtime_telemetry_history(payload: dict[str, Any]) -> dict[str, Any]
         and isinstance(item.get("run_id"), str)
         and isinstance(item.get("orchestrator_operation_context"), dict)
     ]
+    device_local_producer_context_run_ids = _device_local_producer_context_run_ids(
+        payload
+    )
     timestamps = [
         entry.get("telemetry_timestamp")
         for entry in runs
@@ -305,6 +324,9 @@ def inspect_runtime_telemetry_history(payload: dict[str, Any]) -> dict[str, Any]
             "missing_orchestrator_context_run_ids": (
                 missing_orchestrator_context_run_ids
             ),
+            "device_local_producer_context_run_ids": (
+                device_local_producer_context_run_ids
+            ),
             "first_telemetry_timestamp": min(timestamps) if timestamps else None,
             "last_telemetry_timestamp": max(timestamps) if timestamps else None,
             "execution_sequence_ids": sequence_ids,
@@ -324,6 +346,56 @@ def inspect_runtime_telemetry_history(payload: dict[str, Any]) -> dict[str, Any]
             "It is not production monitoring, distributed tracing, or a cloud telemetry store.",
         ],
     }
+
+
+def _has_orchestrator_context(payload: dict[str, Any]) -> bool:
+    for entry in payload.get("runs", []):
+        if isinstance(entry, dict) and isinstance(
+            entry.get("orchestrator_operation_context"),
+            dict,
+        ):
+            return True
+    for item in payload.get("missing_telemetry", []):
+        if isinstance(item, dict) and isinstance(
+            item.get("orchestrator_operation_context"),
+            dict,
+        ):
+            return True
+    return False
+
+
+def _device_local_producer_context_run_ids(payload: dict[str, Any]) -> list[str]:
+    run_ids: list[str] = []
+    for entry in payload.get("runs", []):
+        if not isinstance(entry, dict):
+            continue
+        context = entry.get("orchestrator_operation_context")
+        if _has_device_local_producer_context(context):
+            run_id = entry.get("run_id")
+            if isinstance(run_id, str) and run_id:
+                run_ids.append(run_id)
+    for item in payload.get("missing_telemetry", []):
+        if not isinstance(item, dict):
+            continue
+        context = item.get("orchestrator_operation_context")
+        if _has_device_local_producer_context(context):
+            run_id = item.get("run_id")
+            if isinstance(run_id, str) and run_id:
+                run_ids.append(run_id)
+    return run_ids
+
+
+def _has_device_local_producer_context(value: Any) -> bool:
+    if not isinstance(value, dict):
+        return False
+    candidate_context = value.get("candidate_context")
+    if not isinstance(candidate_context, dict):
+        return False
+    producer = candidate_context.get("producer")
+    if not isinstance(producer, dict):
+        return False
+    sources = producer.get("device_local_producer_sources")
+    return isinstance(sources, list) and bool(sources)
 
 
 def _select_records(
@@ -498,6 +570,7 @@ def _validate_preserved_orchestrator_context(
     context: dict[str, Any],
     *,
     label: str,
+    require_device_local_producer: bool = False,
 ) -> None:
     _validate_orchestrator_context_markers(context, label=label)
     candidate_context = context.get("candidate_context")
@@ -513,6 +586,7 @@ def _validate_preserved_orchestrator_context(
     _validate_orchestrator_producer_context(
         candidate_context.get("producer"),
         source=Path(label),
+        require_device_local_producer=require_device_local_producer,
     )
 
 
@@ -612,8 +686,18 @@ def _validate_orchestrator_mapping_hint(
     return mapping_hint
 
 
-def _validate_orchestrator_producer_context(value: Any, *, source: Path) -> None:
+def _validate_orchestrator_producer_context(
+    value: Any,
+    *,
+    source: Path,
+    require_device_local_producer: bool = False,
+) -> None:
     if value is None:
+        if require_device_local_producer:
+            raise RuntimeTelemetryHistoryError(
+                "Orchestrator telemetry feed candidate_context.producer is "
+                f"required for device-local producer validation: {source}"
+            )
         return
     if not isinstance(value, dict):
         raise RuntimeTelemetryHistoryError(
@@ -626,13 +710,23 @@ def _validate_orchestrator_producer_context(value: Any, *, source: Path) -> None
     )
     for field in list_fields:
         field_value = value.get(field)
-        if field_value is not None and (
-            not isinstance(field_value, list)
-            or not all(isinstance(item, str) for item in field_value)
-        ):
+        if field_value is None and not require_device_local_producer:
+            continue
+        valid_string_list = isinstance(field_value, list) and all(
+            isinstance(item, str) for item in field_value
+        )
+        if not valid_string_list:
             raise RuntimeTelemetryHistoryError(
                 "Orchestrator telemetry feed candidate_context.producer."
                 f"{field} must be a string list: {source}"
+            )
+        if require_device_local_producer and (
+            not field_value or not all(field_value)
+        ):
+            raise RuntimeTelemetryHistoryError(
+                "Orchestrator telemetry feed candidate_context.producer."
+                f"{field} must be a non-empty string list for device-local "
+                f"producer validation: {source}"
             )
     object_fields = (
         "producer_sources_by_task",
@@ -640,13 +734,21 @@ def _validate_orchestrator_producer_context(value: Any, *, source: Path) -> None
     )
     for field in object_fields:
         field_value = value.get(field)
-        if field_value is not None and not isinstance(field_value, dict):
+        if field_value is None and not require_device_local_producer:
+            continue
+        if not isinstance(field_value, dict):
             raise RuntimeTelemetryHistoryError(
                 "Orchestrator telemetry feed candidate_context.producer."
                 f"{field} must be an object: {source}"
             )
+        if require_device_local_producer and not field_value:
+            raise RuntimeTelemetryHistoryError(
+                "Orchestrator telemetry feed candidate_context.producer."
+                f"{field} must be a non-empty object for device-local "
+                f"producer validation: {source}"
+            )
     if (
-        "operation_context_role" in value
+        ("operation_context_role" in value or require_device_local_producer)
         and value.get("operation_context_role")
         != ORCHESTRATOR_EDGEENV_OPERATION_CONTEXT_ROLE
     ):
@@ -661,10 +763,18 @@ def _validate_orchestrator_producer_context(value: Any, *, source: Path) -> None
         "device_local_task_count",
     ):
         field_value = value.get(field)
-        if field_value is not None and type(field_value) is not int:
+        if field_value is None and not require_device_local_producer:
+            continue
+        if type(field_value) is not int:
             raise RuntimeTelemetryHistoryError(
                 "Orchestrator telemetry feed candidate_context.producer."
                 f"{field} must be an integer: {source}"
+            )
+        if require_device_local_producer and field_value <= 0:
+            raise RuntimeTelemetryHistoryError(
+                "Orchestrator telemetry feed candidate_context.producer."
+                f"{field} must be a positive integer for device-local "
+                f"producer validation: {source}"
             )
 
 
