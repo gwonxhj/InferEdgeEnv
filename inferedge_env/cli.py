@@ -848,6 +848,12 @@ def runtime_intelligence_handoff_manifest(
     )
     if summary.get("history_seed_runs") is not None:
         console.print(f"History seed entries: {summary.get('history_seed_runs')}")
+    device_local_run_ids = summary.get("device_local_producer_context_run_ids")
+    if device_local_run_ids:
+        console.print(
+            "Device-local producer contexts: "
+            f"{', '.join(device_local_run_ids)}"
+        )
     console.print("Lab remains the final deployment decision owner.", soft_wrap=True)
 
 

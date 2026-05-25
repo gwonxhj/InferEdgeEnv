@@ -107,6 +107,8 @@ def test_runtime_intelligence_lab_handoff_manifest_records_producer_contracts(
         "runtime_telemetry_context_present": True,
         "history_seed_runs": 2,
         "orchestrator_context_present": True,
+        "device_local_producer_context_present": True,
+        "device_local_producer_context_run_ids": ["candidate"],
     }
     assert "AIGuard guard_analysis is intentionally not produced by EdgeEnv." in (
         payload["notes"]
@@ -145,6 +147,7 @@ def test_runtime_intelligence_lab_handoff_cli_writes_manifest(tmp_path):
     assert payload["schema_version"] == RUNTIME_INTELLIGENCE_LAB_HANDOFF_SCHEMA_VERSION
     assert payload["edgeenv_report_summary"]["history_seed_runs"] == 2
     assert "History seed entries: 2" in result.output
+    assert "Device-local producer contexts: candidate" in result.output
 
 
 def test_runtime_intelligence_lab_handoff_rejects_mismatched_run_id(tmp_path):
@@ -339,6 +342,54 @@ def test_runtime_intelligence_lab_handoff_rejects_incomplete_aiguard_candidates(
         )
 
 
+def test_runtime_intelligence_lab_handoff_rejects_missing_device_local_producer(
+    tmp_path,
+):
+    baseline_path, candidate_path, regression_path, history_path = _write_handoff_files(
+        tmp_path
+    )
+    regression = json.loads(regression_path.read_text(encoding="utf-8"))
+    regression["runtime_telemetry_context"]["candidate"][
+        "orchestrator_operation_context"
+    ]["candidate_context"].pop("producer")
+    regression_path.write_text(json.dumps(regression), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeIntelligenceLabHandoffError,
+        match="producer is required for device-local lineage",
+    ):
+        build_runtime_intelligence_lab_handoff_manifest(
+            baseline_result_path=baseline_path,
+            candidate_result_path=candidate_path,
+            edgeenv_regression_report_path=regression_path,
+            telemetry_history_path=history_path,
+        )
+
+
+def test_runtime_intelligence_lab_handoff_rejects_history_missing_device_local_producer(
+    tmp_path,
+):
+    baseline_path, candidate_path, regression_path, history_path = _write_handoff_files(
+        tmp_path
+    )
+    history = json.loads(history_path.read_text(encoding="utf-8"))
+    history["runs"][1]["orchestrator_operation_context"]["candidate_context"].pop(
+        "producer"
+    )
+    history_path.write_text(json.dumps(history), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeIntelligenceLabHandoffError,
+        match="candidate_context.producer is required",
+    ):
+        build_runtime_intelligence_lab_handoff_manifest(
+            baseline_result_path=baseline_path,
+            candidate_result_path=candidate_path,
+            edgeenv_regression_report_path=regression_path,
+            telemetry_history_path=history_path,
+        )
+
+
 def _write_handoff_files(tmp_path):
     baseline_path = tmp_path / "baseline-result.json"
     candidate_path = tmp_path / "candidate-result.json"
@@ -346,6 +397,7 @@ def _write_handoff_files(tmp_path):
     history_path = tmp_path / "runtime-telemetry-history.json"
     baseline_path.write_text(json.dumps({"run_id": "baseline"}), encoding="utf-8")
     candidate_path.write_text(json.dumps({"run_id": "candidate"}), encoding="utf-8")
+    operation_context = _orchestrator_operation_context("candidate")
     history_path.write_text(
         json.dumps(
             {
@@ -371,6 +423,7 @@ def _write_handoff_files(tmp_path):
                             "candidate",
                             sequence_id=2,
                         ),
+                        "orchestrator_operation_context": operation_context,
                     },
                 ],
                 "missing_telemetry": [],
@@ -416,59 +469,14 @@ def _write_handoff_files(tmp_path):
                                         sequence_id=2,
                                     )
                                 ),
+                                "orchestrator_operation_context": operation_context,
                             },
                         ],
                     },
                     "baseline": {"run_id": "baseline"},
                     "candidate": {
                         "run_id": "candidate",
-                        "orchestrator_operation_context": {
-                            "schema_version": (
-                                "inferedge-orchestrator-edgeenv-runtime-telemetry-"
-                                "feed-v1"
-                            ),
-                            "source_repository": (
-                                ORCHESTRATOR_TELEMETRY_FEED_SOURCE_REPOSITORY
-                            ),
-                            "artifact_role": ORCHESTRATOR_TELEMETRY_FEED_ARTIFACT_ROLE,
-                            "producer_contract": (
-                                ORCHESTRATOR_TELEMETRY_FEED_PRODUCER_CONTRACT
-                            ),
-                            "not_a_regression_judgement": True,
-                            "not_a_comparability_gate": True,
-                            "decision_owner": "lab",
-                            "regression_owner": "edgeenv",
-                            "candidate_context": {
-                                "run_id": "candidate",
-                                "telemetry_source": (
-                                    "inferedge_orchestrator_operation_summary"
-                                ),
-                                "operation": {"queue_depth": 7},
-                                "resource": {"source": "tegrastats_timeline"},
-                            },
-                            "edgeenv_mapping_hint": {
-                                "runtime_telemetry_context_role": "candidate",
-                                "copy_candidate_context_to": (
-                                    "runtime_telemetry_context.candidate"
-                                ),
-                                "operation_context_role": "supplemental",
-                                "coverage_summary_owner": "edgeenv",
-                                "coverage_summary_path": (
-                                    "runtime_telemetry_context.history."
-                                    "telemetry_coverage"
-                                ),
-                                "candidate_context_required_fields": [
-                                    "run_id",
-                                    "telemetry_source",
-                                    "operation",
-                                    "resource",
-                                ],
-                                "aiguard_evidence_candidates": [
-                                    "runtime_queue_overload",
-                                    "runtime_thermal_instability",
-                                ],
-                            },
-                        },
+                        "orchestrator_operation_context": operation_context,
                     },
                 },
             }
@@ -476,6 +484,61 @@ def _write_handoff_files(tmp_path):
         encoding="utf-8",
     )
     return baseline_path, candidate_path, regression_path, history_path
+
+
+def _orchestrator_operation_context(run_id: str) -> dict:
+    return {
+        "schema_version": "inferedge-orchestrator-edgeenv-runtime-telemetry-feed-v1",
+        "source_repository": ORCHESTRATOR_TELEMETRY_FEED_SOURCE_REPOSITORY,
+        "artifact_role": ORCHESTRATOR_TELEMETRY_FEED_ARTIFACT_ROLE,
+        "producer_contract": ORCHESTRATOR_TELEMETRY_FEED_PRODUCER_CONTRACT,
+        "not_a_regression_judgement": True,
+        "not_a_comparability_gate": True,
+        "decision_owner": "lab",
+        "regression_owner": "edgeenv",
+        "candidate_context": {
+            "run_id": run_id,
+            "telemetry_source": "inferedge_orchestrator_operation_summary",
+            "operation": {"queue_depth": 7},
+            "resource": {"source": "tegrastats_timeline"},
+            "producer": {
+                "operation_context_role": "supplemental",
+                "producer_sources": [
+                    "device_local_cli_override",
+                    "orchestration_summary",
+                ],
+                "device_local_producer_sources": ["device_local_cli_override"],
+                "producer_sources_by_task": {
+                    "vision_agent": ["device_local_cli_override"],
+                },
+                "producer_stage_by_task": {
+                    "vision_agent": "device_local_starter",
+                },
+                "producer_event_count": 4,
+                "device_local_event_count": 2,
+                "device_local_task_count": 1,
+            },
+        },
+        "edgeenv_mapping_hint": {
+            "runtime_telemetry_context_role": "candidate",
+            "copy_candidate_context_to": "runtime_telemetry_context.candidate",
+            "operation_context_role": "supplemental",
+            "coverage_summary_owner": "edgeenv",
+            "coverage_summary_path": (
+                "runtime_telemetry_context.history.telemetry_coverage"
+            ),
+            "candidate_context_required_fields": [
+                "run_id",
+                "telemetry_source",
+                "operation",
+                "resource",
+            ],
+            "aiguard_evidence_candidates": [
+                "runtime_queue_overload",
+                "runtime_thermal_instability",
+            ],
+        },
+    }
 
 
 def _runtime_history_seed(run_id: str, *, sequence_id: int) -> dict:
