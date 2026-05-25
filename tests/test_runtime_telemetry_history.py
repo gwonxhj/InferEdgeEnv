@@ -520,6 +520,76 @@ def test_cli_runs_telemetry_export_history_attaches_orchestrator_feed(
     ] == ORCHESTRATOR_TELEMETRY_FEED_SOURCE_REPOSITORY
 
 
+def test_cli_runs_telemetry_export_history_preserves_missing_orchestrator_feed(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    runner = CliRunner()
+    edgeenv_root = tmp_path / ".edgeenv"
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="candidate",
+    )
+    output_path = tmp_path / "runtime-telemetry-history.json"
+    feed_path = tmp_path / "orchestrator-feed.json"
+    feed_path.write_text(
+        json.dumps(_orchestrator_feed_payload("candidate")),
+        encoding="utf-8",
+    )
+
+    export_result = runner.invoke(
+        app,
+        [
+            "runs",
+            "telemetry",
+            "export-history",
+            "--output",
+            str(output_path),
+            "--edgeenv-root",
+            str(edgeenv_root),
+            "--orchestrator-feed",
+            str(feed_path),
+        ],
+    )
+    inspect_result = runner.invoke(
+        app,
+        [
+            "runs",
+            "telemetry",
+            "inspect-history",
+            str(output_path),
+        ],
+    )
+
+    assert export_result.exit_code == 0, export_result.output
+    assert "Telemetry entries: 0" in export_result.output
+    assert "Missing telemetry: 1" in export_result.output
+    assert "Orchestrator context entries: 1" in export_result.output
+    assert inspect_result.exit_code == 0, inspect_result.output
+    assert "Replay runs: 0" in inspect_result.output
+    assert "Orchestrator context runs: 1" in inspect_result.output
+    assert "Missing telemetry Orchestrator context runs: 1" in inspect_result.output
+    assert "Evidence gaps: 1" in inspect_result.output
+    assert "Missing run IDs: candidate" in inspect_result.output
+    payload = json.loads(output_path.read_text(encoding="utf-8"))
+    missing_context = payload["missing_telemetry"][0]["orchestrator_operation_context"]
+    assert missing_context["run_id"] == "candidate"
+    assert missing_context["source_repository"] == (
+        ORCHESTRATOR_TELEMETRY_FEED_SOURCE_REPOSITORY
+    )
+    assert missing_context["artifact_role"] == ORCHESTRATOR_TELEMETRY_FEED_ARTIFACT_ROLE
+    assert missing_context["producer_contract"] == (
+        ORCHESTRATOR_TELEMETRY_FEED_PRODUCER_CONTRACT
+    )
+    assert missing_context["not_a_regression_judgement"] is True
+    assert missing_context["not_a_comparability_gate"] is True
+
+
 def test_inspect_runtime_telemetry_history_reports_replay_summary(
     tmp_path,
     bench_config,

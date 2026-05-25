@@ -468,6 +468,10 @@ def inspect_runtime_telemetry_history_command(
         "Orchestrator context runs: "
         f"{len(replay.get('orchestrator_context_run_ids', []))}"
     )
+    console.print(
+        "Missing telemetry Orchestrator context runs: "
+        f"{len(replay.get('missing_orchestrator_context_run_ids', []))}"
+    )
     console.print(f"Evidence gaps: {replay['evidence_gap_count']}")
     console.print(f"Missing run IDs: {', '.join(replay['missing_run_ids']) or '-'}")
     console.print(
