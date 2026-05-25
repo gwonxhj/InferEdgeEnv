@@ -208,6 +208,24 @@ def test_build_runtime_telemetry_history_attaches_orchestrator_feed_context(
     assert context["regression_owner"] == "edgeenv"
     assert context["candidate_context"]["operation"]["queue_depth"] == 7
     assert context["candidate_context"]["resource"]["gpu_temperature"] == 78.5
+    producer = context["candidate_context"]["producer"]
+    assert producer["producer_sources"] == [
+        "image_file",
+        "fastapi_request_fixture",
+        "resource_snapshot_fixture",
+    ]
+    assert producer["producer_sources_by_task"] == {
+        "vision_agent": ["image_file"],
+        "voice_command_agent": ["fastapi_request_fixture"],
+        "safety_monitor_agent": ["resource_snapshot_fixture"],
+    }
+    assert producer["producer_stage_by_task"] == {
+        "vision_agent": "device_local_cli_override",
+        "voice_command_agent": "device_local_cli_override",
+        "safety_monitor_agent": "device_local_cli_override",
+    }
+    assert producer["device_local_event_count"] == 15
+    assert producer["operation_context_role"] == "supplemental"
     assert context["edgeenv_mapping_hint"]["copy_candidate_context_to"] == (
         ORCHESTRATOR_EDGEENV_CANDIDATE_CONTEXT_PATH
     )
@@ -265,6 +283,11 @@ def test_build_runtime_telemetry_history_preserves_missing_orchestrator_feed_con
     assert context["source_repository"] == ORCHESTRATOR_TELEMETRY_FEED_SOURCE_REPOSITORY
     assert context["artifact_role"] == ORCHESTRATOR_TELEMETRY_FEED_ARTIFACT_ROLE
     assert context["producer_contract"] == ORCHESTRATOR_TELEMETRY_FEED_PRODUCER_CONTRACT
+    assert context["candidate_context"]["producer"]["producer_stage_by_task"] == {
+        "vision_agent": "device_local_cli_override",
+        "voice_command_agent": "device_local_cli_override",
+        "safety_monitor_agent": "device_local_cli_override",
+    }
     assert context["edgeenv_mapping_hint"]["aiguard_evidence_candidates"] == [
         *ORCHESTRATOR_EDGEENV_AIGUARD_EVIDENCE_CANDIDATES
     ]
@@ -310,6 +333,36 @@ def test_load_runtime_telemetry_history_rejects_bad_missing_orchestrator_marker(
         ),
     ):
         load_runtime_telemetry_history(history_path)
+
+
+def test_build_runtime_telemetry_history_rejects_bad_orchestrator_producer_context(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    edgeenv_root = tmp_path / ".edgeenv"
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="candidate",
+        runtime_telemetry=_runtime_telemetry_payload(sequence_id=2),
+    )
+    feed = _orchestrator_feed_payload("candidate")
+    feed["candidate_context"]["producer"]["operation_context_role"] = "verdict"
+    feed_path = tmp_path / "orchestrator-feed.json"
+    feed_path.write_text(json.dumps(feed), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeTelemetryHistoryError,
+        match="candidate_context.producer.operation_context_role must be supplemental",
+    ):
+        build_runtime_telemetry_history(
+            edgeenv_root,
+            orchestrator_feeds=[feed_path],
+        )
 
 
 def test_build_runtime_telemetry_history_rejects_bad_feed_mapping_contract(
@@ -996,6 +1049,7 @@ def _orchestrator_feed_payload(run_id: str) -> dict:
                 "operation",
                 "resource",
                 "queue_state_summary",
+                "producer",
             ],
             "queue_depth": 7,
             "operation": {
@@ -1008,6 +1062,32 @@ def _orchestrator_feed_payload(run_id: str) -> dict:
                 "resource_evidence_available": True,
                 "gpu_temperature": 78.5,
                 "ram_used_mb": 2048.0,
+            },
+            "producer": {
+                "producer_sources": [
+                    "image_file",
+                    "fastapi_request_fixture",
+                    "resource_snapshot_fixture",
+                ],
+                "device_local_producer_sources": [
+                    "image_file",
+                    "fastapi_request_fixture",
+                    "resource_snapshot_fixture",
+                ],
+                "producer_sources_by_task": {
+                    "vision_agent": ["image_file"],
+                    "voice_command_agent": ["fastapi_request_fixture"],
+                    "safety_monitor_agent": ["resource_snapshot_fixture"],
+                },
+                "producer_stage_by_task": {
+                    "vision_agent": "device_local_cli_override",
+                    "voice_command_agent": "device_local_cli_override",
+                    "safety_monitor_agent": "device_local_cli_override",
+                },
+                "producer_event_count": 7,
+                "device_local_event_count": 15,
+                "device_local_task_count": 3,
+                "operation_context_role": "supplemental",
             },
         },
         "edgeenv_mapping_hint": {

@@ -101,6 +101,12 @@ supplemental candidate operation context to
 candidate context still include `run_id`, `telemetry_source`, `operation`, and
 `resource` before the context can reach regression reports or Lab handoff
 manifests.
+If the feed includes device-local producer lineage under
+`candidate_context.producer`, EdgeEnv also preserves that supplemental context.
+The producer trace may include producer sources, per-task producer stages,
+producer source mappings, and device-local event counts. EdgeEnv validates this
+block when present, but it does not make Orchestrator the comparability owner or
+runtime regression owner.
 The same marker and mapping validation is applied when a selected run has no
 `runtime_telemetry` and the Orchestrator context is preserved under
 `missing_telemetry[].orchestrator_operation_context`; missing telemetry remains
