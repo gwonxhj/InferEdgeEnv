@@ -106,6 +106,7 @@ def test_runtime_intelligence_lab_handoff_manifest_records_producer_contracts(
         "severity": "high",
         "runtime_telemetry_context_present": True,
         "history_seed_runs": 2,
+        "history_seed_run_config_runs": 2,
         "orchestrator_context_present": True,
         "device_local_producer_context_present": True,
         "device_local_producer_context_run_ids": ["candidate"],
@@ -146,6 +147,7 @@ def test_runtime_intelligence_lab_handoff_cli_writes_manifest(tmp_path):
     payload = json.loads(output_path.read_text(encoding="utf-8"))
     assert payload["schema_version"] == RUNTIME_INTELLIGENCE_LAB_HANDOFF_SCHEMA_VERSION
     assert payload["edgeenv_report_summary"]["history_seed_runs"] == 2
+    assert payload["edgeenv_report_summary"]["history_seed_run_config_runs"] == 2
     assert "History seed entries: 2" in result.output
     assert "Device-local producer contexts: candidate" in result.output
 
@@ -488,6 +490,7 @@ def _write_handoff_files(tmp_path):
                     "missing_telemetry_runs": 0,
                     "orchestrator_feed_runs": 1,
                     "history_seed_runs": 2,
+                    "history_seed_run_config_runs": 2,
                 },
                 "runs": [
                     {
@@ -530,6 +533,7 @@ def _write_handoff_files(tmp_path):
                             "missing_telemetry_runs": 0,
                             "orchestrator_feed_runs": 1,
                             "history_seed_runs": 2,
+                            "history_seed_run_config_runs": 2,
                         },
                         "runs": [
                             {
@@ -641,6 +645,18 @@ def _runtime_history_seed(run_id: str, *, sequence_id: int) -> dict:
             "device": "cpu",
             "precision": "fp32",
             "power_mode": "unknown",
+        },
+        "run_config": {
+            "batch": 1,
+            "height": 640,
+            "width": 640,
+            "warmup": 1,
+            "runs": 10,
+            "timeout_ms": None,
+            "input_mode": "dummy",
+            "input_preprocess": "none",
+            "power_mode": "unknown",
+            "jetson_clocks": "unknown",
         },
         "points": [
             {

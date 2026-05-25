@@ -107,6 +107,9 @@ def build_runtime_telemetry_history(
             "registered_runs": len(records),
             "telemetry_runs": len(entries),
             "history_seed_runs": _history_seed_run_count(entries),
+            "history_seed_run_config_runs": _history_seed_run_config_count(
+                entries
+            ),
             "missing_telemetry_runs": len(missing),
             "orchestrator_feed_runs": len(orchestrator_contexts),
         },
@@ -314,6 +317,11 @@ def inspect_runtime_telemetry_history(
                 entry["run_id"]
                 for entry in runs
                 if isinstance(entry.get("runtime_telemetry_history_seed"), dict)
+            ],
+            "history_seed_run_config_run_ids": [
+                entry["run_id"]
+                for entry in runs
+                if _has_runtime_history_seed_run_config(entry)
             ],
             "orchestrator_context_run_ids": [
                 entry["run_id"]
@@ -1017,6 +1025,39 @@ def _validate_runtime_history_seed(value: Any, *, label: str) -> None:
         raise RuntimeTelemetryHistoryError(
             f"Runtime telemetry history seed source_result must be an object: {label}"
         )
+    run_config = value.get("run_config")
+    if run_config is not None:
+        _validate_runtime_history_seed_run_config(
+            run_config,
+            label=f"{label}.run_config",
+        )
+
+
+def _validate_runtime_history_seed_run_config(value: Any, *, label: str) -> None:
+    if not isinstance(value, dict):
+        raise RuntimeTelemetryHistoryError(
+            f"Runtime telemetry history seed run_config must be an object: {label}"
+        )
+    for field in ("batch", "height", "width", "warmup", "runs"):
+        field_value = value.get(field)
+        if type(field_value) is not int:
+            raise RuntimeTelemetryHistoryError(
+                "Runtime telemetry history seed run_config."
+                f"{field} must be an integer: {label}"
+            )
+    timeout_ms = value.get("timeout_ms")
+    if timeout_ms is not None and type(timeout_ms) is not int:
+        raise RuntimeTelemetryHistoryError(
+            "Runtime telemetry history seed run_config.timeout_ms must be "
+            f"an integer or null: {label}"
+        )
+    for field in ("input_mode", "input_preprocess", "power_mode", "jetson_clocks"):
+        field_value = value.get(field)
+        if not isinstance(field_value, str):
+            raise RuntimeTelemetryHistoryError(
+                "Runtime telemetry history seed run_config."
+                f"{field} must be a string: {label}"
+            )
 
 
 def _history_seed_run_count(entries: list[dict[str, Any]]) -> int:
@@ -1025,6 +1066,17 @@ def _history_seed_run_count(entries: list[dict[str, Any]]) -> int:
         for entry in entries
         if isinstance(entry.get("runtime_telemetry_history_seed"), dict)
     )
+
+
+def _history_seed_run_config_count(entries: list[dict[str, Any]]) -> int:
+    return sum(1 for entry in entries if _has_runtime_history_seed_run_config(entry))
+
+
+def _has_runtime_history_seed_run_config(entry: dict[str, Any]) -> bool:
+    history_seed = entry.get("runtime_telemetry_history_seed")
+    if not isinstance(history_seed, dict):
+        return False
+    return isinstance(history_seed.get("run_config"), dict)
 
 
 def _string_items(value: Any) -> list[str]:

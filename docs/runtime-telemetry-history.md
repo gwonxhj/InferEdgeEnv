@@ -45,6 +45,8 @@ The payload is intentionally additive and minimally validated:
   entry as `runtime_telemetry_history_seed`. EdgeEnv validates that the seed
   keeps `registry_owner=edgeenv`, `decision_owner=lab`,
   `production_monitoring=false`, and `missing_telemetry_is_failure=false`.
+  If the seed includes a compact `run_config` snapshot, EdgeEnv validates the
+  replay/comparability context shape and preserves it with the seed.
   This proves Runtime is only the telemetry evidence producer while EdgeEnv owns
   local history accumulation.
 
@@ -139,6 +141,7 @@ The history artifact uses this top-level shape:
     "registered_runs": 2,
     "telemetry_runs": 1,
     "history_seed_runs": 1,
+    "history_seed_run_config_runs": 1,
     "missing_telemetry_runs": 1
   },
   "runs": [
@@ -152,6 +155,18 @@ The history artifact uses this top-level shape:
           "decision_owner": "lab",
           "production_monitoring": false,
           "missing_telemetry_is_failure": false,
+          "run_config": {
+            "batch": 1,
+            "height": 224,
+            "width": 224,
+            "warmup": 1,
+            "runs": 10,
+            "timeout_ms": null,
+            "input_mode": "dummy",
+            "input_preprocess": "none",
+            "power_mode": "unknown",
+            "jetson_clocks": "unknown"
+          },
           "points": [
             {
               "execution_sequence_id": 0,
@@ -260,6 +275,9 @@ Runtime `history_seed` context is preserved as
 `runtime_telemetry_history_seed` in the exported history artifact and counted in
 `summary.history_seed_runs`. It is a one-result replay seed for EdgeEnv history
 accumulation, not a live telemetry stream or a production monitoring contract.
+When Runtime provides `history_seed.run_config`, EdgeEnv counts it in
+`summary.history_seed_run_config_runs` and exposes the run IDs from
+`inspect-history` as replay context, not as a direct regression verdict.
 If the seed is malformed or tries to move registry/decision ownership away from
 EdgeEnv/Lab, export fails rather than silently rewriting the ownership markers.
 
@@ -307,7 +325,10 @@ EdgeEnv regression report, optional Orchestrator operation context, and
 Lab-owned report boundary. When `runtime_telemetry_history_seed` entries are
 present, the handoff validates their schema, `registry_owner=edgeenv`,
 `decision_owner=lab`, non-production marker, and replay points before exposing
-the seed count in `edgeenv_report_summary.history_seed_runs`. When preserved
+the seed count in `edgeenv_report_summary.history_seed_runs`. If seed
+`run_config` snapshots are present, the handoff also preserves
+`edgeenv_report_summary.history_seed_run_config_runs` for Lab-side traceability.
+When preserved
 Orchestrator context is present, the handoff also validates device-local
 `candidate_context.producer` lineage, including per-task source/stage mappings
 and positive producer/device-local event counts. It exposes the matching run IDs
