@@ -510,6 +510,10 @@ def _validate_preserved_orchestrator_context(
         candidate_context=candidate_context,
         source=Path(label),
     )
+    _validate_orchestrator_producer_context(
+        candidate_context.get("producer"),
+        source=Path(label),
+    )
 
 
 def _validate_orchestrator_mapping_hint(
@@ -601,7 +605,67 @@ def _validate_orchestrator_mapping_hint(
                 "edgeenv_mapping_hint.aiguard_evidence_candidates must include "
                 f"{', '.join(missing_candidates)}: {source}"
             )
+    _validate_orchestrator_producer_context(
+        candidate_context.get("producer"),
+        source=source,
+    )
     return mapping_hint
+
+
+def _validate_orchestrator_producer_context(value: Any, *, source: Path) -> None:
+    if value is None:
+        return
+    if not isinstance(value, dict):
+        raise RuntimeTelemetryHistoryError(
+            "Orchestrator telemetry feed candidate_context.producer must be "
+            f"an object: {source}"
+        )
+    list_fields = (
+        "producer_sources",
+        "device_local_producer_sources",
+    )
+    for field in list_fields:
+        field_value = value.get(field)
+        if field_value is not None and (
+            not isinstance(field_value, list)
+            or not all(isinstance(item, str) for item in field_value)
+        ):
+            raise RuntimeTelemetryHistoryError(
+                "Orchestrator telemetry feed candidate_context.producer."
+                f"{field} must be a string list: {source}"
+            )
+    object_fields = (
+        "producer_sources_by_task",
+        "producer_stage_by_task",
+    )
+    for field in object_fields:
+        field_value = value.get(field)
+        if field_value is not None and not isinstance(field_value, dict):
+            raise RuntimeTelemetryHistoryError(
+                "Orchestrator telemetry feed candidate_context.producer."
+                f"{field} must be an object: {source}"
+            )
+    if (
+        "operation_context_role" in value
+        and value.get("operation_context_role")
+        != ORCHESTRATOR_EDGEENV_OPERATION_CONTEXT_ROLE
+    ):
+        raise RuntimeTelemetryHistoryError(
+            "Orchestrator telemetry feed candidate_context.producer."
+            "operation_context_role must be supplemental: "
+            f"{source}"
+        )
+    for field in (
+        "producer_event_count",
+        "device_local_event_count",
+        "device_local_task_count",
+    ):
+        field_value = value.get(field)
+        if field_value is not None and type(field_value) is not int:
+            raise RuntimeTelemetryHistoryError(
+                "Orchestrator telemetry feed candidate_context.producer."
+                f"{field} must be an integer: {source}"
+            )
 
 
 def _validate_optional_mapping_value(
