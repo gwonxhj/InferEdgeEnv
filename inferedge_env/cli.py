@@ -429,11 +429,22 @@ def inspect_runtime_telemetry_history_command(
         "--json",
         help="Print machine-readable replay summary as JSON.",
     ),
+    require_device_local_producer: bool = typer.Option(
+        False,
+        "--require-device-local-producer",
+        help=(
+            "Fail unless preserved Orchestrator context includes device-local "
+            "candidate_context.producer lineage."
+        ),
+    ),
 ) -> None:
     """Validate and summarize a runtime telemetry history replay artifact."""
     try:
         payload = load_runtime_telemetry_history(history_path)
-        summary = inspect_runtime_telemetry_history(payload)
+        summary = inspect_runtime_telemetry_history(
+            payload,
+            require_device_local_producer=require_device_local_producer,
+        )
     except RuntimeTelemetryHistoryError as exc:
         _fail(str(exc), hint=_telemetry_history_input_error_hint(str(exc)))
     if json_output:
@@ -471,6 +482,10 @@ def inspect_runtime_telemetry_history_command(
     console.print(
         "Missing telemetry Orchestrator context runs: "
         f"{len(replay.get('missing_orchestrator_context_run_ids', []))}"
+    )
+    console.print(
+        "Device-local producer context runs: "
+        f"{len(replay.get('device_local_producer_context_run_ids', []))}"
     )
     console.print(f"Evidence gaps: {replay['evidence_gap_count']}")
     console.print(f"Missing run IDs: {', '.join(replay['missing_run_ids']) or '-'}")

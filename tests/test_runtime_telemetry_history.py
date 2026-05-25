@@ -247,6 +247,13 @@ def test_build_runtime_telemetry_history_attaches_orchestrator_feed_context(
     for field in ORCHESTRATOR_EDGEENV_REQUIRED_CANDIDATE_FIELDS:
         assert field in context["candidate_context"]
     assert "not a regression judgement" in payload["notes"][3]
+    strict_summary = inspect_runtime_telemetry_history(
+        payload,
+        require_device_local_producer=True,
+    )
+    assert strict_summary["replay"]["device_local_producer_context_run_ids"] == [
+        "candidate"
+    ]
 
 
 def test_build_runtime_telemetry_history_preserves_missing_orchestrator_feed_context(
@@ -295,6 +302,71 @@ def test_build_runtime_telemetry_history_preserves_missing_orchestrator_feed_con
     assert summary["replay"]["missing_orchestrator_context_run_ids"] == [
         "candidate"
     ]
+    strict_summary = inspect_runtime_telemetry_history(
+        payload,
+        require_device_local_producer=True,
+    )
+    assert strict_summary["replay"]["device_local_producer_context_run_ids"] == [
+        "candidate"
+    ]
+
+
+def test_inspect_runtime_telemetry_history_requires_device_local_producer(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    edgeenv_root = tmp_path / ".edgeenv"
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="candidate",
+        runtime_telemetry=_runtime_telemetry_payload(sequence_id=2),
+    )
+    feed = _orchestrator_feed_payload("candidate")
+    feed["candidate_context"].pop("producer")
+    feed_path = tmp_path / "orchestrator-feed.json"
+    feed_path.write_text(json.dumps(feed), encoding="utf-8")
+    payload = build_runtime_telemetry_history(
+        edgeenv_root,
+        generated_at=datetime(2026, 5, 22, tzinfo=timezone.utc),
+        orchestrator_feeds=[feed_path],
+    )
+
+    with pytest.raises(
+        RuntimeTelemetryHistoryError,
+        match="candidate_context.producer is required",
+    ):
+        inspect_runtime_telemetry_history(
+            payload,
+            require_device_local_producer=True,
+        )
+
+
+def test_inspect_runtime_telemetry_history_requires_orchestrator_context():
+    payload = {
+        "schema_version": RUNTIME_TELEMETRY_HISTORY_SCHEMA_VERSION,
+        "summary": {
+            "registered_runs": 0,
+            "telemetry_runs": 0,
+            "missing_telemetry_runs": 0,
+            "orchestrator_feed_runs": 0,
+        },
+        "runs": [],
+        "missing_telemetry": [],
+    }
+
+    with pytest.raises(
+        RuntimeTelemetryHistoryError,
+        match="must include at least one orchestrator_operation_context",
+    ):
+        inspect_runtime_telemetry_history(
+            payload,
+            require_device_local_producer=True,
+        )
 
 
 def test_load_runtime_telemetry_history_rejects_bad_missing_orchestrator_marker(
@@ -557,6 +629,7 @@ def test_cli_runs_telemetry_export_history_attaches_orchestrator_feed(
             "telemetry",
             "inspect-history",
             str(output_path),
+            "--require-device-local-producer",
         ],
     )
 
@@ -564,6 +637,7 @@ def test_cli_runs_telemetry_export_history_attaches_orchestrator_feed(
     assert "Orchestrator context entries: 1" in export_result.output
     assert inspect_result.exit_code == 0, inspect_result.output
     assert "Orchestrator context runs: 1" in inspect_result.output
+    assert "Device-local producer context runs: 1" in inspect_result.output
     payload = json.loads(output_path.read_text(encoding="utf-8"))
     assert payload["runs"][0]["orchestrator_operation_context"]["run_id"] == (
         "candidate"
