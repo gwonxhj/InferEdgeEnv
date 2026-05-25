@@ -457,6 +457,23 @@ def _validate_history_seed_summary(history: dict[str, Any], *, label: str) -> No
         raise RuntimeIntelligenceLabHandoffError(
             f"{label}.summary.history_seed_runs must match preserved seed count"
         )
+    expected_seed_run_config_runs = summary.get("history_seed_run_config_runs")
+    if expected_seed_run_config_runs is not None:
+        seed_run_config_count = sum(
+            1
+            for item in runs
+            if isinstance(item, dict)
+            and isinstance(item.get("runtime_telemetry_history_seed"), dict)
+            and isinstance(
+                item["runtime_telemetry_history_seed"].get("run_config"),
+                dict,
+            )
+        )
+        if expected_seed_run_config_runs != seed_run_config_count:
+            raise RuntimeIntelligenceLabHandoffError(
+                f"{label}.summary.history_seed_run_config_runs must match "
+                "preserved seed run_config count"
+            )
     if seed_count:
         _validate_embedded_runtime_history(history, label=label)
 
@@ -501,6 +518,11 @@ def _edgeenv_report_summary(regression_report: dict[str, Any]) -> dict[str, Any]
         "severity": regression_report.get("severity"),
         "runtime_telemetry_context_present": isinstance(context, dict),
         "history_seed_runs": history_summary.get("history_seed_runs")
+        if isinstance(history_summary, dict)
+        else None,
+        "history_seed_run_config_runs": history_summary.get(
+            "history_seed_run_config_runs"
+        )
         if isinstance(history_summary, dict)
         else None,
         "orchestrator_context_present": (

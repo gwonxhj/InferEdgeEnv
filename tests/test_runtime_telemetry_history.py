@@ -66,6 +66,7 @@ def test_build_runtime_telemetry_history_records_entries_and_missing_gaps(
         "registered_runs": 2,
         "telemetry_runs": 1,
         "history_seed_runs": 1,
+        "history_seed_run_config_runs": 1,
         "missing_telemetry_runs": 1,
         "orchestrator_feed_runs": 0,
     }
@@ -96,6 +97,18 @@ def test_build_runtime_telemetry_history_records_entries_and_missing_gaps(
     assert payload["runs"][0]["runtime_telemetry_history_seed"]["decision_owner"] == (
         "lab"
     )
+    assert payload["runs"][0]["runtime_telemetry_history_seed"]["run_config"] == {
+        "batch": 1,
+        "height": 224,
+        "width": 224,
+        "warmup": 1,
+        "runs": 10,
+        "timeout_ms": None,
+        "input_mode": "dummy",
+        "input_preprocess": "none",
+        "power_mode": "unknown",
+        "jetson_clocks": "unknown",
+    }
     assert payload["telemetry_coverage"]["missing_field_runs"] == [
         {
             "run_id": "run-with-telemetry",
@@ -165,6 +178,7 @@ def test_write_runtime_telemetry_history_filters_selected_runs(
     assert payload["summary"]["registered_runs"] == 1
     assert payload["summary"]["telemetry_runs"] == 1
     assert payload["summary"]["history_seed_runs"] == 1
+    assert payload["summary"]["history_seed_run_config_runs"] == 1
     assert payload["runs"][0]["run_id"] == "run-b"
     assert payload["runs"][0]["execution_sequence_id"] == 2
 
@@ -654,6 +668,31 @@ def test_build_runtime_telemetry_history_rejects_bad_runtime_history_seed(
         build_runtime_telemetry_history(edgeenv_root)
 
 
+def test_build_runtime_telemetry_history_rejects_bad_runtime_seed_run_config(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    edgeenv_root = tmp_path / ".edgeenv"
+    telemetry = _runtime_telemetry_payload(sequence_id=2)
+    telemetry["history_seed"]["run_config"]["runs"] = "10"
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="run-with-bad-seed-run-config",
+        runtime_telemetry=telemetry,
+    )
+
+    with pytest.raises(
+        RuntimeTelemetryHistoryError,
+        match=r"run_config\.runs must be an integer",
+    ):
+        build_runtime_telemetry_history(edgeenv_root)
+
+
 def test_cli_runs_telemetry_export_history_attaches_orchestrator_feed(
     tmp_path,
     bench_config,
@@ -828,6 +867,10 @@ def test_inspect_runtime_telemetry_history_reports_replay_summary(
     assert summary["replay"]["evidence_gap_count"] == 1
     assert summary["replay"]["missing_run_ids"] == ["run-without-telemetry"]
     assert summary["replay"]["history_seed_run_ids"] == ["run-a", "run-b"]
+    assert summary["replay"]["history_seed_run_config_run_ids"] == [
+        "run-a",
+        "run-b",
+    ]
     assert "latency" in summary["replay"]["telemetry_fields"]
     assert "operation" in summary["replay"]["telemetry_fields"]
     assert summary["replay"]["telemetry_coverage"] == {
@@ -950,10 +993,12 @@ def test_cli_runs_telemetry_export_history_writes_replay_artifact(
     assert "Runtime telemetry history exported" in result.output
     assert "Telemetry entries: 1" in result.output
     assert "History seed entries: 1" in result.output
+    assert "History seed run_config entries: 1" in result.output
     assert "not production monitoring" in result.output
     payload = json.loads(output_path.read_text(encoding="utf-8"))
     assert payload["summary"]["telemetry_runs"] == 1
     assert payload["summary"]["history_seed_runs"] == 1
+    assert payload["summary"]["history_seed_run_config_runs"] == 1
     assert payload["runs"][0]["run_id"] == "run-cli-telemetry"
     assert payload["runs"][0]["runtime_telemetry_history_seed"]["registry_owner"] == (
         "edgeenv"
@@ -1003,6 +1048,7 @@ def test_cli_runs_telemetry_inspect_history_validates_replay_artifact(
     assert "Telemetry coverage runs: 1" in result.output
     assert "Telemetry coverage missing fields: queue_depth" in result.output
     assert "Runtime history seed runs: 1" in result.output
+    assert "Runtime history seed run_config runs: 1" in result.output
     assert "latency" in result.output
     assert "Evidence gaps: 1" in result.output
     assert "run-cli-without-telemetry" in result.output
@@ -1045,6 +1091,9 @@ def test_cli_runs_telemetry_inspect_history_json_output(
     assert payload["replay"]["run_ids"] == ["run-cli-json"]
     assert payload["replay"]["execution_sequence_ids"] == [3]
     assert payload["replay"]["history_seed_run_ids"] == ["run-cli-json"]
+    assert payload["replay"]["history_seed_run_config_run_ids"] == [
+        "run-cli-json"
+    ]
     assert payload["replay"]["telemetry_coverage"]["runs_with_coverage"] == 1
     assert payload["replay"]["telemetry_coverage"]["missing_fields"] == [
         "queue_depth"
@@ -1143,6 +1192,18 @@ def _runtime_history_seed_payload(sequence_id: int) -> dict:
             "device": "cpu",
             "precision": "fp32",
             "power_mode": "unknown",
+        },
+        "run_config": {
+            "batch": 1,
+            "height": 224,
+            "width": 224,
+            "warmup": 1,
+            "runs": 10,
+            "timeout_ms": None,
+            "input_mode": "dummy",
+            "input_preprocess": "none",
+            "power_mode": "unknown",
+            "jetson_clocks": "unknown",
         },
         "recommended_registry_key_fields": [
             "compare_key",
