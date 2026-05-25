@@ -366,6 +366,61 @@ def test_runtime_intelligence_lab_handoff_rejects_missing_device_local_producer(
         )
 
 
+def test_runtime_intelligence_lab_handoff_rejects_unmapped_regression_device_source(
+    tmp_path,
+):
+    baseline_path, candidate_path, regression_path, history_path = _write_handoff_files(
+        tmp_path
+    )
+    regression = json.loads(regression_path.read_text(encoding="utf-8"))
+    producer = regression["runtime_telemetry_context"]["candidate"][
+        "orchestrator_operation_context"
+    ]["candidate_context"]["producer"]
+    producer["producer_sources_by_task"] = {
+        "vision_agent": ["orchestration_summary"],
+    }
+    regression_path.write_text(json.dumps(regression), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeIntelligenceLabHandoffError,
+        match=(
+            "device_local_producer_sources must also appear in "
+            "producer_sources_by_task"
+        ),
+    ):
+        build_runtime_intelligence_lab_handoff_manifest(
+            baseline_result_path=baseline_path,
+            candidate_result_path=candidate_path,
+            edgeenv_regression_report_path=regression_path,
+            telemetry_history_path=history_path,
+        )
+
+
+def test_runtime_intelligence_lab_handoff_rejects_bad_regression_stage_mapping(
+    tmp_path,
+):
+    baseline_path, candidate_path, regression_path, history_path = _write_handoff_files(
+        tmp_path
+    )
+    regression = json.loads(regression_path.read_text(encoding="utf-8"))
+    producer = regression["runtime_telemetry_context"]["candidate"][
+        "orchestrator_operation_context"
+    ]["candidate_context"]["producer"]
+    producer["producer_stage_by_task"] = {"vision_agent": ""}
+    regression_path.write_text(json.dumps(regression), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeIntelligenceLabHandoffError,
+        match="producer_stage_by_task.vision_agent must be a non-empty string",
+    ):
+        build_runtime_intelligence_lab_handoff_manifest(
+            baseline_result_path=baseline_path,
+            candidate_result_path=candidate_path,
+            edgeenv_regression_report_path=regression_path,
+            telemetry_history_path=history_path,
+        )
+
+
 def test_runtime_intelligence_lab_handoff_rejects_history_missing_device_local_producer(
     tmp_path,
 ):
@@ -381,6 +436,31 @@ def test_runtime_intelligence_lab_handoff_rejects_history_missing_device_local_p
     with pytest.raises(
         RuntimeIntelligenceLabHandoffError,
         match="candidate_context.producer is required",
+    ):
+        build_runtime_intelligence_lab_handoff_manifest(
+            baseline_result_path=baseline_path,
+            candidate_result_path=candidate_path,
+            edgeenv_regression_report_path=regression_path,
+            telemetry_history_path=history_path,
+        )
+
+
+def test_runtime_intelligence_lab_handoff_rejects_bad_history_stage_mapping(
+    tmp_path,
+):
+    baseline_path, candidate_path, regression_path, history_path = _write_handoff_files(
+        tmp_path
+    )
+    history = json.loads(history_path.read_text(encoding="utf-8"))
+    producer = history["runs"][1]["orchestrator_operation_context"][
+        "candidate_context"
+    ]["producer"]
+    producer["producer_stage_by_task"] = {"vision_agent": ""}
+    history_path.write_text(json.dumps(history), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeIntelligenceLabHandoffError,
+        match="producer_stage_by_task.vision_agent must be a non-empty string",
     ):
         build_runtime_intelligence_lab_handoff_manifest(
             baseline_result_path=baseline_path,

@@ -105,8 +105,11 @@ If the feed includes device-local producer lineage under
 `candidate_context.producer`, EdgeEnv also preserves that supplemental context.
 The producer trace may include producer sources, per-task producer stages,
 producer source mappings, and device-local event counts. EdgeEnv validates this
-block when present, but it does not make Orchestrator the comparability owner or
-runtime regression owner.
+block when present. Device-local producer sources must remain present in both
+the global source list and per-task source mapping, per-task stages must be
+non-empty strings, and producer/device-local event counts must stay positive.
+This does not make Orchestrator the comparability owner or runtime regression
+owner.
 For device-local handoff smokes, `inspect-history` can enforce that lineage with
 `--require-device-local-producer`. The stricter check fails when the preserved
 history artifact has no Orchestrator context, or when preserved
@@ -306,8 +309,9 @@ present, the handoff validates their schema, `registry_owner=edgeenv`,
 `decision_owner=lab`, non-production marker, and replay points before exposing
 the seed count in `edgeenv_report_summary.history_seed_runs`. When preserved
 Orchestrator context is present, the handoff also validates device-local
-`candidate_context.producer` lineage and exposes the matching run IDs in
-`edgeenv_report_summary.device_local_producer_context_run_ids`. The manifest also
+`candidate_context.producer` lineage, including per-task source/stage mappings
+and positive producer/device-local event counts. It exposes the matching run IDs
+in `edgeenv_report_summary.device_local_producer_context_run_ids`. The manifest also
 includes `lab_bundle_alignment` metadata for Lab's Runtime Intelligence bundle:
 required file keys, EdgeEnv-produced file keys, external AIGuard file keys,
 source repository mapping, artifact roles, and producer contract names. It

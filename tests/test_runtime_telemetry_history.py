@@ -346,6 +346,75 @@ def test_inspect_runtime_telemetry_history_requires_device_local_producer(
         )
 
 
+def test_inspect_runtime_telemetry_history_rejects_unmapped_device_local_source(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    edgeenv_root = tmp_path / ".edgeenv"
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="candidate",
+        runtime_telemetry=_runtime_telemetry_payload(sequence_id=2),
+    )
+    feed = _orchestrator_feed_payload("candidate")
+    feed["candidate_context"]["producer"]["producer_sources_by_task"] = {
+        "vision_agent": ["orchestration_summary"],
+    }
+    feed_path = tmp_path / "orchestrator-feed.json"
+    feed_path.write_text(json.dumps(feed), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeTelemetryHistoryError,
+        match=(
+            "device_local_producer_sources must also appear in "
+            "producer_sources_by_task"
+        ),
+    ):
+        build_runtime_telemetry_history(
+            edgeenv_root,
+            generated_at=datetime(2026, 5, 22, tzinfo=timezone.utc),
+            orchestrator_feeds=[feed_path],
+        )
+
+
+def test_inspect_runtime_telemetry_history_rejects_empty_stage_mapping(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    edgeenv_root = tmp_path / ".edgeenv"
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="candidate",
+        runtime_telemetry=_runtime_telemetry_payload(sequence_id=2),
+    )
+    feed = _orchestrator_feed_payload("candidate")
+    feed["candidate_context"]["producer"]["producer_stage_by_task"] = {
+        "vision_agent": "",
+    }
+    feed_path = tmp_path / "orchestrator-feed.json"
+    feed_path.write_text(json.dumps(feed), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeTelemetryHistoryError,
+        match="producer_stage_by_task.vision_agent must be a non-empty string",
+    ):
+        build_runtime_telemetry_history(
+            edgeenv_root,
+            generated_at=datetime(2026, 5, 22, tzinfo=timezone.utc),
+            orchestrator_feeds=[feed_path],
+        )
+
+
 def test_inspect_runtime_telemetry_history_requires_orchestrator_context():
     payload = {
         "schema_version": RUNTIME_TELEMETRY_HISTORY_SCHEMA_VERSION,

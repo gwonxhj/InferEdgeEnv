@@ -728,25 +728,91 @@ def _validate_orchestrator_producer_context(
                 f"{field} must be a non-empty string list for device-local "
                 f"producer validation: {source}"
             )
-    object_fields = (
-        "producer_sources_by_task",
-        "producer_stage_by_task",
-    )
-    for field in object_fields:
-        field_value = value.get(field)
-        if field_value is None and not require_device_local_producer:
-            continue
-        if not isinstance(field_value, dict):
+    producer_sources = value.get("producer_sources")
+    device_local_sources = value.get("device_local_producer_sources")
+    if isinstance(producer_sources, list) and isinstance(device_local_sources, list):
+        missing_from_sources = sorted(set(device_local_sources) - set(producer_sources))
+        if missing_from_sources:
             raise RuntimeTelemetryHistoryError(
                 "Orchestrator telemetry feed candidate_context.producer."
-                f"{field} must be an object: {source}"
+                "device_local_producer_sources must also appear in "
+                f"producer_sources: {', '.join(missing_from_sources)}: {source}"
             )
-        if require_device_local_producer and not field_value:
+    sources_by_task = value.get("producer_sources_by_task")
+    if sources_by_task is None and not require_device_local_producer:
+        sources_by_task = None
+    else:
+        if not isinstance(sources_by_task, dict):
             raise RuntimeTelemetryHistoryError(
                 "Orchestrator telemetry feed candidate_context.producer."
-                f"{field} must be a non-empty object for device-local "
-                f"producer validation: {source}"
+                f"producer_sources_by_task must be an object: {source}"
             )
+        if require_device_local_producer and not sources_by_task:
+            raise RuntimeTelemetryHistoryError(
+                "Orchestrator telemetry feed candidate_context.producer."
+                "producer_sources_by_task must be a non-empty object for "
+                f"device-local producer validation: {source}"
+            )
+        task_sources: set[str] = set()
+        for task_name, sources in sources_by_task.items():
+            if not isinstance(task_name, str) or not task_name:
+                raise RuntimeTelemetryHistoryError(
+                    "Orchestrator telemetry feed candidate_context.producer."
+                    f"producer_sources_by_task keys must be non-empty strings: "
+                    f"{source}"
+                )
+            if (
+                not isinstance(sources, list)
+                or not sources
+                or not all(
+                    isinstance(item, str) and item for item in sources
+                )
+            ):
+                raise RuntimeTelemetryHistoryError(
+                    "Orchestrator telemetry feed candidate_context.producer."
+                    f"producer_sources_by_task.{task_name} must be a "
+                    f"non-empty string list: {source}"
+                )
+            task_sources.update(sources)
+        if isinstance(device_local_sources, list):
+            missing_from_task_sources = sorted(
+                set(device_local_sources) - task_sources
+            )
+            if missing_from_task_sources:
+                raise RuntimeTelemetryHistoryError(
+                    "Orchestrator telemetry feed candidate_context.producer."
+                    "device_local_producer_sources must also appear in "
+                    "producer_sources_by_task: "
+                    f"{', '.join(missing_from_task_sources)}: {source}"
+                )
+    stage_by_task = value.get("producer_stage_by_task")
+    if stage_by_task is None and not require_device_local_producer:
+        stage_by_task = None
+    else:
+        if not isinstance(stage_by_task, dict):
+            raise RuntimeTelemetryHistoryError(
+                "Orchestrator telemetry feed candidate_context.producer."
+                f"producer_stage_by_task must be an object: {source}"
+            )
+        if require_device_local_producer and not stage_by_task:
+            raise RuntimeTelemetryHistoryError(
+                "Orchestrator telemetry feed candidate_context.producer."
+                "producer_stage_by_task must be a non-empty object for "
+                f"device-local producer validation: {source}"
+            )
+        for task_name, stage in stage_by_task.items():
+            if not isinstance(task_name, str) or not task_name:
+                raise RuntimeTelemetryHistoryError(
+                    "Orchestrator telemetry feed candidate_context.producer."
+                    f"producer_stage_by_task keys must be non-empty strings: "
+                    f"{source}"
+                )
+            if not isinstance(stage, str) or not stage:
+                raise RuntimeTelemetryHistoryError(
+                    "Orchestrator telemetry feed candidate_context.producer."
+                    f"producer_stage_by_task.{task_name} must be a non-empty "
+                    f"string: {source}"
+                )
     if (
         ("operation_context_role" in value or require_device_local_producer)
         and value.get("operation_context_role")
