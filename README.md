@@ -377,6 +377,10 @@ evidence.
 It also exposes a `lab_bundle_alignment` block so Lab can align file keys,
 source repositories, artifact roles, and producer contracts while treating
 AIGuard `guard_analysis` as an external artifact produced by InferEdgeAIGuard.
+That alignment block also lists the external AIGuard evidence types expected by
+Lab's Runtime Intelligence gate, including
+`runtime_history_seed_run_config_traceability`, so EdgeEnv can declare the
+handoff contract without producing the Guard artifact itself.
 It does not include AIGuard `guard_analysis`; AIGuard remains a separate
 deterministic diagnosis provider.
 

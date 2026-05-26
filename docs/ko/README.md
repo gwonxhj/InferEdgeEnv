@@ -95,6 +95,10 @@ warmup/repeat run 같은 compact `history_seed_run_config_markers`도 함께
 요약해 Lab이 전체 Runtime result를 다시 해석하지 않고 replay traceability를
 확인할 수 있게 한다. 이는 local replay/history evidence이며 production
 monitoring stream이 아니다.
+또한 `lab_bundle_alignment.external_aiguard_required_evidence_types`에
+`runtime_history_seed_run_config_traceability`를 포함해, AIGuard artifact는
+외부 산출물로 유지하면서도 Lab Runtime Intelligence gate가 요구하는
+deterministic evidence contract를 EdgeEnv handoff에 명시한다.
 
 ## EdgeEnv가 아닌 것
 
