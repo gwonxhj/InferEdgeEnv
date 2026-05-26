@@ -872,6 +872,16 @@ def runtime_intelligence_handoff_manifest(
             "Device-local producer contexts: "
             f"{', '.join(device_local_run_ids)}"
         )
+    external_evidence_types = payload.get("lab_bundle_alignment", {}).get(
+        "external_aiguard_required_evidence_types",
+        [],
+    )
+    if external_evidence_types:
+        console.print(
+            "External AIGuard evidence types: "
+            f"{', '.join(external_evidence_types)}",
+            soft_wrap=True,
+        )
     console.print("Lab remains the final deployment decision owner.", soft_wrap=True)
 
 

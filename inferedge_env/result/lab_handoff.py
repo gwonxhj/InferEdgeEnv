@@ -69,6 +69,13 @@ LAB_BUNDLE_PRODUCER_CONTRACTS = {
     "aiguard_schema": AIGUARD_DIAGNOSIS_SCHEMA_VERSION,
 }
 LAB_BUNDLE_EXTERNAL_FILE_KEYS = ("aiguard_guard_analysis",)
+LAB_BUNDLE_EXTERNAL_AIGUARD_REQUIRED_EVIDENCE_TYPES = (
+    "runtime_telemetry_context_coverage",
+    "edgeenv_orchestrator_producer_lineage",
+    "runtime_history_seed_run_config_traceability",
+    "runtime_queue_overload",
+    "runtime_thermal_instability",
+)
 
 BOUNDARIES = {
     "orchestrator_context_is_verdict": False,
@@ -769,6 +776,9 @@ def _lab_bundle_alignment(files: dict[str, str]) -> dict[str, Any]:
         "source_repositories": dict(LAB_BUNDLE_SOURCE_REPOSITORIES),
         "artifact_roles": dict(LAB_BUNDLE_ARTIFACT_ROLES),
         "producer_contracts": dict(LAB_BUNDLE_PRODUCER_CONTRACTS),
+        "external_aiguard_required_evidence_types": list(
+            LAB_BUNDLE_EXTERNAL_AIGUARD_REQUIRED_EVIDENCE_TYPES
+        ),
         "boundary_flags": {
             "orchestrator_context_is_verdict": False,
             "orchestrator_context_is_comparability_gate": False,

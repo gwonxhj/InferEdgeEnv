@@ -85,6 +85,15 @@ def test_runtime_intelligence_lab_handoff_manifest_records_producer_contracts(
     assert payload["lab_bundle_alignment"]["producer_contracts"][
         "aiguard_schema"
     ] == "inferedge-aiguard-diagnosis-v1"
+    assert payload["lab_bundle_alignment"][
+        "external_aiguard_required_evidence_types"
+    ] == [
+        "runtime_telemetry_context_coverage",
+        "edgeenv_orchestrator_producer_lineage",
+        "runtime_history_seed_run_config_traceability",
+        "runtime_queue_overload",
+        "runtime_thermal_instability",
+    ]
     assert payload["lab_bundle_alignment"]["boundary_flags"] == {
         "orchestrator_context_is_verdict": False,
         "orchestrator_context_is_comparability_gate": False,
@@ -181,6 +190,12 @@ def test_runtime_intelligence_lab_handoff_cli_writes_manifest(tmp_path):
     assert "History seed entries: 2" in result.output
     assert "History seed run_config markers: baseline, candidate" in result.output
     assert "Device-local producer contexts: candidate" in result.output
+    assert (
+        "External AIGuard evidence types: runtime_telemetry_context_coverage, "
+        "edgeenv_orchestrator_producer_lineage, "
+        "runtime_history_seed_run_config_traceability, "
+        "runtime_queue_overload, runtime_thermal_instability"
+    ) in result.output
 
 
 def test_runtime_intelligence_lab_handoff_rejects_mismatched_run_id(tmp_path):
