@@ -220,6 +220,54 @@ def test_runtime_intelligence_lab_handoff_rejects_seed_count_mismatch(tmp_path):
         )
 
 
+def test_runtime_intelligence_lab_handoff_rejects_bad_regression_seed_run_config(
+    tmp_path,
+):
+    baseline_path, candidate_path, regression_path, history_path = _write_handoff_files(
+        tmp_path
+    )
+    regression = json.loads(regression_path.read_text(encoding="utf-8"))
+    candidate_seed = regression["runtime_telemetry_context"]["history"]["runs"][1][
+        "runtime_telemetry_history_seed"
+    ]
+    candidate_seed["run_config"]["runs"] = "10"
+    regression_path.write_text(json.dumps(regression), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeIntelligenceLabHandoffError,
+        match=r"run_config\.runs must be an integer",
+    ):
+        build_runtime_intelligence_lab_handoff_manifest(
+            baseline_result_path=baseline_path,
+            candidate_result_path=candidate_path,
+            edgeenv_regression_report_path=regression_path,
+            telemetry_history_path=history_path,
+        )
+
+
+def test_runtime_intelligence_lab_handoff_rejects_bad_history_seed_run_config(
+    tmp_path,
+):
+    baseline_path, candidate_path, regression_path, history_path = _write_handoff_files(
+        tmp_path
+    )
+    history = json.loads(history_path.read_text(encoding="utf-8"))
+    candidate_seed = history["runs"][1]["runtime_telemetry_history_seed"]
+    candidate_seed["run_config"]["timeout_ms"] = "5000"
+    history_path.write_text(json.dumps(history), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeIntelligenceLabHandoffError,
+        match=r"run_config\.timeout_ms must be an integer or null",
+    ):
+        build_runtime_intelligence_lab_handoff_manifest(
+            baseline_result_path=baseline_path,
+            candidate_result_path=candidate_path,
+            edgeenv_regression_report_path=regression_path,
+            telemetry_history_path=history_path,
+        )
+
+
 def test_runtime_intelligence_lab_handoff_rejects_bad_orchestrator_schema(tmp_path):
     baseline_path, candidate_path, regression_path, history_path = _write_handoff_files(
         tmp_path
