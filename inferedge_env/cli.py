@@ -876,6 +876,12 @@ def runtime_intelligence_handoff_manifest(
             "Device-local producer contexts: "
             f"{', '.join(device_local_run_ids)}"
         )
+    guard_alignment_run_ids = summary.get("producer_lineage_guard_alignment_run_ids")
+    if guard_alignment_run_ids:
+        console.print(
+            "Producer-lineage guard alignment: "
+            f"{', '.join(guard_alignment_run_ids)}"
+        )
     external_evidence_types = payload.get("lab_bundle_alignment", {}).get(
         "external_aiguard_required_evidence_types",
         [],

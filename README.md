@@ -379,8 +379,9 @@ device-local `candidate_context.producer` lineage, including per-task source
 mapping, per-task stage mapping, and positive producer/device-local event
 counts. It also validates the downstream
 `edgeenv_orchestrator_producer_lineage` marker so Lab/AIGuard can distinguish
-producer-lineage evidence from queue/thermal operation evidence. It reports the
-matching run IDs as EdgeEnv producer-side traceability evidence.
+producer-lineage evidence from queue/thermal operation evidence. It reports
+`producer_lineage_guard_alignment_run_ids` and prints the matching run IDs as
+EdgeEnv producer-side traceability evidence.
 It also exposes a `lab_bundle_alignment` block so Lab can align file keys,
 source repositories, artifact roles, and producer contracts while treating
 AIGuard `guard_analysis` as an external artifact produced by InferEdgeAIGuard.

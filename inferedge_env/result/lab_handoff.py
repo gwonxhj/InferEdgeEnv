@@ -588,6 +588,7 @@ def _edgeenv_report_summary(regression_report: dict[str, Any]) -> dict[str, Any]
     history_summary = history.get("summary", {}) if isinstance(history, dict) else {}
     history_seed_run_config_markers = _history_seed_run_config_markers(history)
     device_local_context_run_ids = _device_local_producer_context_run_ids(context)
+    guard_alignment_run_ids = _producer_lineage_guard_alignment_run_ids(context)
     return {
         "baseline_run_id": regression_report.get("baseline_run_id"),
         "candidate_run_id": regression_report.get("candidate_run_id"),
@@ -618,6 +619,8 @@ def _edgeenv_report_summary(regression_report: dict[str, Any]) -> dict[str, Any]
             device_local_context_run_ids
         ),
         "device_local_producer_context_run_ids": device_local_context_run_ids,
+        "producer_lineage_guard_alignment_present": bool(guard_alignment_run_ids),
+        "producer_lineage_guard_alignment_run_ids": guard_alignment_run_ids,
     }
 
 
@@ -704,6 +707,42 @@ def _device_local_producer_context_run_ids(context: Any) -> list[str]:
                     if isinstance(run_id, str) and run_id and run_id not in run_ids:
                         run_ids.append(run_id)
     return run_ids
+
+
+def _producer_lineage_guard_alignment_run_ids(context: Any) -> list[str]:
+    if not isinstance(context, dict):
+        return []
+    run_ids: list[str] = []
+
+    def append_if_aligned(run_context: Any) -> None:
+        if not isinstance(run_context, dict):
+            return
+        operation_context = run_context.get("orchestrator_operation_context")
+        if not _has_producer_lineage_guard_alignment(operation_context):
+            return
+        run_id = run_context.get("run_id")
+        if isinstance(run_id, str) and run_id and run_id not in run_ids:
+            run_ids.append(run_id)
+
+    append_if_aligned(context.get("baseline"))
+    append_if_aligned(context.get("candidate"))
+    history = context.get("history")
+    if isinstance(history, dict):
+        for section in ("runs", "missing_telemetry"):
+            for entry in history.get(section, []):
+                append_if_aligned(entry)
+    return run_ids
+
+
+def _has_producer_lineage_guard_alignment(operation_context: Any) -> bool:
+    if not isinstance(operation_context, dict):
+        return False
+    alignment = operation_context.get("downstream_guard_alignment")
+    return (
+        isinstance(alignment, dict)
+        and alignment.get("producer_lineage_evidence_type")
+        == ORCHESTRATOR_PRODUCER_LINEAGE_AIGUARD_EVIDENCE_TYPE
+    )
 
 
 def _has_device_local_producer_context(operation_context: Any) -> bool:

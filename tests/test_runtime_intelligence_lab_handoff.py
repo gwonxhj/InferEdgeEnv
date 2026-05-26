@@ -161,6 +161,8 @@ def test_runtime_intelligence_lab_handoff_manifest_records_producer_contracts(
         "orchestrator_context_present": True,
         "device_local_producer_context_present": True,
         "device_local_producer_context_run_ids": ["candidate"],
+        "producer_lineage_guard_alignment_present": True,
+        "producer_lineage_guard_alignment_run_ids": ["candidate"],
     }
     assert "AIGuard guard_analysis is intentionally not produced by EdgeEnv." in (
         payload["notes"]
@@ -202,6 +204,7 @@ def test_runtime_intelligence_lab_handoff_cli_writes_manifest(tmp_path):
     assert "History seed entries: 2" in result.output
     assert "History seed run_config markers: baseline, candidate" in result.output
     assert "Device-local producer contexts: candidate" in result.output
+    assert "Producer-lineage guard alignment: candidate" in result.output
     assert (
         "External AIGuard evidence types: runtime_telemetry_context_coverage, "
         "edgeenv_orchestrator_producer_lineage, "
