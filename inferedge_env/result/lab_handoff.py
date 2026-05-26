@@ -779,6 +779,16 @@ def _lab_bundle_alignment(files: dict[str, str]) -> dict[str, Any]:
         "external_aiguard_required_evidence_types": list(
             LAB_BUNDLE_EXTERNAL_AIGUARD_REQUIRED_EVIDENCE_TYPES
         ),
+        "external_aiguard_alignment_gate": {
+            "declared_by": "edgeenv",
+            "guard_analysis_file_key": "aiguard_guard_analysis",
+            "validated_by": [
+                "inferedge-aiguard check-edgeenv-handoff-alignment",
+                "inferedgelab runtime-intelligence bundle manifest gate",
+            ],
+            "edgeenv_does_not_generate_guard_analysis": True,
+            "lab_is_final_decision_owner": True,
+        },
         "boundary_flags": {
             "orchestrator_context_is_verdict": False,
             "orchestrator_context_is_comparability_gate": False,

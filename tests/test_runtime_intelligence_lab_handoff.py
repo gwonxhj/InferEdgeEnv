@@ -94,6 +94,16 @@ def test_runtime_intelligence_lab_handoff_manifest_records_producer_contracts(
         "runtime_queue_overload",
         "runtime_thermal_instability",
     ]
+    assert payload["lab_bundle_alignment"]["external_aiguard_alignment_gate"] == {
+        "declared_by": "edgeenv",
+        "guard_analysis_file_key": "aiguard_guard_analysis",
+        "validated_by": [
+            "inferedge-aiguard check-edgeenv-handoff-alignment",
+            "inferedgelab runtime-intelligence bundle manifest gate",
+        ],
+        "edgeenv_does_not_generate_guard_analysis": True,
+        "lab_is_final_decision_owner": True,
+    }
     assert payload["lab_bundle_alignment"]["boundary_flags"] == {
         "orchestrator_context_is_verdict": False,
         "orchestrator_context_is_comparability_gate": False,
