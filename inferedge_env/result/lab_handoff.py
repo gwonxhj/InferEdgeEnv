@@ -11,6 +11,7 @@ from inferedge_env.result.telemetry_history import (
     ORCHESTRATOR_EDGEENV_HISTORY_COVERAGE_PATH,
     ORCHESTRATOR_EDGEENV_OPERATION_CONTEXT_ROLE,
     ORCHESTRATOR_EDGEENV_REQUIRED_CANDIDATE_FIELDS,
+    ORCHESTRATOR_PRODUCER_LINEAGE_AIGUARD_EVIDENCE_TYPE,
     ORCHESTRATOR_TELEMETRY_FEED_ARTIFACT_ROLE,
     ORCHESTRATOR_TELEMETRY_FEED_PRODUCER_CONTRACT,
     ORCHESTRATOR_TELEMETRY_FEED_SCHEMA_VERSION,
@@ -314,6 +315,10 @@ def _validate_orchestrator_context(
         operation_context=operation_context,
         regression_path=regression_path,
     )
+    _validate_orchestrator_downstream_guard_alignment(
+        operation_context.get("downstream_guard_alignment"),
+        regression_path=regression_path,
+    )
     _validate_device_local_producer_lineage(
         operation_context.get("candidate_context"),
         label="orchestrator_operation_context.candidate_context",
@@ -422,6 +427,64 @@ def _validate_orchestrator_mapping_hint(
         raise RuntimeIntelligenceLabHandoffError(
             "orchestrator_operation_context.candidate_context must include "
             f"{', '.join(missing_context)}: {regression_path}"
+        )
+
+
+def _validate_orchestrator_downstream_guard_alignment(
+    value: Any,
+    *,
+    regression_path: Path,
+) -> None:
+    if not isinstance(value, dict):
+        raise RuntimeIntelligenceLabHandoffError(
+            "orchestrator_operation_context.downstream_guard_alignment must be "
+            f"an object: {regression_path}"
+        )
+    if value.get("declared_by") != "orchestrator":
+        raise RuntimeIntelligenceLabHandoffError(
+            "orchestrator_operation_context.downstream_guard_alignment."
+            f"declared_by must be orchestrator: {regression_path}"
+        )
+    if (
+        value.get("producer_lineage_evidence_type")
+        != ORCHESTRATOR_PRODUCER_LINEAGE_AIGUARD_EVIDENCE_TYPE
+    ):
+        raise RuntimeIntelligenceLabHandoffError(
+            "orchestrator_operation_context.downstream_guard_alignment."
+            "producer_lineage_evidence_type must be "
+            f"{ORCHESTRATOR_PRODUCER_LINEAGE_AIGUARD_EVIDENCE_TYPE}: "
+            f"{regression_path}"
+        )
+    operation_candidates = value.get("operation_evidence_candidates")
+    if not isinstance(operation_candidates, list) or not all(
+        isinstance(item, str) for item in operation_candidates
+    ):
+        raise RuntimeIntelligenceLabHandoffError(
+            "orchestrator_operation_context.downstream_guard_alignment."
+            "operation_evidence_candidates must be a string list: "
+            f"{regression_path}"
+        )
+    missing_candidates = [
+        candidate
+        for candidate in ORCHESTRATOR_EDGEENV_AIGUARD_EVIDENCE_CANDIDATES
+        if candidate not in operation_candidates
+    ]
+    if missing_candidates:
+        raise RuntimeIntelligenceLabHandoffError(
+            "orchestrator_operation_context.downstream_guard_alignment."
+            "operation_evidence_candidates must include "
+            f"{', '.join(missing_candidates)}: {regression_path}"
+        )
+    if value.get("orchestrator_is_final_decision_owner") is not False:
+        raise RuntimeIntelligenceLabHandoffError(
+            "orchestrator_operation_context.downstream_guard_alignment."
+            "orchestrator_is_final_decision_owner must be false: "
+            f"{regression_path}"
+        )
+    if value.get("lab_is_final_decision_owner") is not True:
+        raise RuntimeIntelligenceLabHandoffError(
+            "orchestrator_operation_context.downstream_guard_alignment."
+            f"lab_is_final_decision_owner must be true: {regression_path}"
         )
 
 

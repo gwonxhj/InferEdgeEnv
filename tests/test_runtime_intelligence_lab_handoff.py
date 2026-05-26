@@ -12,6 +12,8 @@ from inferedge_env.result.lab_handoff import (
     build_runtime_intelligence_lab_handoff_manifest,
 )
 from inferedge_env.result.telemetry_history import (
+    ORCHESTRATOR_EDGEENV_AIGUARD_EVIDENCE_CANDIDATES,
+    ORCHESTRATOR_PRODUCER_LINEAGE_AIGUARD_EVIDENCE_TYPE,
     ORCHESTRATOR_TELEMETRY_FEED_ARTIFACT_ROLE,
     ORCHESTRATOR_TELEMETRY_FEED_PRODUCER_CONTRACT,
     ORCHESTRATOR_TELEMETRY_FEED_SOURCE_REPOSITORY,
@@ -448,6 +450,59 @@ def test_runtime_intelligence_lab_handoff_rejects_incomplete_aiguard_candidates(
         )
 
 
+def test_runtime_intelligence_lab_handoff_rejects_missing_guard_alignment(
+    tmp_path,
+):
+    baseline_path, candidate_path, regression_path, history_path = _write_handoff_files(
+        tmp_path
+    )
+    regression = json.loads(regression_path.read_text(encoding="utf-8"))
+    regression["runtime_telemetry_context"]["candidate"][
+        "orchestrator_operation_context"
+    ].pop("downstream_guard_alignment")
+    regression_path.write_text(json.dumps(regression), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeIntelligenceLabHandoffError,
+        match="downstream_guard_alignment must be an object",
+    ):
+        build_runtime_intelligence_lab_handoff_manifest(
+            baseline_result_path=baseline_path,
+            candidate_result_path=candidate_path,
+            edgeenv_regression_report_path=regression_path,
+            telemetry_history_path=history_path,
+        )
+
+
+def test_runtime_intelligence_lab_handoff_rejects_bad_guard_alignment(
+    tmp_path,
+):
+    baseline_path, candidate_path, regression_path, history_path = _write_handoff_files(
+        tmp_path
+    )
+    regression = json.loads(regression_path.read_text(encoding="utf-8"))
+    regression["runtime_telemetry_context"]["candidate"][
+        "orchestrator_operation_context"
+    ]["downstream_guard_alignment"][
+        "producer_lineage_evidence_type"
+    ] = "runtime_queue_overload"
+    regression_path.write_text(json.dumps(regression), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeIntelligenceLabHandoffError,
+        match=(
+            "producer_lineage_evidence_type must be "
+            "edgeenv_orchestrator_producer_lineage"
+        ),
+    ):
+        build_runtime_intelligence_lab_handoff_manifest(
+            baseline_result_path=baseline_path,
+            candidate_result_path=candidate_path,
+            edgeenv_regression_report_path=regression_path,
+            telemetry_history_path=history_path,
+        )
+
+
 def test_runtime_intelligence_lab_handoff_rejects_missing_device_local_producer(
     tmp_path,
 ):
@@ -725,6 +780,22 @@ def _orchestrator_operation_context(run_id: str) -> dict:
                 "runtime_queue_overload",
                 "runtime_thermal_instability",
             ],
+        },
+        "downstream_guard_alignment": {
+            "declared_by": "orchestrator",
+            "producer_lineage_evidence_type": (
+                ORCHESTRATOR_PRODUCER_LINEAGE_AIGUARD_EVIDENCE_TYPE
+            ),
+            "operation_evidence_candidates": [
+                *ORCHESTRATOR_EDGEENV_AIGUARD_EVIDENCE_CANDIDATES
+            ],
+            "validated_by": [
+                "edgeenv runs telemetry inspect-history",
+                "inferedge-aiguard reason-edgeenv-regression",
+                "inferedgelab runtime-intelligence bundle manifest gate",
+            ],
+            "orchestrator_is_final_decision_owner": False,
+            "lab_is_final_decision_owner": True,
         },
     }
 

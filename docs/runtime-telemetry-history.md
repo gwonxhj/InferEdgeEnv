@@ -112,12 +112,18 @@ the global source list and per-task source mapping, per-task stages must be
 non-empty strings, and producer/device-local event counts must stay positive.
 This does not make Orchestrator the comparability owner or runtime regression
 owner.
+When producer lineage is present, EdgeEnv also requires and preserves
+`downstream_guard_alignment.producer_lineage_evidence_type=edgeenv_orchestrator_producer_lineage`.
+That marker lets AIGuard/Lab validate producer-lineage reasoning separately
+from queue/thermal operation evidence candidates while keeping Lab as final
+decision owner.
 For device-local handoff smokes, `inspect-history` can enforce that lineage with
 `--require-device-local-producer`. The stricter check fails when the preserved
 history artifact has no Orchestrator context, or when preserved
 `candidate_context.producer` metadata lacks device-local producer sources,
 producer source mappings, producer stage mappings, or positive event/task
-counts. This remains an artifact integrity gate, not a deployment decision.
+counts, or when the producer-lineage guard alignment marker is missing or
+mutated. This remains an artifact integrity gate, not a deployment decision.
 The same marker and mapping validation is applied when a selected run has no
 `runtime_telemetry` and the Orchestrator context is preserved under
 `missing_telemetry[].orchestrator_operation_context`; missing telemetry remains
@@ -348,6 +354,9 @@ and Lab's Runtime Intelligence bundle manifest gate validate the external
 not produce AIGuard
 `guard_analysis`; AIGuard remains a separate deterministic diagnosis provider
 and Lab remains the deployment decision owner.
+When Orchestrator context is included, the handoff step now validates the same
+producer-lineage guard alignment marker before declaring
+`edgeenv_orchestrator_producer_lineage` as an external AIGuard evidence type.
 
 After AIGuard creates the external guard artifact, a reviewer can verify the
 handoff/evidence type alignment with:

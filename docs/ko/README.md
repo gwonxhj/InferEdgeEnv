@@ -84,6 +84,12 @@ replay run, telemetry field, coverage metadata, evidence gap을 먼저 확인할
 있다. Runtime이 `runtime_telemetry.coverage`를 제공하면 EdgeEnv는 이를
 evidence quality metadata로 보존하지만, coverage 누락을 run 실패나 regression
 judgement로 승격하지 않는다.
+Orchestrator feed가 device-local `candidate_context.producer` lineage를 포함하면
+EdgeEnv는
+`downstream_guard_alignment.producer_lineage_evidence_type=edgeenv_orchestrator_producer_lineage`
+도 함께 검증/보존한다. 이 marker는 producer-lineage reasoning을 queue/thermal
+operation evidence와 분리하기 위한 것이며, comparability나 deployment decision
+owner를 바꾸지 않는다.
 Runtime이 `runtime_telemetry.history_seed`를 제공하면 EdgeEnv는 이를
 `runtime_telemetry_history_seed`로 보존하고 `registry_owner=edgeenv`,
 `decision_owner=lab` 경계를 검증한다. seed가 `run_config` snapshot을 포함하면

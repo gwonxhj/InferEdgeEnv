@@ -16,6 +16,7 @@ from inferedge_env.result.telemetry_history import (
     ORCHESTRATOR_EDGEENV_HISTORY_COVERAGE_PATH,
     ORCHESTRATOR_EDGEENV_OPERATION_CONTEXT_ROLE,
     ORCHESTRATOR_EDGEENV_REQUIRED_CANDIDATE_FIELDS,
+    ORCHESTRATOR_PRODUCER_LINEAGE_AIGUARD_EVIDENCE_TYPE,
     ORCHESTRATOR_TELEMETRY_FEED_ARTIFACT_ROLE,
     ORCHESTRATOR_TELEMETRY_FEED_PRODUCER_CONTRACT,
     ORCHESTRATOR_TELEMETRY_FEED_SCHEMA_VERSION,
@@ -258,6 +259,18 @@ def test_build_runtime_telemetry_history_attaches_orchestrator_feed_context(
     assert context["edgeenv_mapping_hint"]["aiguard_evidence_candidates"] == [
         *ORCHESTRATOR_EDGEENV_AIGUARD_EVIDENCE_CANDIDATES
     ]
+    assert context["downstream_guard_alignment"][
+        "producer_lineage_evidence_type"
+    ] == ORCHESTRATOR_PRODUCER_LINEAGE_AIGUARD_EVIDENCE_TYPE
+    assert context["downstream_guard_alignment"][
+        "operation_evidence_candidates"
+    ] == [*ORCHESTRATOR_EDGEENV_AIGUARD_EVIDENCE_CANDIDATES]
+    assert context["downstream_guard_alignment"][
+        "orchestrator_is_final_decision_owner"
+    ] is False
+    assert context["downstream_guard_alignment"][
+        "lab_is_final_decision_owner"
+    ] is True
     for field in ORCHESTRATOR_EDGEENV_REQUIRED_CANDIDATE_FIELDS:
         assert field in context["candidate_context"]
     assert "not a regression judgement" in payload["notes"][3]
@@ -268,6 +281,9 @@ def test_build_runtime_telemetry_history_attaches_orchestrator_feed_context(
     assert strict_summary["replay"]["device_local_producer_context_run_ids"] == [
         "candidate"
     ]
+    assert strict_summary["replay"][
+        "producer_lineage_guard_alignment_run_ids"
+    ] == ["candidate"]
 
 
 def test_build_runtime_telemetry_history_preserves_missing_orchestrator_feed_context(
@@ -312,6 +328,9 @@ def test_build_runtime_telemetry_history_preserves_missing_orchestrator_feed_con
     assert context["edgeenv_mapping_hint"]["aiguard_evidence_candidates"] == [
         *ORCHESTRATOR_EDGEENV_AIGUARD_EVIDENCE_CANDIDATES
     ]
+    assert context["downstream_guard_alignment"][
+        "producer_lineage_evidence_type"
+    ] == ORCHESTRATOR_PRODUCER_LINEAGE_AIGUARD_EVIDENCE_TYPE
     assert summary["replay"]["orchestrator_context_run_ids"] == ["candidate"]
     assert summary["replay"]["missing_orchestrator_context_run_ids"] == [
         "candidate"
@@ -323,6 +342,9 @@ def test_build_runtime_telemetry_history_preserves_missing_orchestrator_feed_con
     assert strict_summary["replay"]["device_local_producer_context_run_ids"] == [
         "candidate"
     ]
+    assert strict_summary["replay"][
+        "producer_lineage_guard_alignment_run_ids"
+    ] == ["candidate"]
 
 
 def test_inspect_runtime_telemetry_history_requires_device_local_producer(
@@ -612,6 +634,71 @@ def test_build_runtime_telemetry_history_rejects_incomplete_aiguard_candidates(
         )
 
 
+def test_build_runtime_telemetry_history_rejects_missing_guard_alignment(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    edgeenv_root = tmp_path / ".edgeenv"
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="candidate",
+        runtime_telemetry=_runtime_telemetry_payload(sequence_id=2),
+    )
+    feed = _orchestrator_feed_payload("candidate")
+    feed.pop("downstream_guard_alignment")
+    feed_path = tmp_path / "orchestrator-feed.json"
+    feed_path.write_text(json.dumps(feed), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeTelemetryHistoryError,
+        match="downstream_guard_alignment is required",
+    ):
+        build_runtime_telemetry_history(
+            edgeenv_root,
+            orchestrator_feeds=[feed_path],
+        )
+
+
+def test_build_runtime_telemetry_history_rejects_bad_guard_alignment(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    edgeenv_root = tmp_path / ".edgeenv"
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="candidate",
+        runtime_telemetry=_runtime_telemetry_payload(sequence_id=2),
+    )
+    feed = _orchestrator_feed_payload("candidate")
+    feed["downstream_guard_alignment"][
+        "producer_lineage_evidence_type"
+    ] = "runtime_queue_overload"
+    feed_path = tmp_path / "orchestrator-feed.json"
+    feed_path.write_text(json.dumps(feed), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeTelemetryHistoryError,
+        match=(
+            "producer_lineage_evidence_type must be "
+            "edgeenv_orchestrator_producer_lineage"
+        ),
+    ):
+        build_runtime_telemetry_history(
+            edgeenv_root,
+            orchestrator_feeds=[feed_path],
+        )
+
+
 def test_build_runtime_telemetry_history_rejects_feed_for_unselected_run(
     tmp_path,
     bench_config,
@@ -746,6 +833,7 @@ def test_cli_runs_telemetry_export_history_attaches_orchestrator_feed(
     assert inspect_result.exit_code == 0, inspect_result.output
     assert "Orchestrator context runs: 1" in inspect_result.output
     assert "Device-local producer context runs: 1" in inspect_result.output
+    assert "Producer-lineage guard alignment runs: 1" in inspect_result.output
     payload = json.loads(output_path.read_text(encoding="utf-8"))
     assert payload["runs"][0]["orchestrator_operation_context"]["run_id"] == (
         "candidate"
@@ -753,6 +841,11 @@ def test_cli_runs_telemetry_export_history_attaches_orchestrator_feed(
     assert payload["runs"][0]["orchestrator_operation_context"][
         "source_repository"
     ] == ORCHESTRATOR_TELEMETRY_FEED_SOURCE_REPOSITORY
+    assert payload["runs"][0]["orchestrator_operation_context"][
+        "downstream_guard_alignment"
+    ]["producer_lineage_evidence_type"] == (
+        ORCHESTRATOR_PRODUCER_LINEAGE_AIGUARD_EVIDENCE_TYPE
+    )
 
 
 def test_cli_runs_telemetry_export_history_preserves_missing_orchestrator_feed(
@@ -1309,5 +1402,21 @@ def _orchestrator_feed_payload(run_id: str) -> dict:
             "aiguard_evidence_candidates": [
                 *ORCHESTRATOR_EDGEENV_AIGUARD_EVIDENCE_CANDIDATES
             ],
+        },
+        "downstream_guard_alignment": {
+            "declared_by": "orchestrator",
+            "producer_lineage_evidence_type": (
+                ORCHESTRATOR_PRODUCER_LINEAGE_AIGUARD_EVIDENCE_TYPE
+            ),
+            "operation_evidence_candidates": [
+                *ORCHESTRATOR_EDGEENV_AIGUARD_EVIDENCE_CANDIDATES
+            ],
+            "validated_by": [
+                "edgeenv runs telemetry inspect-history",
+                "inferedge-aiguard reason-edgeenv-regression",
+                "inferedgelab runtime-intelligence bundle manifest gate",
+            ],
+            "orchestrator_is_final_decision_owner": False,
+            "lab_is_final_decision_owner": True,
         },
     }

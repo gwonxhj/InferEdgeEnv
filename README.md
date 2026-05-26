@@ -313,14 +313,19 @@ regression judgement. EdgeEnv also validates the Orchestrator producer markers
 `artifact_role=orchestrator-supplemental-operation-context`, and
 `producer_contract=inferedge-orchestrator-edgeenv-runtime-telemetry-feed-v1`
 before preserving the feed in telemetry history.
+When device-local producer lineage is present, EdgeEnv also requires the feed's
+`downstream_guard_alignment.producer_lineage_evidence_type` to remain
+`edgeenv_orchestrator_producer_lineage`, and keeps that marker separate from
+queue/thermal operation evidence candidates.
 Use `edgeenv runs telemetry inspect-history <path>` to validate and summarize
 that replay artifact before attaching it to a regression report. Add
 `--require-device-local-producer` when the handoff must prove that preserved
 Orchestrator context still carries device-local `candidate_context.producer`
-lineage through EdgeEnv history/replay. This gate validates lineage only; it
-does not change comparability, compute regression, or make Orchestrator the
-deployment decision owner. The intended local flow is export history, inspect
-the replay artifact, then pass it to `report regression --telemetry-history`.
+lineage and its producer-lineage guard alignment marker through EdgeEnv
+history/replay. This gate validates lineage only; it does not change
+comparability, compute regression, or make Orchestrator the deployment decision
+owner. The intended local flow is export history, inspect the replay artifact,
+then pass it to `report regression --telemetry-history`.
 If Runtime includes `runtime_telemetry.coverage`, EdgeEnv preserves it in the
 history artifact and inspect summary as evidence quality metadata. Missing
 coverage fields are visible as coverage gaps, but they do not fail the run or
@@ -372,8 +377,10 @@ traceability without reinterpreting the full Runtime result.
 When preserved Orchestrator context is present, the handoff step also validates
 device-local `candidate_context.producer` lineage, including per-task source
 mapping, per-task stage mapping, and positive producer/device-local event
-counts. It reports the matching run IDs as EdgeEnv producer-side traceability
-evidence.
+counts. It also validates the downstream
+`edgeenv_orchestrator_producer_lineage` marker so Lab/AIGuard can distinguish
+producer-lineage evidence from queue/thermal operation evidence. It reports the
+matching run IDs as EdgeEnv producer-side traceability evidence.
 It also exposes a `lab_bundle_alignment` block so Lab can align file keys,
 source repositories, artifact roles, and producer contracts while treating
 AIGuard `guard_analysis` as an external artifact produced by InferEdgeAIGuard.
