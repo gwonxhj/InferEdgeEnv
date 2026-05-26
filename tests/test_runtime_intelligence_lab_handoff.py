@@ -107,6 +107,36 @@ def test_runtime_intelligence_lab_handoff_manifest_records_producer_contracts(
         "runtime_telemetry_context_present": True,
         "history_seed_runs": 2,
         "history_seed_run_config_runs": 2,
+        "history_seed_run_config_marker_fields": [
+            "input_mode",
+            "input_preprocess",
+            "power_mode",
+            "jetson_clocks",
+            "warmup",
+            "runs",
+        ],
+        "history_seed_run_config_markers": [
+            {
+                "run_id": "baseline",
+                "shape": "1x640x640",
+                "input_mode": "dummy",
+                "input_preprocess": "none",
+                "power_mode": "unknown",
+                "jetson_clocks": "unknown",
+                "warmup": 1,
+                "runs": 10,
+            },
+            {
+                "run_id": "candidate",
+                "shape": "1x640x640",
+                "input_mode": "dummy",
+                "input_preprocess": "none",
+                "power_mode": "unknown",
+                "jetson_clocks": "unknown",
+                "warmup": 1,
+                "runs": 10,
+            },
+        ],
         "orchestrator_context_present": True,
         "device_local_producer_context_present": True,
         "device_local_producer_context_run_ids": ["candidate"],
@@ -149,6 +179,7 @@ def test_runtime_intelligence_lab_handoff_cli_writes_manifest(tmp_path):
     assert payload["edgeenv_report_summary"]["history_seed_runs"] == 2
     assert payload["edgeenv_report_summary"]["history_seed_run_config_runs"] == 2
     assert "History seed entries: 2" in result.output
+    assert "History seed run_config markers: baseline, candidate" in result.output
     assert "Device-local producer contexts: candidate" in result.output
 
 
