@@ -495,6 +495,10 @@ def inspect_runtime_telemetry_history_command(
         "Device-local producer context runs: "
         f"{len(replay.get('device_local_producer_context_run_ids', []))}"
     )
+    console.print(
+        "Producer-lineage guard alignment runs: "
+        f"{len(replay.get('producer_lineage_guard_alignment_run_ids', []))}"
+    )
     console.print(f"Evidence gaps: {replay['evidence_gap_count']}")
     console.print(f"Missing run IDs: {', '.join(replay['missing_run_ids']) or '-'}")
     console.print(

@@ -42,6 +42,9 @@ ORCHESTRATOR_EDGEENV_AIGUARD_EVIDENCE_CANDIDATES = (
     "runtime_queue_overload",
     "runtime_thermal_instability",
 )
+ORCHESTRATOR_PRODUCER_LINEAGE_AIGUARD_EVIDENCE_TYPE = (
+    "edgeenv_orchestrator_producer_lineage"
+)
 
 
 class RuntimeTelemetryHistoryError(ValueError):
@@ -292,6 +295,9 @@ def inspect_runtime_telemetry_history(
     device_local_producer_context_run_ids = _device_local_producer_context_run_ids(
         payload
     )
+    producer_lineage_guard_alignment_run_ids = (
+        _producer_lineage_guard_alignment_run_ids(payload)
+    )
     timestamps = [
         entry.get("telemetry_timestamp")
         for entry in runs
@@ -334,6 +340,9 @@ def inspect_runtime_telemetry_history(
             ),
             "device_local_producer_context_run_ids": (
                 device_local_producer_context_run_ids
+            ),
+            "producer_lineage_guard_alignment_run_ids": (
+                producer_lineage_guard_alignment_run_ids
             ),
             "first_telemetry_timestamp": min(timestamps) if timestamps else None,
             "last_telemetry_timestamp": max(timestamps) if timestamps else None,
@@ -391,6 +400,39 @@ def _device_local_producer_context_run_ids(payload: dict[str, Any]) -> list[str]
             if isinstance(run_id, str) and run_id:
                 run_ids.append(run_id)
     return run_ids
+
+
+def _producer_lineage_guard_alignment_run_ids(payload: dict[str, Any]) -> list[str]:
+    run_ids: list[str] = []
+    for entry in payload.get("runs", []):
+        if not isinstance(entry, dict):
+            continue
+        context = entry.get("orchestrator_operation_context")
+        if _has_producer_lineage_guard_alignment(context):
+            run_id = entry.get("run_id")
+            if isinstance(run_id, str):
+                run_ids.append(run_id)
+    for item in payload.get("missing_telemetry", []):
+        if not isinstance(item, dict):
+            continue
+        context = item.get("orchestrator_operation_context")
+        if _has_producer_lineage_guard_alignment(context):
+            run_id = item.get("run_id")
+            if isinstance(run_id, str):
+                run_ids.append(run_id)
+    return run_ids
+
+
+def _has_producer_lineage_guard_alignment(value: Any) -> bool:
+    if not isinstance(value, dict):
+        return False
+    alignment = value.get("downstream_guard_alignment")
+    if not isinstance(alignment, dict):
+        return False
+    return (
+        alignment.get("producer_lineage_evidence_type")
+        == ORCHESTRATOR_PRODUCER_LINEAGE_AIGUARD_EVIDENCE_TYPE
+    )
 
 
 def _has_device_local_producer_context(value: Any) -> bool:
@@ -526,7 +568,12 @@ def _load_orchestrator_feed(feed_path: Path | str) -> dict[str, Any]:
         candidate_context=candidate_context,
         source=source,
     )
-    return {
+    downstream_guard_alignment = _validate_orchestrator_downstream_guard_alignment(
+        payload.get("downstream_guard_alignment"),
+        candidate_context=candidate_context,
+        source=source,
+    )
+    preserved_context = {
         "schema_version": schema_version,
         "role": payload.get("role"),
         "source_repository": payload.get("source_repository"),
@@ -541,6 +588,11 @@ def _load_orchestrator_feed(feed_path: Path | str) -> dict[str, Any]:
         "candidate_context": deepcopy(candidate_context),
         "edgeenv_mapping_hint": mapping_hint,
     }
+    if downstream_guard_alignment is not None:
+        preserved_context["downstream_guard_alignment"] = (
+            downstream_guard_alignment
+        )
+    return preserved_context
 
 
 def _validate_orchestrator_producer_markers(
@@ -588,6 +640,11 @@ def _validate_preserved_orchestrator_context(
         )
     _validate_orchestrator_mapping_hint(
         context.get("edgeenv_mapping_hint", {}),
+        candidate_context=candidate_context,
+        source=Path(label),
+    )
+    _validate_orchestrator_downstream_guard_alignment(
+        context.get("downstream_guard_alignment"),
         candidate_context=candidate_context,
         source=Path(label),
     )
@@ -692,6 +749,75 @@ def _validate_orchestrator_mapping_hint(
         source=source,
     )
     return mapping_hint
+
+
+def _validate_orchestrator_downstream_guard_alignment(
+    value: Any,
+    *,
+    candidate_context: dict[str, Any],
+    source: Path,
+) -> dict[str, Any] | None:
+    producer_context = candidate_context.get("producer")
+    require_alignment = isinstance(producer_context, dict)
+    if value is None:
+        if require_alignment:
+            raise RuntimeTelemetryHistoryError(
+                "Orchestrator telemetry feed downstream_guard_alignment is "
+                "required when candidate_context.producer is present: "
+                f"{source}"
+            )
+        return None
+    if not isinstance(value, dict):
+        raise RuntimeTelemetryHistoryError(
+            "Orchestrator telemetry feed downstream_guard_alignment must be "
+            f"an object: {source}"
+        )
+    alignment = deepcopy(value)
+    if alignment.get("declared_by") != "orchestrator":
+        raise RuntimeTelemetryHistoryError(
+            "Orchestrator telemetry feed downstream_guard_alignment.declared_by "
+            f"must be orchestrator: {source}"
+        )
+    if (
+        alignment.get("producer_lineage_evidence_type")
+        != ORCHESTRATOR_PRODUCER_LINEAGE_AIGUARD_EVIDENCE_TYPE
+    ):
+        raise RuntimeTelemetryHistoryError(
+            "Orchestrator telemetry feed downstream_guard_alignment."
+            "producer_lineage_evidence_type must be "
+            f"{ORCHESTRATOR_PRODUCER_LINEAGE_AIGUARD_EVIDENCE_TYPE}: {source}"
+        )
+    operation_candidates = alignment.get("operation_evidence_candidates")
+    if not isinstance(operation_candidates, list) or not all(
+        isinstance(item, str) for item in operation_candidates
+    ):
+        raise RuntimeTelemetryHistoryError(
+            "Orchestrator telemetry feed downstream_guard_alignment."
+            f"operation_evidence_candidates must be a string list: {source}"
+        )
+    missing_candidates = [
+        candidate
+        for candidate in ORCHESTRATOR_EDGEENV_AIGUARD_EVIDENCE_CANDIDATES
+        if candidate not in operation_candidates
+    ]
+    if missing_candidates:
+        raise RuntimeTelemetryHistoryError(
+            "Orchestrator telemetry feed downstream_guard_alignment."
+            "operation_evidence_candidates must include "
+            f"{', '.join(missing_candidates)}: {source}"
+        )
+    if alignment.get("orchestrator_is_final_decision_owner") is not False:
+        raise RuntimeTelemetryHistoryError(
+            "Orchestrator telemetry feed downstream_guard_alignment."
+            "orchestrator_is_final_decision_owner must be false: "
+            f"{source}"
+        )
+    if alignment.get("lab_is_final_decision_owner") is not True:
+        raise RuntimeTelemetryHistoryError(
+            "Orchestrator telemetry feed downstream_guard_alignment."
+            f"lab_is_final_decision_owner must be true: {source}"
+        )
+    return alignment
 
 
 def _validate_orchestrator_producer_context(
