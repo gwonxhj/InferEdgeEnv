@@ -856,6 +856,16 @@ def runtime_intelligence_handoff_manifest(
     )
     if summary.get("history_seed_runs") is not None:
         console.print(f"History seed entries: {summary.get('history_seed_runs')}")
+    marker_runs = [
+        str(item.get("run_id"))
+        for item in summary.get("history_seed_run_config_markers", [])
+        if isinstance(item, dict) and item.get("run_id")
+    ]
+    if marker_runs:
+        console.print(
+            "History seed run_config markers: "
+            f"{', '.join(marker_runs)}"
+        )
     device_local_run_ids = summary.get("device_local_producer_context_run_ids")
     if device_local_run_ids:
         console.print(

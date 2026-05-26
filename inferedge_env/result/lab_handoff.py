@@ -78,6 +78,15 @@ BOUNDARIES = {
     "production_observability_platform": False,
 }
 
+RUN_CONFIG_MARKER_FIELDS = (
+    "input_mode",
+    "input_preprocess",
+    "power_mode",
+    "jetson_clocks",
+    "warmup",
+    "runs",
+)
+
 
 class RuntimeIntelligenceLabHandoffError(ValueError):
     """Raised when an EdgeEnv-to-Lab handoff manifest cannot be built."""
@@ -507,6 +516,7 @@ def _edgeenv_report_summary(regression_report: dict[str, Any]) -> dict[str, Any]
     )
     history = context.get("history", {}) if isinstance(context, dict) else {}
     history_summary = history.get("summary", {}) if isinstance(history, dict) else {}
+    history_seed_run_config_markers = _history_seed_run_config_markers(history)
     device_local_context_run_ids = _device_local_producer_context_run_ids(context)
     return {
         "baseline_run_id": regression_report.get("baseline_run_id"),
@@ -525,6 +535,8 @@ def _edgeenv_report_summary(regression_report: dict[str, Any]) -> dict[str, Any]
         )
         if isinstance(history_summary, dict)
         else None,
+        "history_seed_run_config_marker_fields": list(RUN_CONFIG_MARKER_FIELDS),
+        "history_seed_run_config_markers": history_seed_run_config_markers,
         "orchestrator_context_present": (
             isinstance(candidate_context, dict)
             and isinstance(
@@ -537,6 +549,39 @@ def _edgeenv_report_summary(regression_report: dict[str, Any]) -> dict[str, Any]
         ),
         "device_local_producer_context_run_ids": device_local_context_run_ids,
     }
+
+
+def _history_seed_run_config_markers(history: Any) -> list[dict[str, Any]]:
+    if not isinstance(history, dict):
+        return []
+    markers: list[dict[str, Any]] = []
+    for entry in history.get("runs", []):
+        if not isinstance(entry, dict):
+            continue
+        history_seed = entry.get("runtime_telemetry_history_seed")
+        if not isinstance(history_seed, dict):
+            continue
+        run_config = history_seed.get("run_config")
+        if not isinstance(run_config, dict):
+            continue
+        marker: dict[str, Any] = {"run_id": entry.get("run_id")}
+        shape_label = _run_config_shape_label(run_config)
+        if shape_label:
+            marker["shape"] = shape_label
+        for field in RUN_CONFIG_MARKER_FIELDS:
+            if field in run_config:
+                marker[field] = run_config.get(field)
+        markers.append(marker)
+    return markers
+
+
+def _run_config_shape_label(run_config: dict[str, Any]) -> str:
+    batch = run_config.get("batch")
+    height = run_config.get("height")
+    width = run_config.get("width")
+    if batch is None and height is None and width is None:
+        return ""
+    return f"{batch or '-'}x{height or '-'}x{width or '-'}"
 
 
 def _requires_device_local_producer(history: dict[str, Any]) -> bool:

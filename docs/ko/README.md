@@ -89,8 +89,12 @@ Runtime이 `runtime_telemetry.history_seed`를 제공하면 EdgeEnv는 이를
 `decision_owner=lab` 경계를 검증한다. seed가 `run_config` snapshot을 포함하면
 EdgeEnv는 실행 shape, 반복 횟수, timeout, input/preprocess, power mode,
 Jetson clocks marker의 field type을 검증하고
-`summary.history_seed_run_config_runs`에 반영한다. 이는 local replay/history
-evidence이며 production monitoring stream이 아니다.
+`summary.history_seed_run_config_runs`에 반영한다. Runtime Intelligence
+handoff manifest는 shape, input mode/preprocess, power mode, Jetson clocks,
+warmup/repeat run 같은 compact `history_seed_run_config_markers`도 함께
+요약해 Lab이 전체 Runtime result를 다시 해석하지 않고 replay traceability를
+확인할 수 있게 한다. 이는 local replay/history evidence이며 production
+monitoring stream이 아니다.
 
 ## EdgeEnv가 아닌 것
 
