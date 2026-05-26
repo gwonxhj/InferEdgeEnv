@@ -277,7 +277,11 @@ Runtime `history_seed` context is preserved as
 accumulation, not a live telemetry stream or a production monitoring contract.
 When Runtime provides `history_seed.run_config`, EdgeEnv counts it in
 `summary.history_seed_run_config_runs` and exposes the run IDs from
-`inspect-history` as replay context, not as a direct regression verdict.
+`inspect-history` as replay context, not as a direct regression verdict. The
+handoff gate also validates the preserved `run_config` field types so an
+artifact cannot claim replay/comparability context while losing the execution
+shape, repeat count, timeout, input mode, preprocess mode, power mode, or
+Jetson clocks markers.
 If the seed is malformed or tries to move registry/decision ownership away from
 EdgeEnv/Lab, export fails rather than silently rewriting the ownership markers.
 
@@ -326,8 +330,9 @@ Lab-owned report boundary. When `runtime_telemetry_history_seed` entries are
 present, the handoff validates their schema, `registry_owner=edgeenv`,
 `decision_owner=lab`, non-production marker, and replay points before exposing
 the seed count in `edgeenv_report_summary.history_seed_runs`. If seed
-`run_config` snapshots are present, the handoff also preserves
-`edgeenv_report_summary.history_seed_run_config_runs` for Lab-side traceability.
+`run_config` snapshots are present, the handoff validates their field types and
+preserves `edgeenv_report_summary.history_seed_run_config_runs` for Lab-side
+traceability.
 When preserved
 Orchestrator context is present, the handoff also validates device-local
 `candidate_context.producer` lineage, including per-task source/stage mappings

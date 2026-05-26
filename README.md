@@ -364,7 +364,8 @@ producer contract markers for the Runtime result, EdgeEnv regression report,
 optional Orchestrator feed context, and Lab-owned deployment report boundary.
 When Runtime history seeds are present, the handoff step validates the preserved
 `runtime_telemetry_history_seed` schema, `registry_owner=edgeenv`,
-`decision_owner=lab`, and replay point evidence before writing the manifest.
+`decision_owner=lab`, replay point evidence, and any seed `run_config` field
+types before writing the manifest.
 When preserved Orchestrator context is present, the handoff step also validates
 device-local `candidate_context.producer` lineage, including per-task source
 mapping, per-task stage mapping, and positive producer/device-local event

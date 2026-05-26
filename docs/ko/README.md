@@ -87,7 +87,8 @@ judgement로 승격하지 않는다.
 Runtime이 `runtime_telemetry.history_seed`를 제공하면 EdgeEnv는 이를
 `runtime_telemetry_history_seed`로 보존하고 `registry_owner=edgeenv`,
 `decision_owner=lab` 경계를 검증한다. seed가 `run_config` snapshot을 포함하면
-EdgeEnv는 이를 별도 replay/comparability context로 검증하고
+EdgeEnv는 실행 shape, 반복 횟수, timeout, input/preprocess, power mode,
+Jetson clocks marker의 field type을 검증하고
 `summary.history_seed_run_config_runs`에 반영한다. 이는 local replay/history
 evidence이며 production monitoring stream이 아니다.
 
