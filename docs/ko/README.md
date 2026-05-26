@@ -98,7 +98,9 @@ monitoring stream이 아니다.
 또한 `lab_bundle_alignment.external_aiguard_required_evidence_types`에
 `runtime_history_seed_run_config_traceability`를 포함해, AIGuard artifact는
 외부 산출물로 유지하면서도 Lab Runtime Intelligence gate가 요구하는
-deterministic evidence contract를 EdgeEnv handoff에 명시한다.
+deterministic evidence contract를 EdgeEnv handoff에 명시한다. 같은 alignment
+block은 이 선언이 AIGuard `check-edgeenv-handoff-alignment`와 Lab Runtime
+Intelligence bundle manifest gate에서 검증된다는 점도 기록한다.
 
 ## EdgeEnv가 아닌 것
 

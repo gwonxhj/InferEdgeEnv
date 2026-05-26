@@ -340,10 +340,23 @@ and positive producer/device-local event counts. It exposes the matching run IDs
 in `edgeenv_report_summary.device_local_producer_context_run_ids`. The manifest also
 includes `lab_bundle_alignment` metadata for Lab's Runtime Intelligence bundle:
 required file keys, EdgeEnv-produced file keys, external AIGuard file keys,
-source repository mapping, artifact roles, and producer contract names. It
-intentionally does not produce AIGuard
+source repository mapping, artifact roles, producer contract names, and the
+external AIGuard evidence types that downstream gates expect. The alignment
+metadata also records that AIGuard's `check-edgeenv-handoff-alignment` command
+and Lab's Runtime Intelligence bundle manifest gate validate the external
+`guard_analysis` artifact against that declaration. EdgeEnv intentionally does
+not produce AIGuard
 `guard_analysis`; AIGuard remains a separate deterministic diagnosis provider
 and Lab remains the deployment decision owner.
+
+After AIGuard creates the external guard artifact, a reviewer can verify the
+handoff/evidence type alignment with:
+
+```bash
+python -m inferedge_aiguard.cli check-edgeenv-handoff-alignment \
+  --edgeenv-handoff /tmp/edgeenv-runtime-intelligence-lab-handoff.json \
+  --guard-analysis /tmp/aiguard-runtime-operation-guard-analysis.json
+```
 
 ## 4. HOW NOT — What To Avoid
 

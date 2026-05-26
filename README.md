@@ -380,9 +380,21 @@ AIGuard `guard_analysis` as an external artifact produced by InferEdgeAIGuard.
 That alignment block also lists the external AIGuard evidence types expected by
 Lab's Runtime Intelligence gate, including
 `runtime_history_seed_run_config_traceability`, so EdgeEnv can declare the
-handoff contract without producing the Guard artifact itself.
+handoff contract without producing the Guard artifact itself. The same block
+records that the declaration is validated downstream by AIGuard's
+`check-edgeenv-handoff-alignment` command and Lab's Runtime Intelligence bundle
+manifest gate.
 It does not include AIGuard `guard_analysis`; AIGuard remains a separate
 deterministic diagnosis provider.
+
+After AIGuard creates the external `guard_analysis`, verify the cross-repo
+alignment with:
+
+```bash
+python -m inferedge_aiguard.cli check-edgeenv-handoff-alignment \
+  --edgeenv-handoff /tmp/edgeenv-runtime-intelligence-lab-handoff.json \
+  --guard-analysis /tmp/aiguard-runtime-operation-guard-analysis.json
+```
 
 If required fields differ, EdgeEnv reports:
 
