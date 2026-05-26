@@ -343,8 +343,12 @@ When preserved
 Orchestrator context is present, the handoff also validates device-local
 `candidate_context.producer` lineage, including per-task source/stage mappings
 and positive producer/device-local event counts. It exposes the matching run IDs
-in `edgeenv_report_summary.device_local_producer_context_run_ids`. The manifest also
-includes `lab_bundle_alignment` metadata for Lab's Runtime Intelligence bundle:
+in `edgeenv_report_summary.device_local_producer_context_run_ids`. It also
+validates the downstream `edgeenv_orchestrator_producer_lineage` marker and
+exposes `edgeenv_report_summary.producer_lineage_guard_alignment_run_ids` so
+Lab/AIGuard can review producer-lineage evidence separately from queue/thermal
+operation evidence. The manifest also includes `lab_bundle_alignment` metadata
+for Lab's Runtime Intelligence bundle:
 required file keys, EdgeEnv-produced file keys, external AIGuard file keys,
 source repository mapping, artifact roles, producer contract names, and the
 external AIGuard evidence types that downstream gates expect. The alignment
