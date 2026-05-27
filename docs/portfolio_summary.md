@@ -62,6 +62,10 @@ worker-selection, fallback, and compact event-summary evidence. EdgeEnv may
 preserve related operation context and handoff markers as local evidence, but
 it does not confirm production remote execution, long-lived worker readiness,
 secure tunnel operation, production retry/failover, or cloud orchestration.
+When present, the preserved markers are traceability fields such as
+`evidence_role=remote_dispatch_runtime_event_compact_summary`,
+`operation_boundary=remote dispatch starter evidence only`, and
+`production_remote_execution=false`, not proof of remote execution.
 Lab remains the final deployment decision owner.
 
 ## What To Show First

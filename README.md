@@ -319,7 +319,10 @@ handoff traceability only. EdgeEnv does not confirm production remote
 execution, long-lived worker readiness, secure tunnel operation, production
 retry/failover, or cloud orchestration. It preserves the boundary markers so
 AIGuard can emit optional deterministic diagnosis evidence and Lab can keep the
-final deployment decision.
+final deployment decision. Those preserved markers include
+`evidence_role=remote_dispatch_runtime_event_compact_summary`,
+`operation_boundary=remote dispatch starter evidence only`, and
+`production_remote_execution=false` when Orchestrator provides them.
 When device-local producer lineage is present, EdgeEnv also requires the feed's
 `downstream_guard_alignment.producer_lineage_evidence_type` to remain
 `edgeenv_orchestrator_producer_lineage`, and keeps that marker separate from
@@ -485,7 +488,9 @@ produces worker-selection, fallback, and compact event-summary evidence;
 EdgeEnv may preserve related operation context and handoff markers as local
 evidence; AIGuard may explain deterministic warning context; Lab owns the final
 deployment decision. EdgeEnv is not a remote execution system or operation
-control plane.
+control plane. In this path, EdgeEnv preserves remote dispatch markers only as
+registry/replay traceability, including the compact summary role, starter-only
+operation boundary, and `production_remote_execution=false` flag.
 
 EdgeBench is adjacent in benchmark motivation, but InferEdgeEnv is not a public leaderboard. It is a local-first run evidence registry and comparability checker, not a ranking surface.
 

@@ -98,7 +98,11 @@ traceability로 보존할 수 있지만, production remote execution 완료, lon
 worker readiness, secure tunnel operation, production retry/failover, cloud
 orchestration을 확인하지 않는다. Orchestrator는 operation evidence producer,
 AIGuard는 optional deterministic diagnosis provider, Lab은 final deployment
-decision owner로 남는다.
+decision owner로 남는다. Orchestrator가 제공한 경우 EdgeEnv가 보존하는 marker는
+`evidence_role=remote_dispatch_runtime_event_compact_summary`,
+`operation_boundary=remote dispatch starter evidence only`,
+`production_remote_execution=false`를 포함하며, 이는 registry/replay
+traceability일 뿐 remote 실행 검증이 아니다.
 Runtime이 `runtime_telemetry.history_seed`를 제공하면 EdgeEnv는 이를
 `runtime_telemetry_history_seed`로 보존하고 `registry_owner=edgeenv`,
 `decision_owner=lab` 경계를 검증한다. seed가 `run_config` snapshot을 포함하면
