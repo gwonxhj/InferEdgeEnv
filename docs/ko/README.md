@@ -124,6 +124,13 @@ handoff manifest는 device-local producer lineage와 별도로
 deterministic evidence contract를 EdgeEnv handoff에 명시한다. 같은 alignment
 block은 이 선언이 AIGuard `check-edgeenv-handoff-alignment`와 Lab Runtime
 Intelligence bundle manifest gate에서 검증된다는 점도 기록한다.
+같은 `lab_bundle_alignment.expected_report_markers`는 downstream Lab report가
+보존해야 하는 marker를 producer-side handoff에 명시한다:
+`Runtime Intelligence Risk Summary`, `Orchestrator operation feed context`,
+`AIGuard runtime operation anomalies`, `AIGuard remote dispatch event summary`,
+`AIGuard remote event summary consistency`,
+`AIGuard producer-lineage guard alignment`, `Lab remains the final deployment decision owner.`. 이 목록은 EdgeEnv가 Lab decision을 생성한다는 뜻이 아니라,
+Lab-owned report contract와 맞물리는 handoff traceability metadata다.
 
 ## EdgeEnv가 아닌 것
 

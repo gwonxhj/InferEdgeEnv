@@ -404,6 +404,13 @@ artifact itself. The same block
 records that the declaration is validated downstream by AIGuard's
 `check-edgeenv-handoff-alignment` command and Lab's Runtime Intelligence bundle
 manifest gate.
+The same `lab_bundle_alignment.expected_report_markers` list declares the
+Lab-owned report markers that downstream Lab gates must preserve:
+`Runtime Intelligence Risk Summary`, `Orchestrator operation feed context`,
+`AIGuard runtime operation anomalies`, `AIGuard remote dispatch event summary`,
+`AIGuard remote event summary consistency`,
+`AIGuard producer-lineage guard alignment`, and
+`Lab remains the final deployment decision owner.`.
 It does not include AIGuard `guard_analysis`; AIGuard remains a separate
 deterministic diagnosis provider.
 

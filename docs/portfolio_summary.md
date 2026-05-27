@@ -42,6 +42,15 @@ It does not answer whether a model should be deployed. That decision belongs to 
 | Sampler evidence | Stores optional resource/sampler metadata as supplemental evidence | Not a comparability gate |
 | Runtime Intelligence handoff | Preserves Runtime telemetry history, Orchestrator operation context, and AIGuard/Lab alignment markers | Does not produce Guard analysis or Lab deployment decisions |
 
+Runtime Intelligence handoff also exposes
+`lab_bundle_alignment.expected_report_markers` so the producer-side manifest can
+name the Lab-owned report rows expected downstream: `Runtime Intelligence Risk Summary`, `Orchestrator operation feed context`,
+`AIGuard runtime operation anomalies`, `AIGuard remote dispatch event summary`,
+`AIGuard remote event summary consistency`,
+`AIGuard producer-lineage guard alignment`, and `Lab remains the final deployment decision owner.`.
+This is traceability metadata for Lab's report gate, not an EdgeEnv deployment
+decision.
+
 ## Portfolio Boundary
 
 ```text
