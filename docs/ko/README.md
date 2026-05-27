@@ -90,6 +90,15 @@ EdgeEnv는
 도 함께 검증/보존한다. 이 marker는 producer-lineage reasoning을 queue/thermal
 operation evidence와 분리하기 위한 것이며, comparability나 deployment decision
 owner를 바꾸지 않는다.
+upstream Orchestrator evidence가 remote dispatch starter path에서 온 경우도
+EdgeEnv의 역할은 동일하다. EdgeEnv는 worker-selection/fallback/compact event
+summary 같은 operation context와
+`operation_boundary=remote dispatch starter evidence only` marker를 handoff
+traceability로 보존할 수 있지만, production remote execution 완료, long-lived
+worker readiness, secure tunnel operation, production retry/failover, cloud
+orchestration을 확인하지 않는다. Orchestrator는 operation evidence producer,
+AIGuard는 optional deterministic diagnosis provider, Lab은 final deployment
+decision owner로 남는다.
 Runtime이 `runtime_telemetry.history_seed`를 제공하면 EdgeEnv는 이를
 `runtime_telemetry_history_seed`로 보존하고 `registry_owner=edgeenv`,
 `decision_owner=lab` 경계를 검증한다. seed가 `run_config` snapshot을 포함하면

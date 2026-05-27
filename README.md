@@ -313,6 +313,13 @@ regression judgement. EdgeEnv also validates the Orchestrator producer markers
 `artifact_role=orchestrator-supplemental-operation-context`, and
 `producer_contract=inferedge-orchestrator-edgeenv-runtime-telemetry-feed-v1`
 before preserving the feed in telemetry history.
+When the upstream Orchestrator evidence originated from the remote dispatch
+starter path, EdgeEnv treats it the same way: as preserved operation context and
+handoff traceability only. EdgeEnv does not confirm production remote
+execution, long-lived worker readiness, secure tunnel operation, production
+retry/failover, or cloud orchestration. It preserves the boundary markers so
+AIGuard can emit optional deterministic diagnosis evidence and Lab can keep the
+final deployment decision.
 When device-local producer lineage is present, EdgeEnv also requires the feed's
 `downstream_guard_alignment.producer_lineage_evidence_type` to remain
 `edgeenv_orchestrator_producer_lineage`, and keeps that marker separate from
@@ -387,8 +394,10 @@ source repositories, artifact roles, and producer contracts while treating
 AIGuard `guard_analysis` as an external artifact produced by InferEdgeAIGuard.
 That alignment block also lists the external AIGuard evidence types expected by
 Lab's Runtime Intelligence gate, including
-`runtime_history_seed_run_config_traceability`, so EdgeEnv can declare the
-handoff contract without producing the Guard artifact itself. The same block
+`runtime_history_seed_run_config_traceability`, `edgeenv_orchestrator_producer_lineage`,
+and remote-dispatch starter diagnosis evidence when the downstream bundle uses
+that path. EdgeEnv can declare the handoff contract without producing the Guard
+artifact itself. The same block
 records that the declaration is validated downstream by AIGuard's
 `check-edgeenv-handoff-alignment` command and Lab's Runtime Intelligence bundle
 manifest gate.
@@ -470,6 +479,13 @@ InferEdgeEnv records whether benchmark evidence can be trusted and compared. Its
 In the top-level InferEdge ecosystem map, InferEdgeEnv is the v0.1.5 v1-complete experiment hygiene / comparability layer. It is not part of the pinned Core 4 validation path, but it has a completed role: preserving benchmark evidence and judging same-condition, conditional, or non-comparable runs before any metric delta is discussed.
 
 InferEdgeOrchestrator is also separate: it is the post-deployment operation-control layer for scheduling, load shedding, telemetry, and runtime coordination after a model is already deployed. InferEdgeEnv does not control live inference operations; it records benchmark evidence and preserves honest comparison boundaries before or around review handoff.
+
+Remote dispatch starter evidence follows the same boundary. Orchestrator
+produces worker-selection, fallback, and compact event-summary evidence;
+EdgeEnv may preserve related operation context and handoff markers as local
+evidence; AIGuard may explain deterministic warning context; Lab owns the final
+deployment decision. EdgeEnv is not a remote execution system or operation
+control plane.
 
 EdgeBench is adjacent in benchmark motivation, but InferEdgeEnv is not a public leaderboard. It is a local-first run evidence registry and comparability checker, not a ranking surface.
 
