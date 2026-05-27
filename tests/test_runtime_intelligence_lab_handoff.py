@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
 from typer.testing import CliRunner
 
 from inferedge_env.cli import app
 from inferedge_env.result.lab_handoff import (
+    LAB_BUNDLE_EXPECTED_REPORT_MARKERS,
     RUNTIME_INTELLIGENCE_LAB_HANDOFF_SCHEMA_VERSION,
     RuntimeIntelligenceLabHandoffError,
     build_runtime_intelligence_lab_handoff_manifest,
@@ -18,6 +20,8 @@ from inferedge_env.result.telemetry_history import (
     ORCHESTRATOR_TELEMETRY_FEED_PRODUCER_CONTRACT,
     ORCHESTRATOR_TELEMETRY_FEED_SOURCE_REPOSITORY,
 )
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_runtime_intelligence_lab_handoff_manifest_records_producer_contracts(
@@ -96,6 +100,9 @@ def test_runtime_intelligence_lab_handoff_manifest_records_producer_contracts(
         "runtime_queue_overload",
         "runtime_thermal_instability",
     ]
+    assert payload["lab_bundle_alignment"]["expected_report_markers"] == list(
+        LAB_BUNDLE_EXPECTED_REPORT_MARKERS
+    )
     assert payload["lab_bundle_alignment"]["external_aiguard_alignment_gate"] == {
         "declared_by": "edgeenv",
         "guard_analysis_file_key": "aiguard_guard_analysis",
@@ -167,6 +174,21 @@ def test_runtime_intelligence_lab_handoff_manifest_records_producer_contracts(
     assert "AIGuard guard_analysis is intentionally not produced by EdgeEnv." in (
         payload["notes"]
     )
+
+
+def test_runtime_intelligence_docs_describe_lab_expected_report_markers():
+    docs = [
+        (REPO_ROOT / "README.md").read_text(encoding="utf-8"),
+        (REPO_ROOT / "docs" / "ko" / "README.md").read_text(encoding="utf-8"),
+        (REPO_ROOT / "docs" / "portfolio_summary.md").read_text(
+            encoding="utf-8"
+        ),
+    ]
+
+    for doc in docs:
+        assert "lab_bundle_alignment.expected_report_markers" in doc
+        for marker in LAB_BUNDLE_EXPECTED_REPORT_MARKERS:
+            assert marker in doc
 
 
 def test_runtime_intelligence_lab_handoff_cli_writes_manifest(tmp_path):

@@ -77,6 +77,15 @@ LAB_BUNDLE_EXTERNAL_AIGUARD_REQUIRED_EVIDENCE_TYPES = (
     "runtime_queue_overload",
     "runtime_thermal_instability",
 )
+LAB_BUNDLE_EXPECTED_REPORT_MARKERS = (
+    "Runtime Intelligence Risk Summary",
+    "Orchestrator operation feed context",
+    "AIGuard runtime operation anomalies",
+    "AIGuard remote dispatch event summary",
+    "AIGuard remote event summary consistency",
+    "AIGuard producer-lineage guard alignment",
+    "Lab remains the final deployment decision owner.",
+)
 
 BOUNDARIES = {
     "orchestrator_context_is_verdict": False,
@@ -881,6 +890,7 @@ def _lab_bundle_alignment(files: dict[str, str]) -> dict[str, Any]:
         "external_aiguard_required_evidence_types": list(
             LAB_BUNDLE_EXTERNAL_AIGUARD_REQUIRED_EVIDENCE_TYPES
         ),
+        "expected_report_markers": list(LAB_BUNDLE_EXPECTED_REPORT_MARKERS),
         "external_aiguard_alignment_gate": {
             "declared_by": "edgeenv",
             "guard_analysis_file_key": "aiguard_guard_analysis",
