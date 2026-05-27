@@ -17,6 +17,8 @@ from inferedge_env.result.telemetry_history import (
     ORCHESTRATOR_EDGEENV_OPERATION_CONTEXT_ROLE,
     ORCHESTRATOR_EDGEENV_REQUIRED_CANDIDATE_FIELDS,
     ORCHESTRATOR_PRODUCER_LINEAGE_AIGUARD_EVIDENCE_TYPE,
+    ORCHESTRATOR_REMOTE_OPERATION_BOUNDARY,
+    ORCHESTRATOR_REMOTE_RUNTIME_EVENT_SUMMARY_ROLE,
     ORCHESTRATOR_TELEMETRY_FEED_ARTIFACT_ROLE,
     ORCHESTRATOR_TELEMETRY_FEED_PRODUCER_CONTRACT,
     ORCHESTRATOR_TELEMETRY_FEED_SCHEMA_VERSION,
@@ -846,6 +848,16 @@ def test_cli_runs_telemetry_export_history_attaches_orchestrator_feed(
     ]["producer_lineage_evidence_type"] == (
         ORCHESTRATOR_PRODUCER_LINEAGE_AIGUARD_EVIDENCE_TYPE
     )
+    remote_summary = payload["runs"][0]["orchestrator_operation_context"][
+        "remote_runtime_event_summary"
+    ]
+    assert remote_summary["evidence_role"] == (
+        ORCHESTRATOR_REMOTE_RUNTIME_EVENT_SUMMARY_ROLE
+    )
+    assert remote_summary["operation_boundary"] == (
+        ORCHESTRATOR_REMOTE_OPERATION_BOUNDARY
+    )
+    assert remote_summary["production_remote_execution"] is False
 
 
 def test_cli_runs_telemetry_export_history_preserves_missing_orchestrator_feed(
@@ -916,6 +928,41 @@ def test_cli_runs_telemetry_export_history_preserves_missing_orchestrator_feed(
     )
     assert missing_context["not_a_regression_judgement"] is True
     assert missing_context["not_a_comparability_gate"] is True
+    assert missing_context["remote_runtime_event_summary"]["evidence_role"] == (
+        ORCHESTRATOR_REMOTE_RUNTIME_EVENT_SUMMARY_ROLE
+    )
+
+
+def test_build_runtime_telemetry_history_rejects_bad_remote_event_summary_role(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    edgeenv_root = tmp_path / ".edgeenv"
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="candidate",
+        runtime_telemetry=_runtime_telemetry_payload(sequence_id=2),
+    )
+    feed = _orchestrator_feed_payload("candidate")
+    feed["remote_runtime_event_summary"]["evidence_role"] = (
+        "production_remote_execution_summary"
+    )
+    feed_path = tmp_path / "orchestrator-feed.json"
+    feed_path.write_text(json.dumps(feed), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeTelemetryHistoryError,
+        match=r"remote_runtime_event_summary\.evidence_role",
+    ):
+        build_runtime_telemetry_history(
+            edgeenv_root,
+            orchestrator_feeds=[feed_path],
+        )
 
 
 def test_inspect_runtime_telemetry_history_reports_replay_summary(
@@ -1418,5 +1465,12 @@ def _orchestrator_feed_payload(run_id: str) -> dict:
             ],
             "orchestrator_is_final_decision_owner": False,
             "lab_is_final_decision_owner": True,
+        },
+        "remote_runtime_event_summary": {
+            "event_count": 4,
+            "runtime_event_count": 4,
+            "production_remote_execution": False,
+            "evidence_role": ORCHESTRATOR_REMOTE_RUNTIME_EVENT_SUMMARY_ROLE,
+            "operation_boundary": ORCHESTRATOR_REMOTE_OPERATION_BOUNDARY,
         },
     }
