@@ -45,6 +45,10 @@ ORCHESTRATOR_EDGEENV_AIGUARD_EVIDENCE_CANDIDATES = (
 ORCHESTRATOR_PRODUCER_LINEAGE_AIGUARD_EVIDENCE_TYPE = (
     "edgeenv_orchestrator_producer_lineage"
 )
+ORCHESTRATOR_REMOTE_RUNTIME_EVENT_SUMMARY_ROLE = (
+    "remote_dispatch_runtime_event_compact_summary"
+)
+ORCHESTRATOR_REMOTE_OPERATION_BOUNDARY = "remote dispatch starter evidence only"
 
 
 class RuntimeTelemetryHistoryError(ValueError):
@@ -573,6 +577,10 @@ def _load_orchestrator_feed(feed_path: Path | str) -> dict[str, Any]:
         candidate_context=candidate_context,
         source=source,
     )
+    remote_runtime_event_summary = _validate_orchestrator_remote_event_summary(
+        payload.get("remote_runtime_event_summary"),
+        source=source,
+    )
     preserved_context = {
         "schema_version": schema_version,
         "role": payload.get("role"),
@@ -591,6 +599,10 @@ def _load_orchestrator_feed(feed_path: Path | str) -> dict[str, Any]:
     if downstream_guard_alignment is not None:
         preserved_context["downstream_guard_alignment"] = (
             downstream_guard_alignment
+        )
+    if remote_runtime_event_summary is not None:
+        preserved_context["remote_runtime_event_summary"] = (
+            remote_runtime_event_summary
         )
     return preserved_context
 
@@ -646,6 +658,10 @@ def _validate_preserved_orchestrator_context(
     _validate_orchestrator_downstream_guard_alignment(
         context.get("downstream_guard_alignment"),
         candidate_context=candidate_context,
+        source=Path(label),
+    )
+    _validate_orchestrator_remote_event_summary(
+        context.get("remote_runtime_event_summary"),
         source=Path(label),
     )
     _validate_orchestrator_producer_context(
@@ -818,6 +834,39 @@ def _validate_orchestrator_downstream_guard_alignment(
             f"lab_is_final_decision_owner must be true: {source}"
         )
     return alignment
+
+
+def _validate_orchestrator_remote_event_summary(
+    value: Any,
+    *,
+    source: Path,
+) -> dict[str, Any] | None:
+    if value is None:
+        return None
+    if not isinstance(value, dict):
+        raise RuntimeTelemetryHistoryError(
+            "Orchestrator telemetry feed remote_runtime_event_summary must be "
+            f"an object: {source}"
+        )
+    summary = deepcopy(value)
+    if summary.get("evidence_role") != ORCHESTRATOR_REMOTE_RUNTIME_EVENT_SUMMARY_ROLE:
+        raise RuntimeTelemetryHistoryError(
+            "Orchestrator telemetry feed remote_runtime_event_summary."
+            f"evidence_role must be {ORCHESTRATOR_REMOTE_RUNTIME_EVENT_SUMMARY_ROLE}: "
+            f"{source}"
+        )
+    if summary.get("operation_boundary") != ORCHESTRATOR_REMOTE_OPERATION_BOUNDARY:
+        raise RuntimeTelemetryHistoryError(
+            "Orchestrator telemetry feed remote_runtime_event_summary."
+            f"operation_boundary must be {ORCHESTRATOR_REMOTE_OPERATION_BOUNDARY}: "
+            f"{source}"
+        )
+    if summary.get("production_remote_execution") is not False:
+        raise RuntimeTelemetryHistoryError(
+            "Orchestrator telemetry feed remote_runtime_event_summary."
+            f"production_remote_execution must be false: {source}"
+        )
+    return summary
 
 
 def _validate_orchestrator_producer_context(
