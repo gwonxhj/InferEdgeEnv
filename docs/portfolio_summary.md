@@ -40,6 +40,7 @@ It does not answer whether a model should be deployed. That decision belongs to 
 | Runtime regression report | Calculates mean/p95/p99/FPS/resource regression only after same-condition comparability passes | Not cloud monitoring or production observability |
 | Export/import | Moves evidence bundles with manifest, checksum, and path-safety validation | Does not mutate evidence semantics |
 | Sampler evidence | Stores optional resource/sampler metadata as supplemental evidence | Not a comparability gate |
+| Runtime Intelligence handoff | Preserves Runtime telemetry history, Orchestrator operation context, and AIGuard/Lab alignment markers | Does not produce Guard analysis or Lab deployment decisions |
 
 ## Portfolio Boundary
 
@@ -53,6 +54,15 @@ Adjacent roles:
 - InferEdgeLab is the validation / decision layer.
 - InferEdgeEnv is the v0.1.5 v1-complete experiment hygiene / comparability layer.
 - InferEdgeOrchestrator is the post-deployment runtime operation-control layer.
+- InferEdgeAIGuard is the optional deterministic diagnosis evidence provider.
+
+Remote dispatch starter evidence belongs to that adjacent operation/diagnosis
+handoff, not to EdgeEnv's core execution role. Orchestrator produces
+worker-selection, fallback, and compact event-summary evidence. EdgeEnv may
+preserve related operation context and handoff markers as local evidence, but
+it does not confirm production remote execution, long-lived worker readiness,
+secure tunnel operation, production retry/failover, or cloud orchestration.
+Lab remains the final deployment decision owner.
 
 ## What To Show First
 
@@ -73,6 +83,8 @@ For an external reviewer, use this order:
 - InferEdgeEnv is not a deployment decision engine.
 - InferEdgeEnv is not InferEdgeLab.
 - InferEdgeEnv is not InferEdgeOrchestrator.
+- InferEdgeEnv is not InferEdgeAIGuard.
+- InferEdgeEnv is not a remote dispatch or production remote execution layer.
 - InferEdgeEnv is not a public benchmark leaderboard.
 - InferEdgeEnv does not rank all models with one score.
 

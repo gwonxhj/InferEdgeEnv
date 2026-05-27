@@ -80,6 +80,16 @@ The feed schema is:
 inferedge-orchestrator-edgeenv-runtime-telemetry-feed-v1
 ```
 
+Remote dispatch starter evidence can appear upstream of this feed as
+Orchestrator operation context. EdgeEnv does not parse it as production remote
+execution. It preserves only the local evidence markers needed for downstream
+review: worker-selection/fallback context when present, compact runtime event
+summary hints when they are carried by the feed, and ownership boundaries such
+as `operation_boundary=remote dispatch starter evidence only`. Production SSH
+or HTTP dispatch hardening, long-lived worker lifecycle, secure tunnel
+operation, production retry/failover, and cloud control plane behavior remain
+outside EdgeEnv.
+
 EdgeEnv only accepts this feed when it explicitly declares
 `not_a_regression_judgement=true` and `not_a_comparability_gate=true`. The feed
 is then preserved under the matching history entry as
@@ -318,6 +328,11 @@ EdgeEnv owns the local history, comparability judgement, and regression report.
 AIGuard may consume that report as deterministic warning evidence, while Lab
 remains the final deployment decision owner.
 
+If downstream review also includes remote dispatch starter evidence, the same
+ownership split applies: Orchestrator produced the operation evidence, EdgeEnv
+preserved registry/comparability/handoff context, AIGuard explains optional
+deterministic warning evidence, and Lab owns the deployment decision.
+
 Lab handoff manifest:
 
 ```bash
@@ -381,6 +396,9 @@ python -m inferedge_aiguard.cli check-edgeenv-handoff-alignment \
 - Do not use telemetry to bypass the existing comparability-first regression policy.
 - Do not treat `inspect-history` as a live health check; it only validates a local replay artifact.
 - Do not use Orchestrator operation feed context as a substitute for Runtime telemetry or Lab deployment judgement.
+- Do not describe remote dispatch starter context as production remote
+  execution, production retry/failover, secure tunnel operation, or an EdgeEnv
+  remote runner.
 
 ## 5. WHERE — Role In The InferEdge Flow
 

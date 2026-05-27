@@ -35,6 +35,14 @@ The top-level InferEdge README and pipeline map still use the older supporting-r
 
 InferEdgeOrchestrator adds a separate boundary: it is the post-deployment operation-control layer. It may consume upstream evidence or decision outputs, but it owns scheduling, load shedding, telemetry, and runtime coordination after deployment. Env should not be described as that layer.
 
+The Runtime Operation Platform v2 remote dispatch starter uses the same
+separation. Orchestrator owns worker-selection, fallback, and compact runtime
+event evidence. AIGuard can explain deterministic warning context such as
+fallback recovery or compact-summary mismatch. Lab owns the final deployment
+decision. Env's role is narrower: preserve local registry/comparability/replay
+and handoff markers when Orchestrator context is attached to Runtime
+Intelligence artifacts.
+
 ## 4. HOW NOT — Wording To Avoid
 
 Do not describe InferEdgeEnv as:
@@ -43,6 +51,7 @@ Do not describe InferEdgeEnv as:
 - an InferEdgeLab replacement
 - a deployment decision engine
 - an operation-control or scheduler layer
+- a remote dispatch or production remote execution layer
 - a live telemetry system
 - a public benchmark leaderboard
 
@@ -52,6 +61,8 @@ The review is reflected in:
 
 - `README.md` relation section
 - `docs/ko/README.md` project-position section
+- Runtime Intelligence handoff wording in `README.md`,
+  `docs/runtime-telemetry-history.md`, and `docs/portfolio_summary.md`
 
 No schema, CLI contract, compare output, registry layout, or artifact contract changed.
 
