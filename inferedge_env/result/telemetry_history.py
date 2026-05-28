@@ -49,6 +49,10 @@ ORCHESTRATOR_REMOTE_RUNTIME_EVENT_SUMMARY_ROLE = (
     "remote_dispatch_runtime_event_compact_summary"
 )
 ORCHESTRATOR_REMOTE_OPERATION_BOUNDARY = "remote dispatch starter evidence only"
+ORCHESTRATOR_OPERATION_RISK_SUMMARY_SCHEMA_VERSION = (
+    "inferedge-entrypoint-operation-risk-summary-v1"
+)
+ORCHESTRATOR_OPERATION_RISK_SUMMARY_EVIDENCE_ROLE = "derived_navigation_context"
 
 
 class RuntimeTelemetryHistoryError(ValueError):
@@ -302,6 +306,7 @@ def inspect_runtime_telemetry_history(
     producer_lineage_guard_alignment_run_ids = (
         _producer_lineage_guard_alignment_run_ids(payload)
     )
+    operation_risk_summary_run_ids = _operation_risk_summary_run_ids(payload)
     timestamps = [
         entry.get("telemetry_timestamp")
         for entry in runs
@@ -348,6 +353,7 @@ def inspect_runtime_telemetry_history(
             "producer_lineage_guard_alignment_run_ids": (
                 producer_lineage_guard_alignment_run_ids
             ),
+            "operation_risk_summary_run_ids": operation_risk_summary_run_ids,
             "first_telemetry_timestamp": min(timestamps) if timestamps else None,
             "last_telemetry_timestamp": max(timestamps) if timestamps else None,
             "execution_sequence_ids": sequence_ids,
@@ -425,6 +431,34 @@ def _producer_lineage_guard_alignment_run_ids(payload: dict[str, Any]) -> list[s
             if isinstance(run_id, str):
                 run_ids.append(run_id)
     return run_ids
+
+
+def _operation_risk_summary_run_ids(payload: dict[str, Any]) -> list[str]:
+    run_ids: list[str] = []
+    for entry in payload.get("runs", []):
+        if not isinstance(entry, dict):
+            continue
+        context = entry.get("orchestrator_operation_context")
+        if _has_operation_risk_summary(context):
+            run_id = entry.get("run_id")
+            if isinstance(run_id, str):
+                run_ids.append(run_id)
+    for item in payload.get("missing_telemetry", []):
+        if not isinstance(item, dict):
+            continue
+        context = item.get("orchestrator_operation_context")
+        if _has_operation_risk_summary(context):
+            run_id = item.get("run_id")
+            if isinstance(run_id, str):
+                run_ids.append(run_id)
+    return run_ids
+
+
+def _has_operation_risk_summary(value: Any) -> bool:
+    return (
+        isinstance(value, dict)
+        and isinstance(value.get("operation_risk_summary"), dict)
+    )
 
 
 def _has_producer_lineage_guard_alignment(value: Any) -> bool:
@@ -581,6 +615,10 @@ def _load_orchestrator_feed(feed_path: Path | str) -> dict[str, Any]:
         payload.get("remote_runtime_event_summary"),
         source=source,
     )
+    operation_risk_summary = _validate_orchestrator_operation_risk_summary(
+        payload.get("operation_risk_summary"),
+        source=source,
+    )
     preserved_context = {
         "schema_version": schema_version,
         "role": payload.get("role"),
@@ -604,6 +642,8 @@ def _load_orchestrator_feed(feed_path: Path | str) -> dict[str, Any]:
         preserved_context["remote_runtime_event_summary"] = (
             remote_runtime_event_summary
         )
+    if operation_risk_summary is not None:
+        preserved_context["operation_risk_summary"] = operation_risk_summary
     return preserved_context
 
 
@@ -662,6 +702,10 @@ def _validate_preserved_orchestrator_context(
     )
     _validate_orchestrator_remote_event_summary(
         context.get("remote_runtime_event_summary"),
+        source=Path(label),
+    )
+    _validate_orchestrator_operation_risk_summary(
+        context.get("operation_risk_summary"),
         source=Path(label),
     )
     _validate_orchestrator_producer_context(
@@ -866,6 +910,73 @@ def _validate_orchestrator_remote_event_summary(
             "Orchestrator telemetry feed remote_runtime_event_summary."
             f"production_remote_execution must be false: {source}"
         )
+    return summary
+
+
+def _validate_orchestrator_operation_risk_summary(
+    value: Any,
+    *,
+    source: Path,
+) -> dict[str, Any] | None:
+    if value is None:
+        return None
+    if not isinstance(value, dict):
+        raise RuntimeTelemetryHistoryError(
+            "Orchestrator telemetry feed operation_risk_summary must be "
+            f"an object: {source}"
+        )
+    summary = deepcopy(value)
+    expected_pairs = {
+        "schema_version": ORCHESTRATOR_OPERATION_RISK_SUMMARY_SCHEMA_VERSION,
+        "evidence_role": ORCHESTRATOR_OPERATION_RISK_SUMMARY_EVIDENCE_ROLE,
+        "decision_owner": "lab",
+        "scheduler_owner": "orchestrator",
+    }
+    for key, expected in expected_pairs.items():
+        if summary.get(key) != expected:
+            raise RuntimeTelemetryHistoryError(
+                "Orchestrator telemetry feed operation_risk_summary."
+                f"{key} must be {expected}: {source}"
+            )
+    if summary.get("not_a_deployment_decision") is not True:
+        raise RuntimeTelemetryHistoryError(
+            "Orchestrator telemetry feed operation_risk_summary."
+            f"not_a_deployment_decision must be true: {source}"
+        )
+    for field in (
+        "queue_pressure_reason",
+        "max_pressure_task",
+        "primary_health_reason",
+    ):
+        field_value = summary.get(field)
+        if field_value is not None and not isinstance(field_value, str):
+            raise RuntimeTelemetryHistoryError(
+                "Orchestrator telemetry feed operation_risk_summary."
+                f"{field} must be a string when present: {source}"
+            )
+    degraded_worker_ids = summary.get("degraded_worker_ids")
+    if degraded_worker_ids is not None and (
+        not isinstance(degraded_worker_ids, list)
+        or not all(isinstance(item, str) for item in degraded_worker_ids)
+    ):
+        raise RuntimeTelemetryHistoryError(
+            "Orchestrator telemetry feed operation_risk_summary."
+            f"degraded_worker_ids must be a string list when present: {source}"
+        )
+    for field in ("device_local_event_count", "producer_event_count"):
+        field_value = summary.get(field)
+        if field_value is None:
+            continue
+        if isinstance(field_value, bool) or not isinstance(field_value, (int, str)):
+            raise RuntimeTelemetryHistoryError(
+                "Orchestrator telemetry feed operation_risk_summary."
+                f"{field} must be an integer or string marker when present: {source}"
+            )
+        if isinstance(field_value, str) and not field_value:
+            raise RuntimeTelemetryHistoryError(
+                "Orchestrator telemetry feed operation_risk_summary."
+                f"{field} must not be an empty string marker: {source}"
+            )
     return summary
 
 

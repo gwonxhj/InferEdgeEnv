@@ -127,6 +127,16 @@ When producer lineage is present, EdgeEnv also requires and preserves
 That marker lets AIGuard/Lab validate producer-lineage reasoning separately
 from queue/thermal operation evidence candidates while keeping Lab as final
 decision owner.
+If the feed includes `operation_risk_summary`, EdgeEnv preserves that compact
+entrypoint-derived marker block only when it remains navigation context:
+`schema_version=inferedge-entrypoint-operation-risk-summary-v1`,
+`evidence_role=derived_navigation_context`, `decision_owner=lab`,
+`scheduler_owner=orchestrator`, and `not_a_deployment_decision=true`. The block
+may carry queue-pressure reason, max-pressure task, worker-health reason,
+degraded worker ids, and producer/device-local event counts. These values help
+Lab/AIGuard render and reason about operation context, but EdgeEnv still does
+not treat them as regression deltas, comparability fields, or deployment
+decisions.
 For device-local handoff smokes, `inspect-history` can enforce that lineage with
 `--require-device-local-producer`. The stricter check fails when the preserved
 history artifact has no Orchestrator context, or when preserved
