@@ -349,6 +349,87 @@ def test_build_runtime_telemetry_history_preserves_missing_orchestrator_feed_con
     ] == ["candidate"]
 
 
+def test_runtime_telemetry_history_preserves_operation_risk_summary(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    edgeenv_root = tmp_path / ".edgeenv"
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="candidate",
+        runtime_telemetry=_runtime_telemetry_payload(sequence_id=2),
+    )
+    feed = _orchestrator_feed_payload("candidate")
+    feed["operation_risk_summary"] = {
+        "schema_version": "inferedge-entrypoint-operation-risk-summary-v1",
+        "evidence_role": "derived_navigation_context",
+        "decision_owner": "lab",
+        "scheduler_owner": "orchestrator",
+        "queue_pressure_reason": "queue_backlog_threshold_exceeded",
+        "max_pressure_task": "vision_agent",
+        "primary_health_reason": "worker_health_degraded",
+        "degraded_worker_ids": ["vision_agent"],
+        "device_local_event_count": 15,
+        "producer_event_count": 7,
+        "not_a_deployment_decision": True,
+    }
+    feed_path = tmp_path / "orchestrator-feed.json"
+    feed_path.write_text(json.dumps(feed), encoding="utf-8")
+
+    payload = build_runtime_telemetry_history(
+        edgeenv_root,
+        generated_at=datetime(2026, 5, 22, tzinfo=timezone.utc),
+        orchestrator_feeds=[feed_path],
+    )
+
+    context = payload["runs"][0]["orchestrator_operation_context"]
+    assert context["operation_risk_summary"] == feed["operation_risk_summary"]
+    summary = inspect_runtime_telemetry_history(
+        payload,
+        require_device_local_producer=True,
+    )
+    assert summary["replay"]["operation_risk_summary_run_ids"] == ["candidate"]
+    assert summary["replay"]["orchestrator_context_run_ids"] == ["candidate"]
+
+
+def test_runtime_telemetry_history_rejects_operation_risk_summary_as_decision(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    edgeenv_root = tmp_path / ".edgeenv"
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="candidate",
+        runtime_telemetry=_runtime_telemetry_payload(sequence_id=2),
+    )
+    feed = _orchestrator_feed_payload("candidate")
+    feed["operation_risk_summary"] = {
+        "schema_version": "inferedge-entrypoint-operation-risk-summary-v1",
+        "evidence_role": "derived_navigation_context",
+        "decision_owner": "lab",
+        "scheduler_owner": "orchestrator",
+        "not_a_deployment_decision": False,
+    }
+    feed_path = tmp_path / "orchestrator-feed.json"
+    feed_path.write_text(json.dumps(feed), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeTelemetryHistoryError,
+        match="operation_risk_summary.not_a_deployment_decision must be true",
+    ):
+        build_runtime_telemetry_history(edgeenv_root, orchestrator_feeds=[feed_path])
+
+
 def test_inspect_runtime_telemetry_history_requires_device_local_producer(
     tmp_path,
     bench_config,

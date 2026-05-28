@@ -327,6 +327,13 @@ When device-local producer lineage is present, EdgeEnv also requires the feed's
 `downstream_guard_alignment.producer_lineage_evidence_type` to remain
 `edgeenv_orchestrator_producer_lineage`, and keeps that marker separate from
 queue/thermal operation evidence candidates.
+If the feed carries an entrypoint-derived `operation_risk_summary`, EdgeEnv
+preserves it as read-only navigation context after checking the ownership
+markers `evidence_role=derived_navigation_context`, `decision_owner=lab`,
+`scheduler_owner=orchestrator`, and `not_a_deployment_decision=true`. Queue
+pressure, max-pressure task, worker-health, and device-local event count markers
+remain supplemental Orchestrator context; they do not become regression
+judgements or comparability gates.
 Use `edgeenv runs telemetry inspect-history <path>` to validate and summarize
 that replay artifact before attaching it to a regression report. Add
 `--require-device-local-producer` when the handoff must prove that preserved
