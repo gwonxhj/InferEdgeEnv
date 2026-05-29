@@ -399,12 +399,17 @@ counts. It also validates the downstream
 producer-lineage evidence from queue/thermal operation evidence. It reports
 `producer_lineage_guard_alignment_run_ids` and prints the matching run IDs as
 EdgeEnv producer-side traceability evidence.
+If the preserved Orchestrator context includes `runtime_task_event_summary`,
+the manifest also records `orchestrator_task_event_rollup_run_ids` so Lab can
+gate the downstream `edgeenv_orchestrator_task_event_rollup` evidence row
+without making EdgeEnv or AIGuard the deployment decision owner.
 It also exposes a `lab_bundle_alignment` block so Lab can align file keys,
 source repositories, artifact roles, and producer contracts while treating
 AIGuard `guard_analysis` as an external artifact produced by InferEdgeAIGuard.
 That alignment block also lists the external AIGuard evidence types expected by
 Lab's Runtime Intelligence gate, including
 `runtime_history_seed_run_config_traceability`, `edgeenv_orchestrator_producer_lineage`,
+`edgeenv_orchestrator_task_event_rollup`,
 and remote-dispatch starter diagnosis evidence when the downstream bundle uses
 that path. EdgeEnv can declare the handoff contract without producing the Guard
 artifact itself. The same block
@@ -414,6 +419,7 @@ manifest gate.
 The same `lab_bundle_alignment.expected_report_markers` list declares the
 Lab-owned report markers that downstream Lab gates must preserve:
 `Runtime Intelligence Risk Summary`, `Orchestrator operation feed context`,
+`Orchestrator task event rollup`, `AIGuard task event rollup evidence`,
 `AIGuard runtime operation anomalies`, `AIGuard remote dispatch event summary`,
 `AIGuard remote event summary consistency`,
 `AIGuard producer-lineage guard alignment`, and
