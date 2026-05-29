@@ -118,15 +118,22 @@ handoff manifest는 device-local producer lineage와 별도로
 `producer_lineage_guard_alignment_run_ids`도 노출해 Lab/AIGuard가
 `edgeenv_orchestrator_producer_lineage` marker가 유지된 run을 명확히 확인할
 수 있게 한다.
+보존된 Orchestrator context에 `runtime_task_event_summary`가 있으면
+`orchestrator_task_event_rollup_run_ids`도 함께 노출해 Lab이
+`edgeenv_orchestrator_task_event_rollup` evidence row를 downstream gate에서
+확인할 수 있게 한다. 이는 deployment decision이 아니라 task-level runtime
+operation evidence traceability다.
 또한 `lab_bundle_alignment.external_aiguard_required_evidence_types`에
-`runtime_history_seed_run_config_traceability`를 포함해, AIGuard artifact는
-외부 산출물로 유지하면서도 Lab Runtime Intelligence gate가 요구하는
-deterministic evidence contract를 EdgeEnv handoff에 명시한다. 같은 alignment
+`runtime_history_seed_run_config_traceability`와
+`edgeenv_orchestrator_task_event_rollup`을 포함해, AIGuard artifact는 외부
+산출물로 유지하면서도 Lab Runtime Intelligence gate가 요구하는 deterministic
+evidence contract를 EdgeEnv handoff에 명시한다. 같은 alignment
 block은 이 선언이 AIGuard `check-edgeenv-handoff-alignment`와 Lab Runtime
 Intelligence bundle manifest gate에서 검증된다는 점도 기록한다.
 같은 `lab_bundle_alignment.expected_report_markers`는 downstream Lab report가
 보존해야 하는 marker를 producer-side handoff에 명시한다:
 `Runtime Intelligence Risk Summary`, `Orchestrator operation feed context`,
+`Orchestrator task event rollup`, `AIGuard task event rollup evidence`,
 `AIGuard runtime operation anomalies`, `AIGuard remote dispatch event summary`,
 `AIGuard remote event summary consistency`,
 `AIGuard producer-lineage guard alignment`, `Lab remains the final deployment decision owner.`. 이 목록은 EdgeEnv가 Lab decision을 생성한다는 뜻이 아니라,

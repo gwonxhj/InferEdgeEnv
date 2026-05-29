@@ -96,6 +96,7 @@ def test_runtime_intelligence_lab_handoff_manifest_records_producer_contracts(
     ] == [
         "runtime_telemetry_context_coverage",
         "edgeenv_orchestrator_producer_lineage",
+        "edgeenv_orchestrator_task_event_rollup",
         "runtime_history_seed_run_config_traceability",
         "runtime_queue_overload",
         "runtime_thermal_instability",
@@ -170,6 +171,8 @@ def test_runtime_intelligence_lab_handoff_manifest_records_producer_contracts(
         "device_local_producer_context_run_ids": ["candidate"],
         "producer_lineage_guard_alignment_present": True,
         "producer_lineage_guard_alignment_run_ids": ["candidate"],
+        "orchestrator_task_event_rollup_present": True,
+        "orchestrator_task_event_rollup_run_ids": ["candidate"],
     }
     assert "AIGuard guard_analysis is intentionally not produced by EdgeEnv." in (
         payload["notes"]
@@ -230,6 +233,7 @@ def test_runtime_intelligence_lab_handoff_cli_writes_manifest(tmp_path):
     assert (
         "External AIGuard evidence types: runtime_telemetry_context_coverage, "
         "edgeenv_orchestrator_producer_lineage, "
+        "edgeenv_orchestrator_task_event_rollup, "
         "runtime_history_seed_run_config_traceability, "
         "runtime_queue_overload, runtime_thermal_instability"
     ) in result.output
@@ -767,7 +771,38 @@ def _orchestrator_operation_context(run_id: str) -> dict:
         "candidate_context": {
             "run_id": run_id,
             "telemetry_source": "inferedge_orchestrator_operation_summary",
-            "operation": {"queue_depth": 7},
+            "operation": {
+                "queue_depth": 7,
+                "runtime_task_event_summary": {
+                    "vision_agent": {
+                        "scheduler_delay_event_count": 1,
+                        "deadline_missed_count": 1,
+                        "fallback_decision_count": 0,
+                        "max_scheduler_delay_cycles": 3,
+                        "max_queue_wait_ms": 15.0,
+                        "policy_decision_reason_counts": {
+                            "queue_backlog_threshold_exceeded": 1,
+                        },
+                        "drop_reason_counts": {},
+                    },
+                    "voice_command_agent": {
+                        "scheduler_delay_event_count": 0,
+                        "deadline_missed_count": 0,
+                        "fallback_decision_count": 1,
+                        "max_scheduler_delay_cycles": 0,
+                        "max_queue_wait_ms": 0.0,
+                        "policy_decision_reason_counts": {
+                            "queue_backlog_threshold_exceeded": 1,
+                        },
+                        "drop_reason_counts": {
+                            "load_shedding_backlog_threshold_exceeded": 1,
+                        },
+                    },
+                },
+                "tasks_with_deadline_miss": ["vision_agent"],
+                "tasks_with_fallback": ["voice_command_agent"],
+                "tasks_with_scheduler_delay": ["vision_agent"],
+            },
             "resource": {"source": "tegrastats_timeline"},
             "producer": {
                 "operation_context_role": "supplemental",
