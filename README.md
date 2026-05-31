@@ -410,20 +410,27 @@ That alignment block also lists the external AIGuard evidence types expected by
 Lab's Runtime Intelligence gate, including
 `runtime_history_seed_run_config_traceability`, `edgeenv_orchestrator_producer_lineage`,
 `edgeenv_orchestrator_task_event_rollup`,
-and remote-dispatch starter diagnosis evidence when the downstream bundle uses
-that path. EdgeEnv can declare the handoff contract without producing the Guard
+`runtime_queue_overload`, `runtime_thermal_instability`, and
+`remote_execution_recovered_by_fallback` when the downstream bundle uses that
+path. EdgeEnv can declare the handoff contract without producing the Guard
 artifact itself. The same block
 records that the declaration is validated downstream by AIGuard's
 `check-edgeenv-handoff-alignment` command and Lab's Runtime Intelligence bundle
 manifest gate.
 The same `lab_bundle_alignment.expected_report_markers` list declares the
 Lab-owned report markers that downstream Lab gates must preserve:
-`Runtime Intelligence Risk Summary`, `Orchestrator operation feed context`,
-`Orchestrator task event rollup`, `AIGuard task event rollup evidence`,
+`Runtime Intelligence Risk Summary`, `Runtime replay duration scope`,
+`Orchestrator operation feed context`, `Orchestrator task event rollup`,
+`Lab EdgeEnv preservation context`, `AIGuard task event rollup evidence`,
 `AIGuard runtime operation anomalies`, `AIGuard remote dispatch event summary`,
-`AIGuard remote event summary consistency`,
+`AIGuard remote event summary consistency`, `Remote fallback starter evidence`,
+`lab=Remote fallback starter evidence; evidence=remote_execution_recovered_by_fallback`,
 `AIGuard producer-lineage guard alignment`, and
 `Lab remains the final deployment decision owner.`.
+When the EdgeEnv regression context carries optional replay-duration metadata,
+the handoff summary also preserves `duration_source` and
+`duration_scope_label` values such as `source=entrypoint_requested_frames` as
+producer-side traceability metadata for the Lab row.
 It does not include AIGuard `guard_analysis`; AIGuard remains a separate
 deterministic diagnosis provider.
 

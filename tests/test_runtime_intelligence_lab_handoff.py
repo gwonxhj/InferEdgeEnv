@@ -100,6 +100,7 @@ def test_runtime_intelligence_lab_handoff_manifest_records_producer_contracts(
         "runtime_history_seed_run_config_traceability",
         "runtime_queue_overload",
         "runtime_thermal_instability",
+        "remote_execution_recovered_by_fallback",
     ]
     assert payload["lab_bundle_alignment"]["expected_report_markers"] == list(
         LAB_BUNDLE_EXPECTED_REPORT_MARKERS
@@ -173,6 +174,14 @@ def test_runtime_intelligence_lab_handoff_manifest_records_producer_contracts(
         "producer_lineage_guard_alignment_run_ids": ["candidate"],
         "orchestrator_task_event_rollup_present": True,
         "orchestrator_task_event_rollup_run_ids": ["candidate"],
+        "duration_traceability_present": True,
+        "duration_traceability_run_ids": ["candidate"],
+        "duration_sources": ["entrypoint_requested_frames"],
+        "duration_scope_labels": [
+            "source=entrypoint_requested_frames, "
+            "label=short 96-frame-class replay (96 frames), "
+            "class=short_96_frame_class, frames=96",
+        ],
     }
     assert "AIGuard guard_analysis is intentionally not produced by EdgeEnv." in (
         payload["notes"]
@@ -235,7 +244,8 @@ def test_runtime_intelligence_lab_handoff_cli_writes_manifest(tmp_path):
         "edgeenv_orchestrator_producer_lineage, "
         "edgeenv_orchestrator_task_event_rollup, "
         "runtime_history_seed_run_config_traceability, "
-        "runtime_queue_overload, runtime_thermal_instability"
+        "runtime_queue_overload, runtime_thermal_instability, "
+        "remote_execution_recovered_by_fallback"
     ) in result.output
 
 
@@ -735,6 +745,12 @@ def _write_handoff_files(tmp_path):
                             },
                             {
                                 "run_id": "candidate",
+                                "duration_source": "entrypoint_requested_frames",
+                                "duration_scope_label": (
+                                    "source=entrypoint_requested_frames, "
+                                    "label=short 96-frame-class replay (96 frames), "
+                                    "class=short_96_frame_class, frames=96"
+                                ),
                                 "runtime_telemetry_history_seed": (
                                     _runtime_history_seed(
                                         "candidate",
@@ -748,6 +764,12 @@ def _write_handoff_files(tmp_path):
                     "baseline": {"run_id": "baseline"},
                     "candidate": {
                         "run_id": "candidate",
+                        "duration_source": "entrypoint_requested_frames",
+                        "duration_scope_label": (
+                            "source=entrypoint_requested_frames, "
+                            "label=short 96-frame-class replay (96 frames), "
+                            "class=short_96_frame_class, frames=96"
+                        ),
                         "orchestrator_operation_context": operation_context,
                     },
                 },

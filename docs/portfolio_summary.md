@@ -44,11 +44,17 @@ It does not answer whether a model should be deployed. That decision belongs to 
 
 Runtime Intelligence handoff also exposes
 `lab_bundle_alignment.expected_report_markers` so the producer-side manifest can
-name the Lab-owned report rows expected downstream: `Runtime Intelligence Risk Summary`, `Orchestrator operation feed context`,
-`Orchestrator task event rollup`, `AIGuard task event rollup evidence`,
+name the Lab-owned report rows expected downstream: `Runtime Intelligence Risk Summary`,
+`Runtime replay duration scope`, `Orchestrator operation feed context`,
+`Orchestrator task event rollup`, `Lab EdgeEnv preservation context`,
+`AIGuard task event rollup evidence`,
 `AIGuard runtime operation anomalies`, `AIGuard remote dispatch event summary`,
-`AIGuard remote event summary consistency`,
+`AIGuard remote event summary consistency`, `Remote fallback starter evidence`,
+`lab=Remote fallback starter evidence; evidence=remote_execution_recovered_by_fallback`,
 `AIGuard producer-lineage guard alignment`, and `Lab remains the final deployment decision owner.`.
+When available, the same handoff summary preserves `duration_source` and
+`duration_scope_label` values such as `source=entrypoint_requested_frames` as
+producer-side traceability for the Lab-owned replay duration row.
 This is traceability metadata for Lab's report gate, not an EdgeEnv deployment
 decision.
 
