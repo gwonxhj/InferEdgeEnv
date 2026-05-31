@@ -77,15 +77,20 @@ LAB_BUNDLE_EXTERNAL_AIGUARD_REQUIRED_EVIDENCE_TYPES = (
     "runtime_history_seed_run_config_traceability",
     "runtime_queue_overload",
     "runtime_thermal_instability",
+    "remote_execution_recovered_by_fallback",
 )
 LAB_BUNDLE_EXPECTED_REPORT_MARKERS = (
     "Runtime Intelligence Risk Summary",
+    "Runtime replay duration scope",
     "Orchestrator operation feed context",
     "Orchestrator task event rollup",
+    "Lab EdgeEnv preservation context",
     "AIGuard task event rollup evidence",
     "AIGuard runtime operation anomalies",
     "AIGuard remote dispatch event summary",
     "AIGuard remote event summary consistency",
+    "Remote fallback starter evidence",
+    "lab=Remote fallback starter evidence; evidence=remote_execution_recovered_by_fallback",
     "AIGuard producer-lineage guard alignment",
     "Lab remains the final deployment decision owner.",
 )
@@ -602,6 +607,7 @@ def _edgeenv_report_summary(regression_report: dict[str, Any]) -> dict[str, Any]
     device_local_context_run_ids = _device_local_producer_context_run_ids(context)
     guard_alignment_run_ids = _producer_lineage_guard_alignment_run_ids(context)
     task_event_rollup_run_ids = _task_event_rollup_run_ids(context)
+    duration_traceability = _duration_traceability_summary(context)
     return {
         "baseline_run_id": regression_report.get("baseline_run_id"),
         "candidate_run_id": regression_report.get("candidate_run_id"),
@@ -636,7 +642,47 @@ def _edgeenv_report_summary(regression_report: dict[str, Any]) -> dict[str, Any]
         "producer_lineage_guard_alignment_run_ids": guard_alignment_run_ids,
         "orchestrator_task_event_rollup_present": bool(task_event_rollup_run_ids),
         "orchestrator_task_event_rollup_run_ids": task_event_rollup_run_ids,
+        "duration_traceability_present": bool(
+            duration_traceability["run_ids"]
+        ),
+        "duration_traceability_run_ids": duration_traceability["run_ids"],
+        "duration_sources": duration_traceability["sources"],
+        "duration_scope_labels": duration_traceability["scope_labels"],
     }
+
+
+def _duration_traceability_summary(context: Any) -> dict[str, list[str]]:
+    summary: dict[str, list[str]] = {
+        "run_ids": [],
+        "sources": [],
+        "scope_labels": [],
+    }
+    if not isinstance(context, dict):
+        return summary
+
+    def append_unique(field: str, value: Any) -> None:
+        if isinstance(value, str) and value and value not in summary[field]:
+            summary[field].append(value)
+
+    def inspect_run_context(run_context: Any) -> None:
+        if not isinstance(run_context, dict):
+            return
+        source = run_context.get("duration_source")
+        scope_label = run_context.get("duration_scope_label")
+        if source is None and scope_label is None:
+            return
+        append_unique("run_ids", run_context.get("run_id"))
+        append_unique("sources", source)
+        append_unique("scope_labels", scope_label)
+
+    inspect_run_context(context.get("baseline"))
+    inspect_run_context(context.get("candidate"))
+    history = context.get("history")
+    if isinstance(history, dict):
+        for section in ("runs", "missing_telemetry"):
+            for entry in history.get(section, []):
+                inspect_run_context(entry)
+    return summary
 
 
 def _history_seed_run_config_markers(history: Any) -> list[dict[str, Any]]:

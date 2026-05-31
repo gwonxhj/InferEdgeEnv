@@ -125,18 +125,27 @@ handoff manifest는 device-local producer lineage와 별도로
 operation evidence traceability다.
 또한 `lab_bundle_alignment.external_aiguard_required_evidence_types`에
 `runtime_history_seed_run_config_traceability`와
-`edgeenv_orchestrator_task_event_rollup`을 포함해, AIGuard artifact는 외부
-산출물로 유지하면서도 Lab Runtime Intelligence gate가 요구하는 deterministic
-evidence contract를 EdgeEnv handoff에 명시한다. 같은 alignment
+`edgeenv_orchestrator_task_event_rollup`, `runtime_queue_overload`,
+`runtime_thermal_instability`, `remote_execution_recovered_by_fallback`을
+포함해, AIGuard artifact는 외부 산출물로 유지하면서도 Lab Runtime
+Intelligence gate가 요구하는 deterministic evidence contract를 EdgeEnv
+handoff에 명시한다. 같은 alignment
 block은 이 선언이 AIGuard `check-edgeenv-handoff-alignment`와 Lab Runtime
 Intelligence bundle manifest gate에서 검증된다는 점도 기록한다.
 같은 `lab_bundle_alignment.expected_report_markers`는 downstream Lab report가
 보존해야 하는 marker를 producer-side handoff에 명시한다:
-`Runtime Intelligence Risk Summary`, `Orchestrator operation feed context`,
-`Orchestrator task event rollup`, `AIGuard task event rollup evidence`,
+`Runtime Intelligence Risk Summary`, `Runtime replay duration scope`,
+`Orchestrator operation feed context`, `Orchestrator task event rollup`,
+`Lab EdgeEnv preservation context`, `AIGuard task event rollup evidence`,
 `AIGuard runtime operation anomalies`, `AIGuard remote dispatch event summary`,
 `AIGuard remote event summary consistency`,
-`AIGuard producer-lineage guard alignment`, `Lab remains the final deployment decision owner.`. 이 목록은 EdgeEnv가 Lab decision을 생성한다는 뜻이 아니라,
+`Remote fallback starter evidence`,
+`lab=Remote fallback starter evidence; evidence=remote_execution_recovered_by_fallback`,
+`AIGuard producer-lineage guard alignment`, `Lab remains the final deployment decision owner.`.
+EdgeEnv regression context에 optional replay-duration metadata가 있으면
+handoff summary는 `duration_source`와 `duration_scope_label`도
+`source=entrypoint_requested_frames` 같은 producer-side traceability metadata로
+보존한다. 이 목록은 EdgeEnv가 Lab decision을 생성한다는 뜻이 아니라,
 Lab-owned report contract와 맞물리는 handoff traceability metadata다.
 
 ## EdgeEnv가 아닌 것
