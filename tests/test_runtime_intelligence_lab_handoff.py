@@ -203,6 +203,36 @@ def test_runtime_intelligence_docs_describe_lab_expected_report_markers():
             assert marker in doc
 
 
+def test_readmes_expose_edgeenv_role_boundaries():
+    readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+    readme_ko = (REPO_ROOT / "docs" / "ko" / "README.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "Language: English | [한국어](docs/ko/README.md)" in readme
+    assert "Language: [English](../../README.md) | 한국어" in readme_ko
+
+    for required in [
+        "## Role Boundary At A Glance",
+        "Stores local artifacts, SQLite registry rows, portable bundles",
+        "protocol-mismatch boundaries before metric deltas",
+        "overwrite Lab `deployment_decision`",
+        "production observability platform",
+        "remote execution proof",
+    ]:
+        assert required in readme
+
+    for required in [
+        "## 역할 경계 한눈에 보기",
+        "local artifact, SQLite registry row, portable bundle",
+        "protocol-mismatch 경계를 판정한다",
+        "Lab `deployment_decision`을 덮어쓰거나",
+        "production observability platform",
+        "remote execution proof가 되지 않는다",
+    ]:
+        assert required in readme_ko
+
+
 def test_runtime_intelligence_lab_handoff_cli_writes_manifest(tmp_path):
     baseline_path, candidate_path, regression_path, history_path = _write_handoff_files(
         tmp_path

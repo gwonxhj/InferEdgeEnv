@@ -32,6 +32,15 @@ Edge inference results are easy to record but hard to compare honestly. A latenc
 
 EdgeEnv focuses on recording benchmark evidence locally and judging whether two runs are directly comparable, conditionally comparable, or not comparable.
 
+## Role Boundary At A Glance
+
+| Area | EdgeEnv owns | EdgeEnv does not own |
+| --- | --- | --- |
+| Run evidence registry | Stores local artifacts, SQLite registry rows, portable bundles, telemetry history, and replay metadata | Replace Runtime execution or become a production telemetry database |
+| Comparability judgement | Checks same-condition, runtime-comparison, target-comparison, and protocol-mismatch boundaries before metric deltas | Rank every model with a single score or bypass benchmark protocol checks |
+| Runtime regression evidence | Computes latency/resource regression only after the comparability gate passes and emits JSON/Markdown evidence | Make deployment decisions, overwrite Lab `deployment_decision`, or act as AIGuard diagnosis |
+| Operation context handoff | Preserves Runtime/Orchestrator supplemental telemetry, producer lineage, and Lab handoff markers as traceability evidence | Become a scheduler, cloud control plane, production observability platform, or remote execution proof |
+
 ## What EdgeEnv Is Not
 
 EdgeEnv is not:
