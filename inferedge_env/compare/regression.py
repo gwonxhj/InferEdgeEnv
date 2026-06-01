@@ -252,6 +252,12 @@ def _maybe_runtime_telemetry_context(
             "schema_version": telemetry_history.get("schema_version"),
             "summary": telemetry_history.get("summary", {}),
         }
+        history_runs = _history_runs_for_context(telemetry_history)
+        if history_runs:
+            context["history"]["runs"] = history_runs
+        missing_telemetry = _history_missing_for_context(telemetry_history)
+        if missing_telemetry:
+            context["history"]["missing_telemetry"] = missing_telemetry
         telemetry_coverage = telemetry_history.get("telemetry_coverage")
         if isinstance(telemetry_coverage, dict):
             context["history"]["telemetry_coverage"] = telemetry_coverage
@@ -294,6 +300,22 @@ def _history_missing_by_run_id(
     return missing
 
 
+def _history_runs_for_context(telemetry_history: dict[str, Any]) -> list[dict[str, Any]]:
+    runs = telemetry_history.get("runs", [])
+    if not isinstance(runs, list):
+        return []
+    return [dict(entry) for entry in runs if isinstance(entry, dict)]
+
+
+def _history_missing_for_context(
+    telemetry_history: dict[str, Any],
+) -> list[dict[str, Any]]:
+    missing = telemetry_history.get("missing_telemetry", [])
+    if not isinstance(missing, list):
+        return []
+    return [dict(item) for item in missing if isinstance(item, dict)]
+
+
 def _telemetry_run_context(
     result: RunResult,
     history_entry: dict[str, Any] | None,
@@ -328,6 +350,7 @@ def _telemetry_run_context(
         context["history_execution_sequence_id"] = history_entry.get(
             "execution_sequence_id"
         )
+        _attach_runtime_history_seed_context(context, history_entry)
         history_telemetry = history_entry.get("runtime_telemetry")
         if isinstance(history_telemetry, dict):
             coverage = _telemetry_coverage_context(history_telemetry.get("coverage"))
@@ -338,6 +361,24 @@ def _telemetry_run_context(
         context["history_missing_reason"] = missing_entry.get("reason")
         _attach_orchestrator_context(context, missing_entry)
     return context
+
+
+def _attach_runtime_history_seed_context(
+    context: dict[str, Any],
+    history_entry: dict[str, Any],
+) -> None:
+    history_seed = history_entry.get("runtime_telemetry_history_seed")
+    if not isinstance(history_seed, dict):
+        return
+    context["runtime_telemetry_history_seed_present"] = True
+    context["runtime_telemetry_history_seed_schema_version"] = history_seed.get(
+        "schema_version"
+    )
+    context["history_seed_registry_owner"] = history_seed.get("registry_owner")
+    context["history_seed_decision_owner"] = history_seed.get("decision_owner")
+    run_config = history_seed.get("run_config")
+    if isinstance(run_config, dict):
+        context["history_seed_run_config"] = dict(run_config)
 
 
 def _attach_orchestrator_context(

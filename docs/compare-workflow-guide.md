@@ -119,6 +119,17 @@ bypasses the same-condition comparability gate.
 Committed replay-context examples are available when downstream tools need a
 small EdgeEnv-owned fixture without running a benchmark:
 
+- `examples/regression/edgeenv_same_condition_regression.json` shows a
+  same-condition latency/resource regression with mean, p99, FPS, and memory
+  threshold evidence plus preserved `runtime_telemetry_history_seed.run_config`
+  replay context.
+- `examples/regression/edgeenv_runtime_comparison_blocked.json` shows a
+  runtime/provider comparison where regression deltas are intentionally not
+  evaluated.
+- `examples/regression/edgeenv_target_comparison_blocked.json` shows a target
+  comparison where regression deltas are intentionally not evaluated.
+- `examples/regression/edgeenv_protocol_mismatch_blocked.json` shows a
+  benchmark protocol mismatch with a rerun recommendation.
 - `examples/regression/edgeenv_candidate_telemetry_gap.json` shows a comparable
   same-condition report where the candidate run is missing runtime telemetry in
   both the result artifact and telemetry history.

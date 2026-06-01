@@ -1,0 +1,31 @@
+{
+  "baseline_run_id": "baseline",
+  "candidate_run_id": "candidate",
+  "regression_detected": false,
+  "regression_type": "not_evaluated",
+  "severity": "low",
+  "comparable": false,
+  "mode": "target-comparison",
+  "evidence": {
+    "reason": "regression_requires_same_condition_comparability",
+    "comparability_reasons": [
+      "Same model hash",
+      "Same input shape",
+      "Same precision",
+      "Same benchmark protocol",
+      "Different target"
+    ]
+  },
+  "recommendation": "review_as_target_comparison",
+  "comparability": {
+    "comparable": "Conditional",
+    "mode": "target-comparison",
+    "reasons": [
+      "Same model hash",
+      "Same input shape",
+      "Same precision",
+      "Same benchmark protocol",
+      "Different target"
+    ]
+  }
+}

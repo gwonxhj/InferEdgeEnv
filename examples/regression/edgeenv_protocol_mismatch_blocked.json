@@ -1,0 +1,23 @@
+{
+  "baseline_run_id": "baseline",
+  "candidate_run_id": "candidate",
+  "regression_detected": false,
+  "regression_type": "not_evaluated",
+  "severity": "medium",
+  "comparable": false,
+  "mode": "protocol_mismatch",
+  "evidence": {
+    "reason": "regression_requires_same_condition_comparability",
+    "comparability_reasons": [
+      "Different repeat runs"
+    ]
+  },
+  "recommendation": "rerun_with_matching_protocol",
+  "comparability": {
+    "comparable": "No",
+    "mode": null,
+    "reasons": [
+      "Different repeat runs"
+    ]
+  }
+}
