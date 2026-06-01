@@ -25,6 +25,15 @@ InferEdgeEnv는 Edge AI inference benchmark 결과를 local artifact와 SQLite r
 - read-only bundle summary
 - Jetson에서 local execution으로 수집하는 optional `tegrastats` sampled evidence
 
+## 역할 경계 한눈에 보기
+
+| 영역 | EdgeEnv가 담당하는 일 | EdgeEnv가 담당하지 않는 일 |
+| --- | --- | --- |
+| Run evidence registry | local artifact, SQLite registry row, portable bundle, telemetry history, replay metadata를 저장한다. | Runtime execution을 대체하거나 production telemetry database가 되지 않는다. |
+| Comparability judgement | metric delta보다 먼저 same-condition, runtime-comparison, target-comparison, protocol-mismatch 경계를 판정한다. | 모든 모델을 하나의 점수로 ranking하거나 benchmark protocol check를 우회하지 않는다. |
+| Runtime regression evidence | comparability gate가 통과된 뒤에만 latency/resource regression을 계산하고 JSON/Markdown evidence를 생성한다. | deployment decision을 만들거나 Lab `deployment_decision`을 덮어쓰거나 AIGuard diagnosis 역할을 하지 않는다. |
+| Operation context handoff | Runtime/Orchestrator supplemental telemetry, producer lineage, Lab handoff marker를 traceability evidence로 보존한다. | scheduler, cloud control plane, production observability platform, remote execution proof가 되지 않는다. |
+
 ## 빠른 시작
 
 ```bash
