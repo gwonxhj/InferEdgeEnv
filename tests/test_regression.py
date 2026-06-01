@@ -202,6 +202,98 @@ def test_regression_attaches_runtime_telemetry_history_context(
     assert report.evidence["mean_delta_pct"] == 12.0
 
 
+def test_regression_preserves_history_seed_run_config_replay_context(
+    bench_config,
+    target_profile,
+):
+    baseline = make_result(
+        bench_config,
+        target_profile,
+        run_id="baseline",
+        runner_result=_runner_result(
+            mean=100.0,
+            p95=120.0,
+            p99=130.0,
+            fps=50.0,
+            runtime_telemetry=_runtime_telemetry(sequence_id=1),
+        ),
+    )
+    candidate = make_result(
+        bench_config,
+        target_profile,
+        run_id="candidate",
+        runner_result=_runner_result(
+            mean=118.0,
+            p95=132.0,
+            p99=171.6,
+            fps=39.0,
+            runtime_telemetry=_runtime_telemetry(sequence_id=2),
+        ),
+    )
+    telemetry_history = {
+        "schema_version": "edgeenv.runtime-telemetry-history.v1",
+        "summary": {
+            "registered_runs": 2,
+            "telemetry_runs": 2,
+            "history_seed_runs": 2,
+            "history_seed_run_config_runs": 2,
+            "missing_telemetry_runs": 0,
+        },
+        "runs": [
+            {
+                "run_id": "baseline",
+                "telemetry_timestamp": "2026-05-22T00:00:01Z",
+                "execution_sequence_id": 1,
+                "runtime_telemetry_history_seed": _runtime_history_seed(
+                    "baseline",
+                    sequence_id=1,
+                ),
+            },
+            {
+                "run_id": "candidate",
+                "telemetry_timestamp": "2026-05-22T00:00:02Z",
+                "execution_sequence_id": 2,
+                "runtime_telemetry_history_seed": _runtime_history_seed(
+                    "candidate",
+                    sequence_id=2,
+                ),
+            },
+        ],
+        "missing_telemetry": [],
+    }
+
+    report = analyze_regression(
+        baseline,
+        candidate,
+        telemetry_history=telemetry_history,
+    )
+
+    context = report.to_dict()["runtime_telemetry_context"]
+    assert context["history"]["summary"]["history_seed_runs"] == 2
+    assert context["history"]["summary"]["history_seed_run_config_runs"] == 2
+    assert context["history"]["runs"][0]["runtime_telemetry_history_seed"][
+        "registry_owner"
+    ] == "edgeenv"
+    assert context["baseline"]["runtime_telemetry_history_seed_present"] is True
+    assert context["baseline"]["history_seed_registry_owner"] == "edgeenv"
+    assert context["baseline"]["history_seed_decision_owner"] == "lab"
+    assert context["baseline"]["history_seed_run_config"] == {
+        "batch": 1,
+        "height": 224,
+        "width": 224,
+        "warmup": 10,
+        "runs": 100,
+        "timeout_ms": None,
+        "input_mode": "dummy",
+        "input_preprocess": "none",
+        "power_mode": "unknown",
+        "jetson_clocks": "unknown",
+    }
+    assert context["candidate"]["history_seed_run_config"]["runs"] == 100
+    assert report.mode == "same-condition"
+    assert report.regression_detected is True
+
+
 def test_regression_attaches_orchestrator_feed_as_supplemental_context(
     bench_config,
     target_profile,
@@ -802,7 +894,7 @@ def test_cli_telemetry_replay_candidate_gap_to_regression_smoke(
     assert "runtime_telemetry_missing" in markdown
 
 
-def test_committed_replay_warning_fixtures_preserve_edgeenv_owned_context():
+def test_committed_replay_fixtures_preserve_edgeenv_owned_context():
     candidate_gap = json.loads(
         (EXAMPLE_REGRESSION_DIR / "edgeenv_candidate_telemetry_gap.json").read_text(
             encoding="utf-8"
@@ -852,6 +944,70 @@ def test_committed_replay_warning_fixtures_preserve_edgeenv_owned_context():
         "not a comparability gate" in note
         for note in sequence_context["notes"]
     )
+
+    regression = _load_regression_fixture("edgeenv_same_condition_regression.json")
+    runtime_comparison = _load_regression_fixture(
+        "edgeenv_runtime_comparison_blocked.json"
+    )
+    target_comparison = _load_regression_fixture(
+        "edgeenv_target_comparison_blocked.json"
+    )
+    protocol_mismatch = _load_regression_fixture(
+        "edgeenv_protocol_mismatch_blocked.json"
+    )
+
+    for fixture in (
+        regression,
+        runtime_comparison,
+        target_comparison,
+        protocol_mismatch,
+    ):
+        assert "guard_analysis" not in fixture
+        assert "deployment_decision" not in fixture
+
+    assert regression["comparable"] is True
+    assert regression["mode"] == "same-condition"
+    assert regression["regression_detected"] is True
+    assert regression["regression_type"] == "mixed"
+    assert regression["severity"] == "high"
+    triggered = {
+        item["name"] for item in regression["evidence"]["triggered_thresholds"]
+    }
+    assert {
+        "mean_latency_review",
+        "p99_latency_high",
+        "fps_drop_review",
+        "memory_peak_warning",
+    } <= triggered
+    regression_context = regression["runtime_telemetry_context"]
+    assert regression_context["history"]["summary"]["history_seed_runs"] == 2
+    assert regression_context["history"]["summary"][
+        "history_seed_run_config_runs"
+    ] == 2
+    assert regression_context["baseline"]["history_seed_run_config"]["runs"] == 100
+    assert regression_context["candidate"]["history_seed_run_config"][
+        "input_mode"
+    ] == "dummy"
+
+    blocked_cases = [
+        (runtime_comparison, "runtime-comparison", "review_as_runtime_comparison"),
+        (target_comparison, "target-comparison", "review_as_target_comparison"),
+        (protocol_mismatch, "protocol_mismatch", "rerun_with_matching_protocol"),
+    ]
+    delta_keys = {
+        "mean_delta_pct",
+        "p95_delta_pct",
+        "p99_delta_pct",
+        "fps_delta_pct",
+        "memory_peak_delta_pct",
+    }
+    for fixture, mode, recommendation in blocked_cases:
+        assert fixture["comparable"] is False
+        assert fixture["mode"] == mode
+        assert fixture["regression_detected"] is False
+        assert fixture["regression_type"] == "not_evaluated"
+        assert fixture["recommendation"] == recommendation
+        assert not (delta_keys & set(fixture["evidence"]))
 
 
 def test_regression_cli_marks_runtime_comparison_not_evaluated(
@@ -987,6 +1143,36 @@ def _runtime_telemetry(
             "missing_telemetry_is_failure": False,
         },
     }
+
+
+def _runtime_history_seed(run_id: str, *, sequence_id: int) -> dict:
+    return {
+        "schema_version": "inferedge-runtime-telemetry-history-seed-v1",
+        "evidence_role": "runtime_telemetry_history_seed",
+        "run_id": run_id,
+        "execution_sequence_id": sequence_id,
+        "registry_owner": "edgeenv",
+        "decision_owner": "lab",
+        "replay_point": "after_runtime_result_export",
+        "run_config": {
+            "batch": 1,
+            "height": 224,
+            "width": 224,
+            "warmup": 10,
+            "runs": 100,
+            "timeout_ms": None,
+            "input_mode": "dummy",
+            "input_preprocess": "none",
+            "power_mode": "unknown",
+            "jetson_clocks": "unknown",
+        },
+    }
+
+
+def _load_regression_fixture(name: str) -> dict:
+    return json.loads(
+        (EXAMPLE_REGRESSION_DIR / name).read_text(encoding="utf-8")
+    )
 
 
 def _orchestrator_context(run_id: str) -> dict:

@@ -99,6 +99,10 @@ EdgeEnv는
 도 함께 검증/보존한다. 이 marker는 producer-lineage reasoning을 queue/thermal
 operation evidence와 분리하기 위한 것이며, comparability나 deployment decision
 owner를 바꾸지 않는다.
+`examples/regression/`에는 live device 없이 downstream handoff를 확인할 수
+있는 committed replay fixture matrix가 있다. 이 matrix는 same-condition
+regression, `runtime-comparison`, `target-comparison`, `protocol_mismatch`,
+telemetry gap, replay sequence context를 포함한다.
 upstream Orchestrator evidence가 remote dispatch starter path에서 온 경우도
 EdgeEnv의 역할은 동일하다. EdgeEnv는 worker-selection/fallback/compact event
 summary 같은 operation context와
