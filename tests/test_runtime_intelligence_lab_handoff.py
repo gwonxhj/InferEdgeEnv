@@ -233,6 +233,53 @@ def test_readmes_expose_edgeenv_role_boundaries():
         assert required in readme_ko
 
 
+def test_runtime_regression_korean_quick_guide_links_and_boundaries():
+    readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+    readme_ko = (REPO_ROOT / "docs" / "ko" / "README.md").read_text(
+        encoding="utf-8"
+    )
+    language = (REPO_ROOT / "docs" / "language.md").read_text(encoding="utf-8")
+    guide = (
+        REPO_ROOT / "docs" / "ko" / "runtime-regression-monitor.md"
+    ).read_text(encoding="utf-8")
+
+    assert (
+        "[한국어 Runtime Regression Monitor Quick Guide]"
+        "(docs/ko/runtime-regression-monitor.md)"
+        in readme
+    )
+    assert (
+        "[Runtime Regression Monitor 한국어 Quick Guide]"
+        "(runtime-regression-monitor.md)"
+        in readme_ko
+    )
+    assert "ko/runtime-regression-monitor.md" in language
+    assert (
+        "Language: [English representative]"
+        "(../compare-workflow-guide.md#runtime-regression-report) | 한국어"
+        in guide
+    )
+
+    for required in [
+        "local-first run evidence",
+        "comparability checker",
+        "comparability-first",
+        "`same-condition`",
+        "`runtime-comparison`",
+        "`target-comparison`",
+        "`protocol_mismatch`",
+        "Lab `deployment_decision`",
+        "AIGuard `guard_analysis`",
+        "Orchestrator scheduler",
+        "production observability platform",
+        "general monitoring SaaS",
+        "public leaderboard",
+        "Real-time data drift",
+        "Jetson 필요 여부",
+    ]:
+        assert required in guide
+
+
 def test_runtime_intelligence_lab_handoff_cli_writes_manifest(tmp_path):
     baseline_path, candidate_path, regression_path, history_path = _write_handoff_files(
         tmp_path
