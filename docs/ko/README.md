@@ -84,6 +84,9 @@ delta를 계산한다. runtime/provider 또는 target 차이는 각각
 `runtime-comparison`, `target-comparison`으로 표시하고, benchmark protocol
 mismatch는 `protocol_mismatch`로 표시한다. 이 기능은 local regression
 evidence이지 cloud monitoring, public leaderboard, production observability가 아니다.
+한눈에 보는 한국어 해석은
+[Runtime Regression Monitor 한국어 Quick Guide](runtime-regression-monitor.md)를
+먼저 확인한다.
 
 runtime telemetry history artifact가 있으면 `--telemetry-history`로 연결해
 report에 telemetry coverage와 evidence gap을 보조 context로 첨부할 수 있다.
@@ -192,6 +195,7 @@ InferEdgeOrchestrator도 별도 영역이다. Orchestrator는 배포 이후 sche
 - [Portfolio Demo Path](../portfolio-demo-path.md) — 리뷰어용 fake/local/compare/export-import/bundle-summary 데모 경로
 - [Local Command Contract Guide](../local-command-contract.md) — 사용자 benchmark command 연결 방식
 - [Compare Workflow Guide](../compare-workflow-guide.md) — metric delta보다 먼저 comparability를 확인하는 흐름
+- [Runtime Regression Monitor 한국어 Quick Guide](runtime-regression-monitor.md) — comparability-first runtime regression evidence 한국어 요약
 - [Export/Import Design](../export-import-design.md) — portable evidence bundle contract
 - [Schema Versioning And Migration Policy](../schema-versioning-migration-policy.md) — evidence compatibility와 future-version rejection 기준
 - [Release Maintenance Checklist](../release-maintenance-checklist.md) — 반복 가능한 release gate

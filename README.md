@@ -194,6 +194,7 @@ English representative path:
 - [Local Command Contract Guide](docs/local-command-contract.md) — how to connect your own local benchmark command
 - [Runtime Telemetry History Seed](docs/runtime-telemetry-history.md) — optional runtime telemetry evidence ingestion and replay seed boundary
 - [Compare Workflow Guide](docs/compare-workflow-guide.md) — how to judge comparability before reading metric deltas
+- [한국어 Runtime Regression Monitor Quick Guide](docs/ko/runtime-regression-monitor.md) — Korean quick guide for comparability-first runtime regression evidence
 - [Export/Import Design](docs/export-import-design.md) — portable evidence bundle contract
 - [Schema Versioning And Migration Policy](docs/schema-versioning-migration-policy.md) — evidence compatibility and future-version rejection policy
 - [Release Maintenance Checklist](docs/release-maintenance-checklist.md) — repeatable local, clean-room, optional Jetson, tag, and GitHub Release gate

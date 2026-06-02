@@ -19,6 +19,7 @@ Representative English documents:
 - [Portfolio Demo Path](portfolio-demo-path.md) — reviewer-facing demo route
 - [Local Command Contract Guide](local-command-contract.md) — how to connect a benchmark command
 - [Compare Workflow Guide](compare-workflow-guide.md) — how to judge comparability before reading metric deltas
+- [Runtime Regression Monitor Korean Quick Guide](ko/runtime-regression-monitor.md) — Korean quick guide for comparability-first runtime regression evidence
 - [Export/Import Design](export-import-design.md) — portable evidence bundle contract
 - [Schema Versioning And Migration Policy](schema-versioning-migration-policy.md) — evidence compatibility and future-version rejection policy
 - [Release Maintenance Checklist](release-maintenance-checklist.md) — repeatable release gate
@@ -43,6 +44,7 @@ EdgeEnv 문서는 영어 대표 경로와 한국어/혼합 언어 작업 기록�
 - [Portfolio Demo Path](portfolio-demo-path.md) — 리뷰어용 데모 경로
 - [Local Command Contract Guide](local-command-contract.md) — benchmark command 연결 계약
 - [Compare Workflow Guide](compare-workflow-guide.md) — metric delta보다 먼저 comparability를 확인하는 흐름
+- [Runtime Regression Monitor 한국어 Quick Guide](ko/runtime-regression-monitor.md) — comparability-first runtime regression evidence 한국어 요약
 - [Export/Import Design](export-import-design.md) — portable evidence bundle contract
 - [Schema Versioning And Migration Policy](schema-versioning-migration-policy.md) — evidence compatibility와 future-version rejection 기준
 - [Release Maintenance Checklist](release-maintenance-checklist.md) — 반복 가능한 release gate
