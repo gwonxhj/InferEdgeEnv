@@ -578,6 +578,10 @@ runtime_tags: [local]
     assert shown["resource_metrics"]["source"] == "benchmark-command"
     assert shown["runtime_operation_summary"]["source"] == "inferedge-runtime"
     assert shown["runtime_operation_summary"]["health_reason"] == "completed"
+    assert shown["runtime_operation_summary_label"] == (
+        "operation_summary: mode=completed, max_queue=n/a, "
+        "queue_pressure=n/a, deadline_missed=n/a, fallback=n/a, dropped=n/a"
+    )
     assert (
         shown["runtime_operation_summary"]["runtime_events"][0]["event"]
         == "runtime_operation_summary_recorded"

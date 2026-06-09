@@ -10,6 +10,7 @@ from inferedge_env.compare.comparability import check_comparability
 from inferedge_env.registry.db import RunRegistry
 from inferedge_env.result.schema import RunResult
 from inferedge_env.result.writer import load_result
+from inferedge_env.utils.operation_summary import compact_operation_summary_label
 
 
 REQUIRED_RUN_FILES = [
@@ -49,6 +50,7 @@ class _RunEvidence:
     sampler_evidence_label: str
     resource_source: str
     runtime_operation_source: str
+    runtime_operation_summary_label: str
     warnings: tuple[str, ...]
 
 
@@ -105,8 +107,8 @@ def render_bundle_summary_markdown(
         "",
         "## Bundles",
         "",
-        "| Scenario | Run A | Run B | Exported files | Sampler evidence | Resource source | Runtime operation source |",
-        "| --- | --- | --- | --- | --- | --- | --- |",
+        "| Scenario | Run A | Run B | Exported files | Sampler evidence | Resource source | Runtime operation source | Operation summary |",
+        "| --- | --- | --- | --- | --- | --- | --- | --- |",
     ]
     for summary in summaries:
         lines.append(
@@ -131,6 +133,10 @@ def render_bundle_summary_markdown(
                     _escape_table(_combine_labels(
                         summary.run_a.runtime_operation_source,
                         summary.run_b.runtime_operation_source,
+                    )),
+                    _escape_table(_combine_labels(
+                        summary.run_a.runtime_operation_summary_label,
+                        summary.run_b.runtime_operation_summary_label,
                     )),
                 ]
             )
@@ -236,6 +242,9 @@ def _load_run_evidence(registry: RunRegistry, run_id: str) -> _RunEvidence:
         else "absent"
     )
     runtime_operation_source = _runtime_operation_source(result)
+    runtime_operation_summary_label = compact_operation_summary_label(
+        result.runtime_operation_summary
+    )
     exported_files_label = "core + sampler" if sampler_label != "absent" else "core"
     return _RunEvidence(
         run_id=run_id,
@@ -245,6 +254,7 @@ def _load_run_evidence(registry: RunRegistry, run_id: str) -> _RunEvidence:
         sampler_evidence_label=sampler_label,
         resource_source=resource_source,
         runtime_operation_source=runtime_operation_source,
+        runtime_operation_summary_label=runtime_operation_summary_label,
         warnings=tuple(warnings),
     )
 

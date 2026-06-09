@@ -6,7 +6,10 @@ from pathlib import Path
 from typer.testing import CliRunner
 
 from inferedge_env.cli import app
-from inferedge_env.compare.regression import analyze_regression
+from inferedge_env.compare.regression import (
+    analyze_regression,
+    render_regression_markdown,
+)
 from inferedge_env.config.bench_config import BenchmarkConfig
 from inferedge_env.config.target_profile import TargetProfile
 from inferedge_env.registry.db import RunRegistry
@@ -396,6 +399,12 @@ def test_regression_attaches_orchestrator_feed_as_supplemental_context(
         "Orchestrator operation context is supplemental evidence, not a regression judgement."
         in context["notes"]
     )
+    markdown = render_regression_markdown(report)
+    assert "### Operation Context Quick Scan" in markdown
+    assert (
+        "| candidate | operation_summary: mode=n/a, max_queue=7, "
+        "queue_pressure=n/a, deadline_missed=2, fallback=1, dropped=n/a |"
+    ) in markdown
 
 
 def test_regression_preserves_replay_sequence_order_mismatch_context(
