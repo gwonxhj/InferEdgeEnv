@@ -109,3 +109,6 @@ edgeenv report regression <baseline_run_id> <candidate_run_id> \
 
 Downstream AIGuard/Lab handoff를 live device 없이 확인해야 할 때는
 `examples/regression/`의 committed replay fixture를 사용한다.
+`examples/regression/fixture_matrix.json`은 각 fixture가 어떤 mode를
+대표하는지, regression delta 계산이 허용되는지, telemetry gap 또는 replay
+sequence context가 필요한지를 기록하는 machine-readable index다.

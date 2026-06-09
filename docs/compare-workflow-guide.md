@@ -119,6 +119,9 @@ bypasses the same-condition comparability gate.
 Committed replay-context examples are available when downstream tools need a
 small EdgeEnv-owned fixture without running a benchmark:
 
+- `examples/regression/fixture_matrix.json` is the machine-readable fixture
+  index. It records the required roles, expected mode, whether deltas are
+  allowed, and which telemetry/replay context each fixture must preserve.
 - `examples/regression/edgeenv_same_condition_regression.json` shows a
   same-condition latency/resource regression with mean, p99, FPS, and memory
   threshold evidence plus preserved `runtime_telemetry_history_seed.run_config`

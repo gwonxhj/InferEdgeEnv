@@ -106,6 +106,8 @@ owner를 바꾸지 않는다.
 있는 committed replay fixture matrix가 있다. 이 matrix는 same-condition
 regression, `runtime-comparison`, `target-comparison`, `protocol_mismatch`,
 telemetry gap, replay sequence context를 포함한다.
+`examples/regression/fixture_matrix.json`은 각 fixture role, mode, delta 허용
+여부, telemetry/replay context 요구사항을 machine-readable하게 고정한다.
 upstream Orchestrator evidence가 remote dispatch starter path에서 온 경우도
 EdgeEnv의 역할은 동일하다. EdgeEnv는 worker-selection/fallback/compact event
 summary 같은 operation context와

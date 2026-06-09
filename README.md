@@ -107,7 +107,9 @@ The guide also links small committed runtime regression replay fixtures under
 `examples/regression/` for downstream AIGuard/Lab handoff checks. The fixture
 matrix covers same-condition regression, runtime-comparison, target-comparison,
 protocol-mismatch, telemetry-gap, and replay-sequence context without requiring
-a live device.
+a live device. Use `examples/regression/fixture_matrix.json` as the
+machine-readable index for which fixture represents each mode and whether
+regression deltas are allowed.
 
 ### 4. Optional Resource And Sampler Evidence
 
