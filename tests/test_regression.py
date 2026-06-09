@@ -1010,6 +1010,100 @@ def test_committed_replay_fixtures_preserve_edgeenv_owned_context():
         assert not (delta_keys & set(fixture["evidence"]))
 
 
+def test_regression_replay_fixture_matrix_matches_committed_reports():
+    matrix = json.loads(
+        (EXAMPLE_REGRESSION_DIR / "fixture_matrix.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert matrix["schema_version"] == (
+        "edgeenv-regression-replay-fixture-matrix-v1"
+    )
+    assert matrix["owner"] == "edgeenv"
+    assert matrix["boundaries"] == {
+        "not_a_deployment_decision": True,
+        "not_a_guard_analysis": True,
+        "not_production_monitoring": True,
+        "comparability_first": True,
+    }
+
+    fixtures = matrix["fixtures"]
+    roles = {entry["role"] for entry in fixtures}
+    assert roles == set(matrix["required_roles"])
+
+    delta_keys = {
+        "mean_delta_pct",
+        "p95_delta_pct",
+        "p99_delta_pct",
+        "fps_delta_pct",
+        "memory_peak_delta_pct",
+    }
+    seen_modes = set()
+    for entry in fixtures:
+        payload = _load_regression_fixture(entry["path"])
+        seen_modes.add(entry["mode"])
+
+        assert "guard_analysis" not in payload
+        assert "deployment_decision" not in payload
+        assert payload["mode"] == entry["mode"]
+        assert payload["comparable"] is entry["comparable"]
+        assert payload["regression_detected"] is entry[
+            "expected_regression_detected"
+        ]
+        assert payload["recommendation"] == entry["expected_recommendation"]
+
+        evidence = payload["evidence"]
+        if entry["regression_delta_allowed"]:
+            assert delta_keys <= set(evidence)
+        else:
+            assert not (delta_keys & set(evidence))
+
+        context = payload.get("runtime_telemetry_context")
+        if entry["requires_runtime_telemetry_context"]:
+            assert isinstance(context, dict)
+            assert context["role"] == "supplemental_runtime_telemetry_context"
+            assert any(
+                "not a comparability gate" in note
+                for note in context["notes"]
+            )
+        else:
+            assert context is None
+
+        if entry["requires_history_seed_run_config"]:
+            assert context is not None
+            summary = context["history"]["summary"]
+            assert summary["history_seed_run_config_runs"] == 2
+            assert context["baseline"]["history_seed_run_config"]["runs"] == 100
+            assert context["candidate"]["history_seed_run_config"]["runs"] == 100
+
+        if entry["telemetry_gap_expected"]:
+            assert context is not None
+            expected_gaps = set(entry["expected_evidence_gaps"])
+            observed_gaps = {gap["reason"] for gap in context["evidence_gaps"]}
+            assert expected_gaps <= observed_gaps
+
+        if entry.get("sequence_context") == "inverted":
+            assert context is not None
+            assert context["baseline"]["execution_sequence_id"] > context[
+                "candidate"
+            ]["execution_sequence_id"]
+            assert context["evidence_gaps"] == []
+
+        expected_thresholds = set(entry.get("expected_triggered_thresholds", []))
+        if expected_thresholds:
+            observed_thresholds = {
+                item["name"] for item in evidence["triggered_thresholds"]
+            }
+            assert expected_thresholds <= observed_thresholds
+
+    assert {
+        "same-condition",
+        "runtime-comparison",
+        "target-comparison",
+        "protocol_mismatch",
+    } <= seen_modes
+
+
 def test_regression_cli_marks_runtime_comparison_not_evaluated(
     tmp_path,
     bench_config,
