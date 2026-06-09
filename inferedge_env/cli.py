@@ -60,6 +60,10 @@ from inferedge_env.result.writer import (
 )
 from inferedge_env.runners.fake import FakeRunner
 from inferedge_env.runners.local import LocalRunner, LocalRunnerError
+from inferedge_env.utils.operation_summary import (
+    compact_operation_summary_label,
+    operation_summary_rows_from_runtime_context,
+)
 
 
 app = typer.Typer(help="EdgeEnv benchmark runner and local result registry.")
@@ -967,6 +971,9 @@ def _show_payload(record: RegistryRecord) -> dict:
         )
     if result.runtime_operation_summary is not None:
         payload["runtime_operation_summary"] = result.runtime_operation_summary
+        payload["runtime_operation_summary_label"] = compact_operation_summary_label(
+            result.runtime_operation_summary
+        )
     if result.runtime_telemetry is not None:
         payload["runtime_telemetry"] = result.runtime_telemetry
     return payload
@@ -1253,6 +1260,8 @@ def _print_runtime_telemetry_context(context: dict[str, Any]) -> None:
             soft_wrap=True,
         )
         _print_runtime_telemetry_coverage("candidate", candidate)
+    for label, summary in operation_summary_rows_from_runtime_context(context):
+        console.print(f"- {label} {summary}", soft_wrap=True)
     gaps = context.get("evidence_gaps", [])
     if gaps:
         console.print("- evidence_gaps:")

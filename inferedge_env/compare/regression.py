@@ -5,6 +5,9 @@ from typing import Any
 
 from inferedge_env.compare.comparability import ComparabilityReport, check_comparability
 from inferedge_env.result.schema import RunResult
+from inferedge_env.utils.operation_summary import (
+    operation_summary_rows_from_runtime_context,
+)
 
 
 MEAN_REVIEW_PCT = 15.0
@@ -131,11 +134,39 @@ def render_regression_markdown(report: RegressionReport) -> str:
     ]
     lines.extend(f"- {reason}" for reason in report.comparability.reasons)
     if report.runtime_telemetry_context is not None:
+        operation_rows = operation_summary_rows_from_runtime_context(
+            report.runtime_telemetry_context
+        )
         lines.extend(
             [
                 "",
                 "## Runtime Telemetry Context",
                 "",
+            ]
+        )
+        if operation_rows:
+            lines.extend(
+                [
+                    "### Operation Context Quick Scan",
+                    "",
+                    "| Context | Operation summary |",
+                    "| --- | --- |",
+                ]
+            )
+            lines.extend(
+                "| "
+                + " | ".join(
+                    [
+                        _escape_table(label),
+                        _escape_table(summary),
+                    ]
+                )
+                + " |"
+                for label, summary in operation_rows
+            )
+            lines.append("")
+        lines.extend(
+            [
                 "```json",
                 _json_dumps(report.runtime_telemetry_context),
                 "```",
@@ -590,3 +621,7 @@ def _json_dumps(payload: dict[str, Any]) -> str:
     import json
 
     return json.dumps(payload, indent=2, sort_keys=True)
+
+
+def _escape_table(value: str) -> str:
+    return value.replace("|", "\\|")

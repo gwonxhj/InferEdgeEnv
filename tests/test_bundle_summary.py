@@ -64,7 +64,7 @@ def test_bundle_summary_generates_markdown_for_three_scenarios(
     assert "# EdgeEnv Evidence Bundle Handoff" in markdown
     assert (
         "| same-condition | run-a | run-b | core + sampler | "
-        "metadata + raw log | absent | absent |"
+        "metadata + raw log | absent | absent | absent |"
     ) in markdown
     assert "| same-condition | Yes | same-condition | present | yes |" in markdown
     assert (
@@ -119,7 +119,10 @@ def test_bundle_summary_allows_missing_optional_sampler_metadata(
     )
 
     assert "# EdgeEnv Evidence Bundle Handoff" in markdown
-    assert "| same-condition | run-1 | run-2 | core | absent | absent | absent |" in markdown
+    assert (
+        "| same-condition | run-1 | run-2 | core | absent | absent | "
+        "absent | absent |"
+    ) in markdown
     assert "- Sampler metadata present: no" in markdown
     assert "## Warnings" in markdown
     assert "run-1: sampler metadata absent" in markdown
@@ -151,7 +154,9 @@ def test_bundle_summary_surfaces_runtime_operation_source(
 
     assert (
         "| same-condition | run-1 | run-2 | core | absent | absent | "
-        "inferedge-runtime / absent |"
+        "inferedge-runtime / absent | operation_summary: mode=completed, "
+        "max_queue=n/a, queue_pressure=n/a, deadline_missed=n/a, "
+        "fallback=n/a, dropped=n/a / absent |"
     ) in markdown
     assert "runtime operation evidence was supplemental" in markdown
 
