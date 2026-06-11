@@ -96,7 +96,9 @@ def test_runtime_intelligence_lab_handoff_manifest_records_producer_contracts(
     ] == [
         "runtime_telemetry_context_coverage",
         "edgeenv_orchestrator_producer_lineage",
+        "edgeenv_orchestrator_operation_risk_rollup",
         "edgeenv_orchestrator_task_event_rollup",
+        "edgeenv_orchestrator_operation_timeline_summary",
         "runtime_history_seed_run_config_traceability",
         "runtime_queue_overload",
         "runtime_thermal_instability",
@@ -134,6 +136,17 @@ def test_runtime_intelligence_lab_handoff_manifest_records_producer_contracts(
         "regression_detected": True,
         "regression_type": "mixed",
         "severity": "high",
+        "fixture_matrix_context_present": True,
+        "fixture_matrix_schema_version": "edgeenv-regression-replay-fixture-matrix-v1",
+        "fixture_matrix_owner": "edgeenv",
+        "fixture_matrix_required_role_count": 2,
+        "fixture_matrix_covered_role_count": 2,
+        "fixture_matrix_covered_modes": [
+            "same-condition",
+            "protocol_mismatch",
+        ],
+        "fixture_matrix_comparability_first": True,
+        "fixture_matrix_not_a_deployment_decision": True,
         "runtime_telemetry_context_present": True,
         "history_seed_runs": 2,
         "history_seed_run_config_runs": 2,
@@ -172,8 +185,12 @@ def test_runtime_intelligence_lab_handoff_manifest_records_producer_contracts(
         "device_local_producer_context_run_ids": ["candidate"],
         "producer_lineage_guard_alignment_present": True,
         "producer_lineage_guard_alignment_run_ids": ["candidate"],
+        "orchestrator_operation_risk_rollup_present": True,
+        "orchestrator_operation_risk_rollup_run_ids": ["candidate"],
         "orchestrator_task_event_rollup_present": True,
         "orchestrator_task_event_rollup_run_ids": ["candidate"],
+        "orchestrator_operation_timeline_summary_present": True,
+        "orchestrator_operation_timeline_summary_run_ids": ["candidate"],
         "duration_traceability_present": True,
         "duration_traceability_run_ids": ["candidate"],
         "duration_sources": ["entrypoint_requested_frames"],
@@ -316,14 +333,38 @@ def test_runtime_intelligence_lab_handoff_cli_writes_manifest(tmp_path):
     assert "History seed run_config markers: baseline, candidate" in result.output
     assert "Device-local producer contexts: candidate" in result.output
     assert "Producer-lineage guard alignment: candidate" in result.output
+    assert "Orchestrator operation risk rollup: candidate" in result.output
+    assert "Orchestrator operation timeline summary: candidate" in result.output
     assert (
         "External AIGuard evidence types: runtime_telemetry_context_coverage, "
         "edgeenv_orchestrator_producer_lineage, "
+        "edgeenv_orchestrator_operation_risk_rollup, "
         "edgeenv_orchestrator_task_event_rollup, "
+        "edgeenv_orchestrator_operation_timeline_summary, "
         "runtime_history_seed_run_config_traceability, "
         "runtime_queue_overload, runtime_thermal_instability, "
         "remote_execution_recovered_by_fallback"
     ) in result.output
+
+
+def test_runtime_intelligence_lab_handoff_accepts_legacy_results_without_run_id(
+    tmp_path,
+):
+    baseline_path, candidate_path, regression_path, history_path = _write_handoff_files(
+        tmp_path
+    )
+    baseline_path.write_text(json.dumps({}), encoding="utf-8")
+    candidate_path.write_text(json.dumps({}), encoding="utf-8")
+
+    payload = build_runtime_intelligence_lab_handoff_manifest(
+        baseline_result_path=baseline_path,
+        candidate_result_path=candidate_path,
+        edgeenv_regression_report_path=regression_path,
+        telemetry_history_path=history_path,
+    )
+
+    assert payload["edgeenv_report_summary"]["baseline_run_id"] == "baseline"
+    assert payload["edgeenv_report_summary"]["candidate_run_id"] == "candidate"
 
 
 def test_runtime_intelligence_lab_handoff_rejects_mismatched_run_id(tmp_path):
@@ -799,6 +840,7 @@ def _write_handoff_files(tmp_path):
                 "regression_detected": True,
                 "regression_type": "mixed",
                 "severity": "high",
+                "fixture_matrix_context": _fixture_matrix_context(),
                 "runtime_telemetry_context": {
                     "history": {
                         "schema_version": "edgeenv.runtime-telemetry-history.v1",
@@ -857,6 +899,32 @@ def _write_handoff_files(tmp_path):
     return baseline_path, candidate_path, regression_path, history_path
 
 
+def _fixture_matrix_context() -> dict:
+    return {
+        "schema_version": "edgeenv-regression-replay-fixture-matrix-v1",
+        "owner": "edgeenv",
+        "required_role_count": 2,
+        "covered_role_count": 2,
+        "required_roles": [
+            "same_condition_regression",
+            "protocol_mismatch_blocked",
+        ],
+        "covered_roles": [
+            "same_condition_regression",
+            "protocol_mismatch_blocked",
+        ],
+        "covered_modes": [
+            "same-condition",
+            "protocol_mismatch",
+        ],
+        "boundaries": {
+            "comparability_first": True,
+            "not_a_deployment_decision": True,
+            "not_a_guard_analysis": True,
+        },
+    }
+
+
 def _orchestrator_operation_context(run_id: str) -> dict:
     return {
         "schema_version": "inferedge-orchestrator-edgeenv-runtime-telemetry-feed-v1",
@@ -901,6 +969,8 @@ def _orchestrator_operation_context(run_id: str) -> dict:
                 "tasks_with_deadline_miss": ["vision_agent"],
                 "tasks_with_fallback": ["voice_command_agent"],
                 "tasks_with_scheduler_delay": ["vision_agent"],
+                "operation_risk_rollup": _operation_risk_rollup_payload(),
+                "operation_timeline_summary": _operation_timeline_summary_payload(),
             },
             "resource": {"source": "tegrastats_timeline"},
             "producer": {
@@ -956,6 +1026,93 @@ def _orchestrator_operation_context(run_id: str) -> dict:
             "orchestrator_is_final_decision_owner": False,
             "lab_is_final_decision_owner": True,
         },
+    }
+
+
+def _operation_risk_rollup_payload() -> dict:
+    return {
+        "schema_version": "inferedge-orchestrator-operation-risk-rollup-v1",
+        "operation_context_role": "supplemental",
+        "scheduler_owner": "orchestrator",
+        "decision_owner": "lab",
+        "not_a_deployment_decision": True,
+        "risk_level": "review",
+        "first_read": "review_operation_risk_context",
+        "primary_reasons": [
+            "queue_pressure_overloaded",
+            "scheduler_delay_present",
+            "fallback_used",
+        ],
+        "affected_tasks": {
+            "deadline_missed": ["vision_agent"],
+            "fallback": ["voice_command_agent"],
+            "scheduler_delay": ["vision_agent"],
+            "degraded": ["vision_agent"],
+            "constrained": [],
+        },
+        "queue_pressure_state": "overloaded",
+        "queue_pressure_reason": "queue_backlog_threshold_exceeded",
+        "max_total_queue_depth": 7,
+        "deadline_missed_count": 2,
+        "fallback_count": 1,
+        "drop_count": 1,
+        "scheduler_delay_event_count": 1,
+        "policy_decision_count": 2,
+    }
+
+
+def _operation_timeline_summary_payload() -> dict:
+    return {
+        "schema_version": "inferedge-orchestrator-operation-timeline-summary-v1",
+        "source": (
+            "queue_depth_timeline+latency_timeline+policy_decision_log+"
+            "runtime_event_summary"
+        ),
+        "sample_counts": {
+            "queue_depth": 2,
+            "latency": 2,
+            "policy_decision": 2,
+            "runtime_event": 3,
+        },
+        "queue": {
+            "max_total_queue_depth": 7,
+            "average_total_queue_depth": 4.5,
+            "overload_backlog_threshold": 5,
+            "pressure_state": "overloaded",
+            "pressure_reason": "queue_backlog_threshold_exceeded",
+            "max_pressure_task": "vision_agent",
+            "max_queue_depth_by_task": {"vision_agent": 7},
+        },
+        "latency": {
+            "sample_count": 2,
+            "max_latency_ms": 50.0,
+            "max_queue_wait_ms": 15.0,
+            "max_queue_wait_ms_by_task": {"vision_agent": 15.0},
+            "tasks_with_deadline_miss": ["vision_agent"],
+        },
+        "policy": {
+            "decision_count": 2,
+            "decision_reasons": ["queue_backlog_threshold_exceeded"],
+            "first_decision": {
+                "decision_reason": "queue_backlog_threshold_exceeded",
+            },
+            "latest_decision": {
+                "decision_reason": "queue_backlog_threshold_exceeded",
+            },
+        },
+        "affected_tasks": {
+            "deadline_missed": ["vision_agent"],
+            "fallback": ["voice_command_agent"],
+            "scheduler_delay": ["vision_agent"],
+            "degraded": ["vision_agent"],
+            "constrained": [],
+        },
+        "review_hints": [
+            "review_queue_pressure",
+            "review_scheduler_delay",
+            "review_deadline_miss",
+            "review_fallback_use",
+        ],
     }
 
 

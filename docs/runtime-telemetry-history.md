@@ -137,6 +137,18 @@ degraded worker ids, and producer/device-local event counts. These values help
 Lab/AIGuard render and reason about operation context, but EdgeEnv still does
 not treat them as regression deltas, comparability fields, or deployment
 decisions.
+If the feed includes Orchestrator `operation_risk_rollup` or
+`operation_timeline_summary` under `candidate_context.operation`, EdgeEnv keeps
+those compact blocks as supplemental operation context for Lab/AIGuard handoff.
+The rollup is accepted only with
+`schema_version=inferedge-orchestrator-operation-risk-rollup-v1`,
+`operation_context_role=supplemental`, `decision_owner=lab`,
+`scheduler_owner=orchestrator`, and `not_a_deployment_decision=true`. The
+timeline is accepted only with
+`schema_version=inferedge-orchestrator-operation-timeline-summary-v1`. The
+inspect summary reports matching runs as `operation_risk_rollup_run_ids` and
+`operation_timeline_summary_run_ids`, but those markers do not become EdgeEnv
+regression judgements, comparability gates, or deployment decisions.
 For device-local handoff smokes, `inspect-history` can enforce that lineage with
 `--require-device-local-producer`. The stricter check fails when the preserved
 history artifact has no Orchestrator context, or when preserved

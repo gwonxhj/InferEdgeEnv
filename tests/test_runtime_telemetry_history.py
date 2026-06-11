@@ -394,7 +394,109 @@ def test_runtime_telemetry_history_preserves_operation_risk_summary(
         require_device_local_producer=True,
     )
     assert summary["replay"]["operation_risk_summary_run_ids"] == ["candidate"]
+    assert summary["replay"]["operation_risk_rollup_run_ids"] == ["candidate"]
+    assert summary["replay"]["operation_timeline_summary_run_ids"] == ["candidate"]
     assert summary["replay"]["orchestrator_context_run_ids"] == ["candidate"]
+
+
+def test_runtime_telemetry_history_preserves_operation_risk_rollup(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    edgeenv_root = tmp_path / ".edgeenv"
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="candidate",
+        runtime_telemetry=_runtime_telemetry_payload(sequence_id=2),
+    )
+    feed = _orchestrator_feed_payload("candidate")
+    feed["operation_risk_rollup"] = _operation_risk_rollup_payload()
+    feed_path = tmp_path / "orchestrator-feed.json"
+    feed_path.write_text(json.dumps(feed), encoding="utf-8")
+
+    payload = build_runtime_telemetry_history(
+        edgeenv_root,
+        generated_at=datetime(2026, 5, 22, tzinfo=timezone.utc),
+        orchestrator_feeds=[feed_path],
+    )
+
+    context = payload["runs"][0]["orchestrator_operation_context"]
+    assert context["operation_risk_rollup"] == feed["operation_risk_rollup"]
+    assert context["candidate_context"]["operation"][
+        "operation_risk_rollup"
+    ] == _operation_risk_rollup_payload()
+    assert context["candidate_context"]["operation"][
+        "operation_timeline_summary"
+    ] == _operation_timeline_summary_payload()
+    summary = inspect_runtime_telemetry_history(
+        payload,
+        require_device_local_producer=True,
+    )
+    assert summary["replay"]["operation_risk_rollup_run_ids"] == ["candidate"]
+    assert summary["replay"]["operation_timeline_summary_run_ids"] == ["candidate"]
+
+
+def test_runtime_telemetry_history_rejects_operation_risk_rollup_as_decision(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    edgeenv_root = tmp_path / ".edgeenv"
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="candidate",
+        runtime_telemetry=_runtime_telemetry_payload(sequence_id=2),
+    )
+    feed = _orchestrator_feed_payload("candidate")
+    feed["candidate_context"]["operation"]["operation_risk_rollup"][
+        "not_a_deployment_decision"
+    ] = False
+    feed_path = tmp_path / "orchestrator-feed.json"
+    feed_path.write_text(json.dumps(feed), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeTelemetryHistoryError,
+        match="operation_risk_rollup.not_a_deployment_decision must be true",
+    ):
+        build_runtime_telemetry_history(edgeenv_root, orchestrator_feeds=[feed_path])
+
+
+def test_runtime_telemetry_history_rejects_bad_operation_timeline_schema(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    edgeenv_root = tmp_path / ".edgeenv"
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="candidate",
+        runtime_telemetry=_runtime_telemetry_payload(sequence_id=2),
+    )
+    feed = _orchestrator_feed_payload("candidate")
+    feed["candidate_context"]["operation"]["operation_timeline_summary"][
+        "schema_version"
+    ] = "wrong"
+    feed_path = tmp_path / "orchestrator-feed.json"
+    feed_path.write_text(json.dumps(feed), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeTelemetryHistoryError,
+        match="operation_timeline_summary.schema_version must be",
+    ):
+        build_runtime_telemetry_history(edgeenv_root, orchestrator_feeds=[feed_path])
 
 
 def test_runtime_telemetry_history_rejects_operation_risk_summary_as_decision(
@@ -1452,6 +1554,93 @@ def _runtime_history_seed_payload(sequence_id: int) -> dict:
     }
 
 
+def _operation_risk_rollup_payload() -> dict:
+    return {
+        "schema_version": "inferedge-orchestrator-operation-risk-rollup-v1",
+        "operation_context_role": "supplemental",
+        "scheduler_owner": "orchestrator",
+        "decision_owner": "lab",
+        "not_a_deployment_decision": True,
+        "risk_level": "review",
+        "first_read": "review_operation_risk_context",
+        "primary_reasons": [
+            "queue_pressure_overloaded",
+            "scheduler_delay_present",
+            "fallback_used",
+        ],
+        "affected_tasks": {
+            "deadline_missed": ["vision_agent"],
+            "fallback": ["voice_command_agent"],
+            "scheduler_delay": ["vision_agent"],
+            "degraded": ["vision_agent"],
+            "constrained": [],
+        },
+        "queue_pressure_state": "overloaded",
+        "queue_pressure_reason": "queue_backlog_threshold_exceeded",
+        "max_total_queue_depth": 7,
+        "deadline_missed_count": 2,
+        "fallback_count": 1,
+        "drop_count": 1,
+        "scheduler_delay_event_count": 1,
+        "policy_decision_count": 2,
+    }
+
+
+def _operation_timeline_summary_payload() -> dict:
+    return {
+        "schema_version": "inferedge-orchestrator-operation-timeline-summary-v1",
+        "source": (
+            "queue_depth_timeline+latency_timeline+policy_decision_log+"
+            "runtime_event_summary"
+        ),
+        "sample_counts": {
+            "queue_depth": 2,
+            "latency": 2,
+            "policy_decision": 2,
+            "runtime_event": 3,
+        },
+        "queue": {
+            "max_total_queue_depth": 7,
+            "average_total_queue_depth": 4.5,
+            "overload_backlog_threshold": 5,
+            "pressure_state": "overloaded",
+            "pressure_reason": "queue_backlog_threshold_exceeded",
+            "max_pressure_task": "vision_agent",
+            "max_queue_depth_by_task": {"vision_agent": 7},
+        },
+        "latency": {
+            "sample_count": 2,
+            "max_latency_ms": 50.0,
+            "max_queue_wait_ms": 15.0,
+            "max_queue_wait_ms_by_task": {"vision_agent": 15.0},
+            "tasks_with_deadline_miss": ["vision_agent"],
+        },
+        "policy": {
+            "decision_count": 2,
+            "decision_reasons": ["queue_backlog_threshold_exceeded"],
+            "first_decision": {
+                "decision_reason": "queue_backlog_threshold_exceeded",
+            },
+            "latest_decision": {
+                "decision_reason": "queue_backlog_threshold_exceeded",
+            },
+        },
+        "affected_tasks": {
+            "deadline_missed": ["vision_agent"],
+            "fallback": ["voice_command_agent"],
+            "scheduler_delay": ["vision_agent"],
+            "degraded": ["vision_agent"],
+            "constrained": [],
+        },
+        "review_hints": [
+            "review_queue_pressure",
+            "review_scheduler_delay",
+            "review_deadline_miss",
+            "review_fallback_use",
+        ],
+    }
+
+
 def _orchestrator_feed_payload(run_id: str) -> dict:
     return {
         "schema_version": ORCHESTRATOR_TELEMETRY_FEED_SCHEMA_VERSION,
@@ -1481,6 +1670,8 @@ def _orchestrator_feed_payload(run_id: str) -> dict:
                 "queue_depth": 7,
                 "deadline_missed_count": 2,
                 "fallback_count": 1,
+                "operation_risk_rollup": _operation_risk_rollup_payload(),
+                "operation_timeline_summary": _operation_timeline_summary_payload(),
             },
             "resource": {
                 "source": "tegrastats_timeline",
