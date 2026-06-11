@@ -886,6 +886,22 @@ def runtime_intelligence_handoff_manifest(
             "Producer-lineage guard alignment: "
             f"{', '.join(guard_alignment_run_ids)}"
         )
+    operation_risk_rollup_run_ids = summary.get(
+        "orchestrator_operation_risk_rollup_run_ids"
+    )
+    if operation_risk_rollup_run_ids:
+        console.print(
+            "Orchestrator operation risk rollup: "
+            f"{', '.join(operation_risk_rollup_run_ids)}"
+        )
+    operation_timeline_run_ids = summary.get(
+        "orchestrator_operation_timeline_summary_run_ids"
+    )
+    if operation_timeline_run_ids:
+        console.print(
+            "Orchestrator operation timeline summary: "
+            f"{', '.join(operation_timeline_run_ids)}"
+        )
     external_evidence_types = payload.get("lab_bundle_alignment", {}).get(
         "external_aiguard_required_evidence_types",
         [],

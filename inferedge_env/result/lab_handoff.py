@@ -73,7 +73,9 @@ LAB_BUNDLE_EXTERNAL_FILE_KEYS = ("aiguard_guard_analysis",)
 LAB_BUNDLE_EXTERNAL_AIGUARD_REQUIRED_EVIDENCE_TYPES = (
     "runtime_telemetry_context_coverage",
     "edgeenv_orchestrator_producer_lineage",
+    "edgeenv_orchestrator_operation_risk_rollup",
     "edgeenv_orchestrator_task_event_rollup",
+    "edgeenv_orchestrator_operation_timeline_summary",
     "runtime_history_seed_run_config_traceability",
     "runtime_queue_overload",
     "runtime_thermal_instability",
@@ -83,9 +85,13 @@ LAB_BUNDLE_EXPECTED_REPORT_MARKERS = (
     "Runtime Intelligence Risk Summary",
     "Runtime replay duration scope",
     "Orchestrator operation feed context",
+    "EdgeEnv fixture matrix coverage",
+    "Reviewer operation quick scan",
     "Orchestrator task event rollup",
     "Lab EdgeEnv preservation context",
+    "AIGuard operation risk rollup evidence",
     "AIGuard task event rollup evidence",
+    "AIGuard operation timeline evidence",
     "AIGuard runtime operation anomalies",
     "AIGuard remote dispatch event summary",
     "AIGuard remote event summary consistency",
@@ -231,16 +237,18 @@ def _validate_run_alignment(
     *,
     regression_path: Path,
 ) -> None:
-    baseline_run_id = baseline_result.get("run_id")
-    candidate_run_id = candidate_result.get("run_id")
-    if not isinstance(baseline_run_id, str) or not baseline_run_id:
-        raise RuntimeIntelligenceLabHandoffError(
-            "baseline result must include a non-empty run_id"
-        )
-    if not isinstance(candidate_run_id, str) or not candidate_run_id:
-        raise RuntimeIntelligenceLabHandoffError(
-            "candidate result must include a non-empty run_id"
-        )
+    baseline_run_id = _aligned_result_run_id(
+        baseline_result,
+        fallback=regression_report.get("baseline_run_id"),
+        result_label="baseline result",
+        regression_field="baseline_run_id",
+    )
+    candidate_run_id = _aligned_result_run_id(
+        candidate_result,
+        fallback=regression_report.get("candidate_run_id"),
+        result_label="candidate result",
+        regression_field="candidate_run_id",
+    )
     if regression_report.get("baseline_run_id") != baseline_run_id:
         raise RuntimeIntelligenceLabHandoffError(
             "EdgeEnv regression report baseline_run_id does not match "
@@ -251,6 +259,28 @@ def _validate_run_alignment(
             "EdgeEnv regression report candidate_run_id does not match "
             f"candidate result run_id: {regression_path}"
         )
+
+
+def _aligned_result_run_id(
+    result: dict[str, Any],
+    *,
+    fallback: Any,
+    result_label: str,
+    regression_field: str,
+) -> str:
+    result_run_id = result.get("run_id")
+    if isinstance(result_run_id, str) and result_run_id:
+        return result_run_id
+    if result_run_id is not None:
+        raise RuntimeIntelligenceLabHandoffError(
+            f"{result_label} run_id must be a non-empty string when present"
+        )
+    if isinstance(fallback, str) and fallback:
+        return fallback
+    raise RuntimeIntelligenceLabHandoffError(
+        f"{result_label} must include run_id or EdgeEnv regression report "
+        f"must include a non-empty {regression_field}"
+    )
 
 
 def _validate_regression_context(
@@ -606,9 +636,16 @@ def _edgeenv_report_summary(regression_report: dict[str, Any]) -> dict[str, Any]
     history_seed_run_config_markers = _history_seed_run_config_markers(history)
     device_local_context_run_ids = _device_local_producer_context_run_ids(context)
     guard_alignment_run_ids = _producer_lineage_guard_alignment_run_ids(context)
+    operation_risk_rollup_run_ids = _operation_risk_rollup_run_ids(context)
     task_event_rollup_run_ids = _task_event_rollup_run_ids(context)
+    operation_timeline_summary_run_ids = _operation_timeline_summary_run_ids(
+        context
+    )
+    fixture_matrix_summary = _fixture_matrix_summary(
+        regression_report.get("fixture_matrix_context")
+    )
     duration_traceability = _duration_traceability_summary(context)
-    return {
+    summary = {
         "baseline_run_id": regression_report.get("baseline_run_id"),
         "candidate_run_id": regression_report.get("candidate_run_id"),
         "comparable": regression_report.get("comparable"),
@@ -640,8 +677,20 @@ def _edgeenv_report_summary(regression_report: dict[str, Any]) -> dict[str, Any]
         "device_local_producer_context_run_ids": device_local_context_run_ids,
         "producer_lineage_guard_alignment_present": bool(guard_alignment_run_ids),
         "producer_lineage_guard_alignment_run_ids": guard_alignment_run_ids,
+        "orchestrator_operation_risk_rollup_present": bool(
+            operation_risk_rollup_run_ids
+        ),
+        "orchestrator_operation_risk_rollup_run_ids": (
+            operation_risk_rollup_run_ids
+        ),
         "orchestrator_task_event_rollup_present": bool(task_event_rollup_run_ids),
         "orchestrator_task_event_rollup_run_ids": task_event_rollup_run_ids,
+        "orchestrator_operation_timeline_summary_present": bool(
+            operation_timeline_summary_run_ids
+        ),
+        "orchestrator_operation_timeline_summary_run_ids": (
+            operation_timeline_summary_run_ids
+        ),
         "duration_traceability_present": bool(
             duration_traceability["run_ids"]
         ),
@@ -649,6 +698,45 @@ def _edgeenv_report_summary(regression_report: dict[str, Any]) -> dict[str, Any]
         "duration_sources": duration_traceability["sources"],
         "duration_scope_labels": duration_traceability["scope_labels"],
     }
+    summary["fixture_matrix_context_present"] = bool(fixture_matrix_summary)
+    summary.update(fixture_matrix_summary)
+    return summary
+
+
+def _fixture_matrix_summary(context: Any) -> dict[str, Any]:
+    if not isinstance(context, dict):
+        return {}
+    required_roles = _string_list(context.get("required_roles"))
+    covered_roles = _string_list(context.get("covered_roles"))
+    covered_modes = _string_list(context.get("covered_modes"))
+    boundaries = context.get("boundaries")
+    if not isinstance(boundaries, dict):
+        boundaries = {}
+    return {
+        "fixture_matrix_schema_version": context.get("schema_version"),
+        "fixture_matrix_owner": context.get("owner"),
+        "fixture_matrix_required_role_count": context.get(
+            "required_role_count",
+            len(required_roles),
+        ),
+        "fixture_matrix_covered_role_count": context.get(
+            "covered_role_count",
+            len(covered_roles),
+        ),
+        "fixture_matrix_covered_modes": covered_modes,
+        "fixture_matrix_comparability_first": boundaries.get(
+            "comparability_first"
+        ),
+        "fixture_matrix_not_a_deployment_decision": boundaries.get(
+            "not_a_deployment_decision"
+        ),
+    }
+
+
+def _string_list(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [item for item in value if isinstance(item, str)]
 
 
 def _duration_traceability_summary(context: Any) -> dict[str, list[str]]:
@@ -820,6 +908,56 @@ def _task_event_rollup_run_ids(context: Any) -> list[str]:
     return run_ids
 
 
+def _operation_risk_rollup_run_ids(context: Any) -> list[str]:
+    if not isinstance(context, dict):
+        return []
+    run_ids: list[str] = []
+
+    def append_if_present(run_context: Any) -> None:
+        if not isinstance(run_context, dict):
+            return
+        operation_context = run_context.get("orchestrator_operation_context")
+        if not _has_operation_risk_rollup(operation_context):
+            return
+        run_id = run_context.get("run_id")
+        if isinstance(run_id, str) and run_id and run_id not in run_ids:
+            run_ids.append(run_id)
+
+    append_if_present(context.get("baseline"))
+    append_if_present(context.get("candidate"))
+    history = context.get("history")
+    if isinstance(history, dict):
+        for section in ("runs", "missing_telemetry"):
+            for entry in history.get(section, []):
+                append_if_present(entry)
+    return run_ids
+
+
+def _operation_timeline_summary_run_ids(context: Any) -> list[str]:
+    if not isinstance(context, dict):
+        return []
+    run_ids: list[str] = []
+
+    def append_if_present(run_context: Any) -> None:
+        if not isinstance(run_context, dict):
+            return
+        operation_context = run_context.get("orchestrator_operation_context")
+        if not _has_operation_timeline_summary(operation_context):
+            return
+        run_id = run_context.get("run_id")
+        if isinstance(run_id, str) and run_id and run_id not in run_ids:
+            run_ids.append(run_id)
+
+    append_if_present(context.get("baseline"))
+    append_if_present(context.get("candidate"))
+    history = context.get("history")
+    if isinstance(history, dict):
+        for section in ("runs", "missing_telemetry"):
+            for entry in history.get(section, []):
+                append_if_present(entry)
+    return run_ids
+
+
 def _has_task_event_rollup(operation_context: Any) -> bool:
     if not isinstance(operation_context, dict):
         return False
@@ -831,6 +969,30 @@ def _has_task_event_rollup(operation_context: Any) -> bool:
         return False
     summary = operation.get("runtime_task_event_summary")
     return isinstance(summary, dict) and bool(summary)
+
+
+def _has_operation_risk_rollup(operation_context: Any) -> bool:
+    if not isinstance(operation_context, dict):
+        return False
+    if isinstance(operation_context.get("operation_risk_rollup"), dict):
+        return True
+    operation = _candidate_operation_context(operation_context)
+    return isinstance(operation.get("operation_risk_rollup"), dict)
+
+
+def _has_operation_timeline_summary(operation_context: Any) -> bool:
+    if not isinstance(operation_context, dict):
+        return False
+    operation = _candidate_operation_context(operation_context)
+    return isinstance(operation.get("operation_timeline_summary"), dict)
+
+
+def _candidate_operation_context(operation_context: dict[str, Any]) -> dict[str, Any]:
+    candidate_context = operation_context.get("candidate_context")
+    if not isinstance(candidate_context, dict):
+        return {}
+    operation = candidate_context.get("operation")
+    return operation if isinstance(operation, dict) else {}
 
 
 def _has_producer_lineage_guard_alignment(operation_context: Any) -> bool:

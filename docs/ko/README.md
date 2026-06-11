@@ -132,6 +132,10 @@ warmup/repeat run 같은 compact `history_seed_run_config_markers`도 함께
 요약해 Lab이 전체 Runtime result를 다시 해석하지 않고 replay traceability를
 확인할 수 있게 한다. 이는 local replay/history evidence이며 production
 monitoring stream이 아니다.
+Lab-compatible legacy Runtime result fixture에 top-level `run_id`가 없으면
+EdgeEnv handoff는 EdgeEnv regression report의 `baseline_run_id` /
+`candidate_run_id`를 identity 기준으로 사용한다. 단, Runtime result가
+`run_id`를 선언한 경우에는 regression report와 반드시 일치해야 한다.
 handoff manifest는 device-local producer lineage와 별도로
 `producer_lineage_guard_alignment_run_ids`도 노출해 Lab/AIGuard가
 `edgeenv_orchestrator_producer_lineage` marker가 유지된 run을 명확히 확인할
@@ -141,10 +145,24 @@ handoff manifest는 device-local producer lineage와 별도로
 `edgeenv_orchestrator_task_event_rollup` evidence row를 downstream gate에서
 확인할 수 있게 한다. 이는 deployment decision이 아니라 task-level runtime
 operation evidence traceability다.
+보존된 Orchestrator context에 `operation_risk_rollup` 또는
+`operation_timeline_summary`가 있으면 EdgeEnv는 각각
+`orchestrator_operation_risk_rollup_run_ids`와
+`orchestrator_operation_timeline_summary_run_ids`도 노출한다. rollup은
+`schema_version=inferedge-orchestrator-operation-risk-rollup-v1`,
+`operation_context_role=supplemental`, `decision_owner=lab`,
+`scheduler_owner=orchestrator`, `not_a_deployment_decision=true` marker를
+유지해야 하며, timeline은
+`schema_version=inferedge-orchestrator-operation-timeline-summary-v1`를
+유지해야 한다. 이 둘은 Lab/AIGuard review context일 뿐 EdgeEnv
+comparability gate나 deployment decision이 아니다.
 또한 `lab_bundle_alignment.external_aiguard_required_evidence_types`에
 `runtime_history_seed_run_config_traceability`와
-`edgeenv_orchestrator_task_event_rollup`, `runtime_queue_overload`,
-`runtime_thermal_instability`, `remote_execution_recovered_by_fallback`을
+`edgeenv_orchestrator_operation_risk_rollup`,
+`edgeenv_orchestrator_task_event_rollup`,
+`edgeenv_orchestrator_operation_timeline_summary`,
+`runtime_queue_overload`, `runtime_thermal_instability`,
+`remote_execution_recovered_by_fallback`을
 포함해, AIGuard artifact는 외부 산출물로 유지하면서도 Lab Runtime
 Intelligence gate가 요구하는 deterministic evidence contract를 EdgeEnv
 handoff에 명시한다. 같은 alignment
@@ -153,8 +171,12 @@ Intelligence bundle manifest gate에서 검증된다는 점도 기록한다.
 같은 `lab_bundle_alignment.expected_report_markers`는 downstream Lab report가
 보존해야 하는 marker를 producer-side handoff에 명시한다:
 `Runtime Intelligence Risk Summary`, `Runtime replay duration scope`,
-`Orchestrator operation feed context`, `Orchestrator task event rollup`,
-`Lab EdgeEnv preservation context`, `AIGuard task event rollup evidence`,
+`Orchestrator operation feed context`, `EdgeEnv fixture matrix coverage`,
+`Reviewer operation quick scan`, `Orchestrator task event rollup`,
+`Lab EdgeEnv preservation context`,
+`AIGuard operation risk rollup evidence`,
+`AIGuard task event rollup evidence`,
+`AIGuard operation timeline evidence`,
 `AIGuard runtime operation anomalies`, `AIGuard remote dispatch event summary`,
 `AIGuard remote event summary consistency`,
 `Remote fallback starter evidence`,

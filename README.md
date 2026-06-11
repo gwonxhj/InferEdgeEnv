@@ -349,6 +349,17 @@ markers `evidence_role=derived_navigation_context`, `decision_owner=lab`,
 pressure, max-pressure task, worker-health, and device-local event count markers
 remain supplemental Orchestrator context; they do not become regression
 judgements or comparability gates.
+If the feed carries Orchestrator `operation_risk_rollup` or
+`operation_timeline_summary` inside `candidate_context.operation`, EdgeEnv also
+preserves and validates those compact supplemental markers for AIGuard/Lab
+handoff. The rollup must keep
+`schema_version=inferedge-orchestrator-operation-risk-rollup-v1`,
+`operation_context_role=supplemental`, `decision_owner=lab`,
+`scheduler_owner=orchestrator`, and `not_a_deployment_decision=true`. The
+timeline must keep
+`schema_version=inferedge-orchestrator-operation-timeline-summary-v1`. These
+blocks remain operation review context only; EdgeEnv does not turn them into
+comparability gates or deployment decisions.
 Use `edgeenv runs telemetry inspect-history <path>` to validate and summarize
 that replay artifact before attaching it to a regression report. Add
 `--require-device-local-producer` when the handoff must prove that preserved
@@ -399,6 +410,10 @@ edgeenv report runtime-intelligence-handoff \
 The handoff manifest records source repository mapping, artifact roles, and
 producer contract markers for the Runtime result, EdgeEnv regression report,
 optional Orchestrator feed context, and Lab-owned deployment report boundary.
+When a Lab-compatible legacy Runtime result fixture does not carry a top-level
+`run_id`, EdgeEnv anchors the handoff identity to the EdgeEnv regression
+report's `baseline_run_id` / `candidate_run_id`; if a result does declare
+`run_id`, it must still match the regression report.
 When Runtime history seeds are present, the handoff step validates the preserved
 `runtime_telemetry_history_seed` schema, `registry_owner=edgeenv`,
 `decision_owner=lab`, replay point evidence, and any seed `run_config` field
@@ -424,7 +439,9 @@ AIGuard `guard_analysis` as an external artifact produced by InferEdgeAIGuard.
 That alignment block also lists the external AIGuard evidence types expected by
 Lab's Runtime Intelligence gate, including
 `runtime_history_seed_run_config_traceability`, `edgeenv_orchestrator_producer_lineage`,
+`edgeenv_orchestrator_operation_risk_rollup`,
 `edgeenv_orchestrator_task_event_rollup`,
+`edgeenv_orchestrator_operation_timeline_summary`,
 `runtime_queue_overload`, `runtime_thermal_instability`, and
 `remote_execution_recovered_by_fallback` when the downstream bundle uses that
 path. EdgeEnv can declare the handoff contract without producing the Guard
@@ -435,8 +452,12 @@ manifest gate.
 The same `lab_bundle_alignment.expected_report_markers` list declares the
 Lab-owned report markers that downstream Lab gates must preserve:
 `Runtime Intelligence Risk Summary`, `Runtime replay duration scope`,
-`Orchestrator operation feed context`, `Orchestrator task event rollup`,
-`Lab EdgeEnv preservation context`, `AIGuard task event rollup evidence`,
+`Orchestrator operation feed context`, `EdgeEnv fixture matrix coverage`,
+`Reviewer operation quick scan`, `Orchestrator task event rollup`,
+`Lab EdgeEnv preservation context`,
+`AIGuard operation risk rollup evidence`,
+`AIGuard task event rollup evidence`,
+`AIGuard operation timeline evidence`,
 `AIGuard runtime operation anomalies`, `AIGuard remote dispatch event summary`,
 `AIGuard remote event summary consistency`, `Remote fallback starter evidence`,
 `lab=Remote fallback starter evidence; evidence=remote_execution_recovered_by_fallback`,
