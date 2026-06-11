@@ -149,6 +149,13 @@ timeline is accepted only with
 inspect summary reports matching runs as `operation_risk_rollup_run_ids` and
 `operation_timeline_summary_run_ids`, but those markers do not become EdgeEnv
 regression judgements, comparability gates, or deployment decisions.
+If the same operation context carries Orchestrator `stale_drop_summary` or an
+operation timeline `stale_drop` block, EdgeEnv validates
+`schema_version=inferedge-orchestrator-stale-drop-summary-v1`,
+`operation_context_role=supplemental`, `scheduler_owner=orchestrator`,
+`decision_owner=lab`, and `not_a_deployment_decision=true`. The inspect summary
+then reports matching runs as `stale_drop_summary_run_ids`; this is optional
+stale/backlog-drop traceability for AIGuard/Lab, not a comparability field.
 For device-local handoff smokes, `inspect-history` can enforce that lineage with
 `--require-device-local-producer`. The stricter check fails when the preserved
 history artifact has no Orchestrator context, or when preserved

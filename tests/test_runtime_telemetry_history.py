@@ -286,6 +286,7 @@ def test_build_runtime_telemetry_history_attaches_orchestrator_feed_context(
     assert strict_summary["replay"][
         "producer_lineage_guard_alignment_run_ids"
     ] == ["candidate"]
+    assert strict_summary["replay"]["stale_drop_summary_run_ids"] == ["candidate"]
 
 
 def test_build_runtime_telemetry_history_preserves_missing_orchestrator_feed_context(
@@ -396,6 +397,7 @@ def test_runtime_telemetry_history_preserves_operation_risk_summary(
     assert summary["replay"]["operation_risk_summary_run_ids"] == ["candidate"]
     assert summary["replay"]["operation_risk_rollup_run_ids"] == ["candidate"]
     assert summary["replay"]["operation_timeline_summary_run_ids"] == ["candidate"]
+    assert summary["replay"]["stale_drop_summary_run_ids"] == ["candidate"]
     assert summary["replay"]["orchestrator_context_run_ids"] == ["candidate"]
 
 
@@ -439,6 +441,7 @@ def test_runtime_telemetry_history_preserves_operation_risk_rollup(
     )
     assert summary["replay"]["operation_risk_rollup_run_ids"] == ["candidate"]
     assert summary["replay"]["operation_timeline_summary_run_ids"] == ["candidate"]
+    assert summary["replay"]["stale_drop_summary_run_ids"] == ["candidate"]
 
 
 def test_runtime_telemetry_history_rejects_operation_risk_rollup_as_decision(
@@ -466,6 +469,35 @@ def test_runtime_telemetry_history_rejects_operation_risk_rollup_as_decision(
     with pytest.raises(
         RuntimeTelemetryHistoryError,
         match="operation_risk_rollup.not_a_deployment_decision must be true",
+    ):
+        build_runtime_telemetry_history(edgeenv_root, orchestrator_feeds=[feed_path])
+
+
+def test_runtime_telemetry_history_rejects_stale_drop_summary_as_decision(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    edgeenv_root = tmp_path / ".edgeenv"
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="candidate",
+        runtime_telemetry=_runtime_telemetry_payload(sequence_id=2),
+    )
+    feed = _orchestrator_feed_payload("candidate")
+    feed["candidate_context"]["operation"]["stale_drop_summary"][
+        "decision_owner"
+    ] = "aiguard"
+    feed_path = tmp_path / "orchestrator-feed.json"
+    feed_path.write_text(json.dumps(feed), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeTelemetryHistoryError,
+        match="stale_drop_summary.decision_owner must be lab",
     ):
         build_runtime_telemetry_history(edgeenv_root, orchestrator_feeds=[feed_path])
 
@@ -1019,6 +1051,7 @@ def test_cli_runs_telemetry_export_history_attaches_orchestrator_feed(
     assert "Orchestrator context runs: 1" in inspect_result.output
     assert "Device-local producer context runs: 1" in inspect_result.output
     assert "Producer-lineage guard alignment runs: 1" in inspect_result.output
+    assert "Orchestrator stale-drop summary runs: 1" in inspect_result.output
     payload = json.loads(output_path.read_text(encoding="utf-8"))
     assert payload["runs"][0]["orchestrator_operation_context"]["run_id"] == (
         "candidate"
@@ -1625,19 +1658,42 @@ def _operation_timeline_summary_payload() -> dict:
                 "decision_reason": "queue_backlog_threshold_exceeded",
             },
         },
+        "stale_drop": _stale_drop_summary_payload(),
         "affected_tasks": {
             "deadline_missed": ["vision_agent"],
             "fallback": ["voice_command_agent"],
             "scheduler_delay": ["vision_agent"],
             "degraded": ["vision_agent"],
             "constrained": [],
+            "stale_drop": ["vision_agent"],
         },
         "review_hints": [
             "review_queue_pressure",
             "review_scheduler_delay",
             "review_deadline_miss",
             "review_fallback_use",
+            "review_stale_drop",
         ],
+    }
+
+
+def _stale_drop_summary_payload() -> dict:
+    return {
+        "schema_version": "inferedge-orchestrator-stale-drop-summary-v1",
+        "operation_context_role": "supplemental",
+        "scheduler_owner": "orchestrator",
+        "decision_owner": "lab",
+        "not_a_deployment_decision": True,
+        "first_read": "review_stale_drop_context",
+        "stale_drop_count": 1,
+        "total_drop_count": 1,
+        "stale_drop_rate": 1.0,
+        "stale_drop_reasons": {
+            "stale_frame_expired": 1,
+        },
+        "stale_drop_reason_classes": ["stale_frame"],
+        "tasks_with_stale_drop": ["vision_agent"],
+        "task_counts": {"vision_agent": 1},
     }
 
 
@@ -1670,6 +1726,7 @@ def _orchestrator_feed_payload(run_id: str) -> dict:
                 "queue_depth": 7,
                 "deadline_missed_count": 2,
                 "fallback_count": 1,
+                "stale_drop_summary": _stale_drop_summary_payload(),
                 "operation_risk_rollup": _operation_risk_rollup_payload(),
                 "operation_timeline_summary": _operation_timeline_summary_payload(),
             },
