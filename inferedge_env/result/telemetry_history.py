@@ -59,6 +59,9 @@ ORCHESTRATOR_OPERATION_RISK_ROLLUP_SCHEMA_VERSION = (
 ORCHESTRATOR_OPERATION_TIMELINE_SUMMARY_SCHEMA_VERSION = (
     "inferedge-orchestrator-operation-timeline-summary-v1"
 )
+ORCHESTRATOR_STALE_DROP_SUMMARY_SCHEMA_VERSION = (
+    "inferedge-orchestrator-stale-drop-summary-v1"
+)
 
 
 class RuntimeTelemetryHistoryError(ValueError):
@@ -317,6 +320,7 @@ def inspect_runtime_telemetry_history(
     operation_timeline_summary_run_ids = _operation_timeline_summary_run_ids(
         payload
     )
+    stale_drop_summary_run_ids = _stale_drop_summary_run_ids(payload)
     timestamps = [
         entry.get("telemetry_timestamp")
         for entry in runs
@@ -368,6 +372,7 @@ def inspect_runtime_telemetry_history(
             "operation_timeline_summary_run_ids": (
                 operation_timeline_summary_run_ids
             ),
+            "stale_drop_summary_run_ids": stale_drop_summary_run_ids,
             "first_telemetry_timestamp": min(timestamps) if timestamps else None,
             "last_telemetry_timestamp": max(timestamps) if timestamps else None,
             "execution_sequence_ids": sequence_ids,
@@ -517,6 +522,27 @@ def _operation_timeline_summary_run_ids(payload: dict[str, Any]) -> list[str]:
     return run_ids
 
 
+def _stale_drop_summary_run_ids(payload: dict[str, Any]) -> list[str]:
+    run_ids: list[str] = []
+    for entry in payload.get("runs", []):
+        if not isinstance(entry, dict):
+            continue
+        context = entry.get("orchestrator_operation_context")
+        if _has_stale_drop_summary(context):
+            run_id = entry.get("run_id")
+            if isinstance(run_id, str):
+                run_ids.append(run_id)
+    for item in payload.get("missing_telemetry", []):
+        if not isinstance(item, dict):
+            continue
+        context = item.get("orchestrator_operation_context")
+        if _has_stale_drop_summary(context):
+            run_id = item.get("run_id")
+            if isinstance(run_id, str):
+                run_ids.append(run_id)
+    return run_ids
+
+
 def _has_operation_risk_rollup(value: Any) -> bool:
     if not isinstance(value, dict):
         return False
@@ -531,6 +557,19 @@ def _has_operation_timeline_summary(value: Any) -> bool:
         return False
     operation = _candidate_operation_context(value)
     return isinstance(operation.get("operation_timeline_summary"), dict)
+
+
+def _has_stale_drop_summary(value: Any) -> bool:
+    if not isinstance(value, dict):
+        return False
+    operation = _candidate_operation_context(value)
+    if isinstance(operation.get("stale_drop_summary"), dict):
+        return True
+    timeline = operation.get("operation_timeline_summary")
+    return (
+        isinstance(timeline, dict)
+        and isinstance(timeline.get("stale_drop"), dict)
+    )
 
 
 def _candidate_operation_context(value: dict[str, Any]) -> dict[str, Any]:
@@ -1154,6 +1193,10 @@ def _validate_orchestrator_candidate_operation_context(
     operation = candidate_context.get("operation")
     if not isinstance(operation, dict):
         return
+    _validate_orchestrator_stale_drop_summary(
+        operation.get("stale_drop_summary"),
+        source=source,
+    )
     _validate_orchestrator_operation_risk_rollup(
         operation.get("operation_risk_rollup"),
         source=source,
@@ -1223,6 +1266,66 @@ def _validate_orchestrator_operation_timeline_summary(
                     "Orchestrator telemetry feed operation_timeline_summary."
                     f"affected_tasks.{key} must be a string list: {source}"
                 )
+    _validate_orchestrator_stale_drop_summary(
+        summary.get("stale_drop"),
+        source=source,
+    )
+    return summary
+
+
+def _validate_orchestrator_stale_drop_summary(
+    value: Any,
+    *,
+    source: Path,
+) -> dict[str, Any] | None:
+    if value is None:
+        return None
+    if not isinstance(value, dict):
+        raise RuntimeTelemetryHistoryError(
+            "Orchestrator telemetry feed stale_drop_summary must be "
+            f"an object: {source}"
+        )
+    summary = deepcopy(value)
+    expected_pairs = {
+        "schema_version": ORCHESTRATOR_STALE_DROP_SUMMARY_SCHEMA_VERSION,
+        "operation_context_role": ORCHESTRATOR_EDGEENV_OPERATION_CONTEXT_ROLE,
+        "scheduler_owner": "orchestrator",
+        "decision_owner": "lab",
+    }
+    for key, expected in expected_pairs.items():
+        if summary.get(key) != expected:
+            raise RuntimeTelemetryHistoryError(
+                "Orchestrator telemetry feed stale_drop_summary."
+                f"{key} must be {expected}: {source}"
+            )
+    if summary.get("not_a_deployment_decision") is not True:
+        raise RuntimeTelemetryHistoryError(
+            "Orchestrator telemetry feed stale_drop_summary."
+            f"not_a_deployment_decision must be true: {source}"
+        )
+    for field in ("stale_drop_count", "total_drop_count"):
+        field_value = summary.get(field)
+        if type(field_value) is not int or field_value < 0:
+            raise RuntimeTelemetryHistoryError(
+                "Orchestrator telemetry feed stale_drop_summary."
+                f"{field} must be a non-negative integer: {source}"
+            )
+    for field in ("stale_drop_reasons", "task_counts"):
+        field_value = summary.get(field)
+        if field_value is not None and not isinstance(field_value, dict):
+            raise RuntimeTelemetryHistoryError(
+                "Orchestrator telemetry feed stale_drop_summary."
+                f"{field} must be an object when present: {source}"
+            )
+    tasks = summary.get("tasks_with_stale_drop")
+    if tasks is not None and (
+        not isinstance(tasks, list)
+        or not all(isinstance(item, str) for item in tasks)
+    ):
+        raise RuntimeTelemetryHistoryError(
+            "Orchestrator telemetry feed stale_drop_summary."
+            f"tasks_with_stale_drop must be a string list when present: {source}"
+        )
     return summary
 
 

@@ -104,6 +104,10 @@ def test_runtime_intelligence_lab_handoff_manifest_records_producer_contracts(
         "runtime_thermal_instability",
         "remote_execution_recovered_by_fallback",
     ]
+    assert payload["lab_bundle_alignment"]["optional_aiguard_evidence_types"] == [
+        "stale_frame_risk",
+        "edgeenv_orchestrator_stale_drop_summary",
+    ]
     assert payload["lab_bundle_alignment"]["expected_report_markers"] == list(
         LAB_BUNDLE_EXPECTED_REPORT_MARKERS
     )
@@ -191,6 +195,8 @@ def test_runtime_intelligence_lab_handoff_manifest_records_producer_contracts(
         "orchestrator_task_event_rollup_run_ids": ["candidate"],
         "orchestrator_operation_timeline_summary_present": True,
         "orchestrator_operation_timeline_summary_run_ids": ["candidate"],
+        "orchestrator_stale_drop_summary_present": True,
+        "orchestrator_stale_drop_summary_run_ids": ["candidate"],
         "duration_traceability_present": True,
         "duration_traceability_run_ids": ["candidate"],
         "duration_sources": ["entrypoint_requested_frames"],
@@ -335,6 +341,7 @@ def test_runtime_intelligence_lab_handoff_cli_writes_manifest(tmp_path):
     assert "Producer-lineage guard alignment: candidate" in result.output
     assert "Orchestrator operation risk rollup: candidate" in result.output
     assert "Orchestrator operation timeline summary: candidate" in result.output
+    assert "Orchestrator stale-drop summary: candidate" in result.output
     assert (
         "External AIGuard evidence types: runtime_telemetry_context_coverage, "
         "edgeenv_orchestrator_producer_lineage, "
@@ -788,6 +795,32 @@ def test_runtime_intelligence_lab_handoff_rejects_bad_history_stage_mapping(
         )
 
 
+def test_runtime_intelligence_lab_handoff_rejects_stale_drop_summary_as_decision(
+    tmp_path,
+):
+    baseline_path, candidate_path, regression_path, history_path = _write_handoff_files(
+        tmp_path
+    )
+    regression = json.loads(regression_path.read_text(encoding="utf-8"))
+    regression["runtime_telemetry_context"]["candidate"][
+        "orchestrator_operation_context"
+    ]["candidate_context"]["operation"]["stale_drop_summary"][
+        "decision_owner"
+    ] = "aiguard"
+    regression_path.write_text(json.dumps(regression), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeIntelligenceLabHandoffError,
+        match="stale_drop_summary.decision_owner must be lab",
+    ):
+        build_runtime_intelligence_lab_handoff_manifest(
+            baseline_result_path=baseline_path,
+            candidate_result_path=candidate_path,
+            edgeenv_regression_report_path=regression_path,
+            telemetry_history_path=history_path,
+        )
+
+
 def _write_handoff_files(tmp_path):
     baseline_path = tmp_path / "baseline-result.json"
     candidate_path = tmp_path / "candidate-result.json"
@@ -940,6 +973,7 @@ def _orchestrator_operation_context(run_id: str) -> dict:
             "telemetry_source": "inferedge_orchestrator_operation_summary",
             "operation": {
                 "queue_depth": 7,
+                "stale_drop_summary": _stale_drop_summary_payload(),
                 "runtime_task_event_summary": {
                     "vision_agent": {
                         "scheduler_delay_event_count": 1,
@@ -1100,19 +1134,42 @@ def _operation_timeline_summary_payload() -> dict:
                 "decision_reason": "queue_backlog_threshold_exceeded",
             },
         },
+        "stale_drop": _stale_drop_summary_payload(),
         "affected_tasks": {
             "deadline_missed": ["vision_agent"],
             "fallback": ["voice_command_agent"],
             "scheduler_delay": ["vision_agent"],
             "degraded": ["vision_agent"],
             "constrained": [],
+            "stale_drop": ["vision_agent"],
         },
         "review_hints": [
             "review_queue_pressure",
             "review_scheduler_delay",
             "review_deadline_miss",
             "review_fallback_use",
+            "review_stale_drop",
         ],
+    }
+
+
+def _stale_drop_summary_payload() -> dict:
+    return {
+        "schema_version": "inferedge-orchestrator-stale-drop-summary-v1",
+        "operation_context_role": "supplemental",
+        "scheduler_owner": "orchestrator",
+        "decision_owner": "lab",
+        "not_a_deployment_decision": True,
+        "first_read": "review_stale_drop_context",
+        "stale_drop_count": 1,
+        "total_drop_count": 1,
+        "stale_drop_rate": 1.0,
+        "stale_drop_reasons": {
+            "stale_frame_expired": 1,
+        },
+        "stale_drop_reason_classes": ["stale_frame"],
+        "tasks_with_stale_drop": ["vision_agent"],
+        "task_counts": {"vision_agent": 1},
     }
 
 

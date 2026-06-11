@@ -360,6 +360,14 @@ timeline must keep
 `schema_version=inferedge-orchestrator-operation-timeline-summary-v1`. These
 blocks remain operation review context only; EdgeEnv does not turn them into
 comparability gates or deployment decisions.
+If that preserved operation context includes Orchestrator
+`stale_drop_summary` or an operation timeline `stale_drop` block, EdgeEnv
+validates the compact stale-drop boundary markers
+`schema_version=inferedge-orchestrator-stale-drop-summary-v1`,
+`operation_context_role=supplemental`, `scheduler_owner=orchestrator`,
+`decision_owner=lab`, and `not_a_deployment_decision=true`. The inspect and
+handoff summaries expose matching run IDs as stale-drop traceability metadata;
+this remains optional operation evidence, not an EdgeEnv regression gate.
 Use `edgeenv runs telemetry inspect-history <path>` to validate and summarize
 that replay artifact before attaching it to a regression report. Add
 `--require-device-local-producer` when the handoff must prove that preserved
@@ -449,6 +457,11 @@ artifact itself. The same block
 records that the declaration is validated downstream by AIGuard's
 `check-edgeenv-handoff-alignment` command and Lab's Runtime Intelligence bundle
 manifest gate.
+The alignment block separately declares optional AIGuard evidence types
+`stale_frame_risk` and `edgeenv_orchestrator_stale_drop_summary` for newer
+sustained Orchestrator stale-drop context. They are optional so EdgeEnv can
+preserve stale-drop evidence when present without rejecting older queue/thermal
+feeds or changing Lab's required Runtime Intelligence bundle set.
 The same `lab_bundle_alignment.expected_report_markers` list declares the
 Lab-owned report markers that downstream Lab gates must preserve:
 `Runtime Intelligence Risk Summary`, `Runtime replay duration scope`,

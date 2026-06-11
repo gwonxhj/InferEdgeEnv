@@ -12,6 +12,7 @@ from inferedge_env.result.telemetry_history import (
     ORCHESTRATOR_EDGEENV_OPERATION_CONTEXT_ROLE,
     ORCHESTRATOR_EDGEENV_REQUIRED_CANDIDATE_FIELDS,
     ORCHESTRATOR_PRODUCER_LINEAGE_AIGUARD_EVIDENCE_TYPE,
+    ORCHESTRATOR_STALE_DROP_SUMMARY_SCHEMA_VERSION,
     ORCHESTRATOR_TELEMETRY_FEED_ARTIFACT_ROLE,
     ORCHESTRATOR_TELEMETRY_FEED_PRODUCER_CONTRACT,
     ORCHESTRATOR_TELEMETRY_FEED_SCHEMA_VERSION,
@@ -80,6 +81,10 @@ LAB_BUNDLE_EXTERNAL_AIGUARD_REQUIRED_EVIDENCE_TYPES = (
     "runtime_queue_overload",
     "runtime_thermal_instability",
     "remote_execution_recovered_by_fallback",
+)
+LAB_BUNDLE_OPTIONAL_AIGUARD_EVIDENCE_TYPES = (
+    "stale_frame_risk",
+    "edgeenv_orchestrator_stale_drop_summary",
 )
 LAB_BUNDLE_EXPECTED_REPORT_MARKERS = (
     "Runtime Intelligence Risk Summary",
@@ -371,6 +376,10 @@ def _validate_orchestrator_context(
         label="orchestrator_operation_context.candidate_context",
         source=regression_path,
     )
+    _validate_orchestrator_stale_drop_context(
+        operation_context,
+        regression_path=regression_path,
+    )
 
 
 def _validate_orchestrator_producer_markers(
@@ -641,6 +650,7 @@ def _edgeenv_report_summary(regression_report: dict[str, Any]) -> dict[str, Any]
     operation_timeline_summary_run_ids = _operation_timeline_summary_run_ids(
         context
     )
+    stale_drop_summary_run_ids = _stale_drop_summary_run_ids(context)
     fixture_matrix_summary = _fixture_matrix_summary(
         regression_report.get("fixture_matrix_context")
     )
@@ -691,6 +701,10 @@ def _edgeenv_report_summary(regression_report: dict[str, Any]) -> dict[str, Any]
         "orchestrator_operation_timeline_summary_run_ids": (
             operation_timeline_summary_run_ids
         ),
+        "orchestrator_stale_drop_summary_present": bool(
+            stale_drop_summary_run_ids
+        ),
+        "orchestrator_stale_drop_summary_run_ids": stale_drop_summary_run_ids,
         "duration_traceability_present": bool(
             duration_traceability["run_ids"]
         ),
@@ -958,6 +972,31 @@ def _operation_timeline_summary_run_ids(context: Any) -> list[str]:
     return run_ids
 
 
+def _stale_drop_summary_run_ids(context: Any) -> list[str]:
+    if not isinstance(context, dict):
+        return []
+    run_ids: list[str] = []
+
+    def append_if_present(run_context: Any) -> None:
+        if not isinstance(run_context, dict):
+            return
+        operation_context = run_context.get("orchestrator_operation_context")
+        if not _has_stale_drop_summary(operation_context):
+            return
+        run_id = run_context.get("run_id")
+        if isinstance(run_id, str) and run_id and run_id not in run_ids:
+            run_ids.append(run_id)
+
+    append_if_present(context.get("baseline"))
+    append_if_present(context.get("candidate"))
+    history = context.get("history")
+    if isinstance(history, dict):
+        for section in ("runs", "missing_telemetry"):
+            for entry in history.get(section, []):
+                append_if_present(entry)
+    return run_ids
+
+
 def _has_task_event_rollup(operation_context: Any) -> bool:
     if not isinstance(operation_context, dict):
         return False
@@ -985,6 +1024,19 @@ def _has_operation_timeline_summary(operation_context: Any) -> bool:
         return False
     operation = _candidate_operation_context(operation_context)
     return isinstance(operation.get("operation_timeline_summary"), dict)
+
+
+def _has_stale_drop_summary(operation_context: Any) -> bool:
+    if not isinstance(operation_context, dict):
+        return False
+    operation = _candidate_operation_context(operation_context)
+    if isinstance(operation.get("stale_drop_summary"), dict):
+        return True
+    timeline = operation.get("operation_timeline_summary")
+    return (
+        isinstance(timeline, dict)
+        and isinstance(timeline.get("stale_drop"), dict)
+    )
 
 
 def _candidate_operation_context(operation_context: dict[str, Any]) -> dict[str, Any]:
@@ -1123,6 +1175,77 @@ def _validate_device_local_producer_lineage(
             )
 
 
+def _validate_orchestrator_stale_drop_context(
+    operation_context: dict[str, Any],
+    *,
+    regression_path: Path,
+) -> None:
+    operation = _candidate_operation_context(operation_context)
+    _validate_orchestrator_stale_drop_summary(
+        operation.get("stale_drop_summary"),
+        regression_path=regression_path,
+    )
+    timeline = operation.get("operation_timeline_summary")
+    if isinstance(timeline, dict):
+        _validate_orchestrator_stale_drop_summary(
+            timeline.get("stale_drop"),
+            regression_path=regression_path,
+        )
+
+
+def _validate_orchestrator_stale_drop_summary(
+    value: Any,
+    *,
+    regression_path: Path,
+) -> None:
+    if value is None:
+        return
+    if not isinstance(value, dict):
+        raise RuntimeIntelligenceLabHandoffError(
+            f"stale_drop_summary must be an object: {regression_path}"
+        )
+    expected_pairs = {
+        "schema_version": ORCHESTRATOR_STALE_DROP_SUMMARY_SCHEMA_VERSION,
+        "operation_context_role": ORCHESTRATOR_EDGEENV_OPERATION_CONTEXT_ROLE,
+        "scheduler_owner": "orchestrator",
+        "decision_owner": "lab",
+    }
+    for key, expected in expected_pairs.items():
+        if value.get(key) != expected:
+            raise RuntimeIntelligenceLabHandoffError(
+                f"stale_drop_summary.{key} must be {expected}: "
+                f"{regression_path}"
+            )
+    if value.get("not_a_deployment_decision") is not True:
+        raise RuntimeIntelligenceLabHandoffError(
+            f"stale_drop_summary.not_a_deployment_decision must be true: "
+            f"{regression_path}"
+        )
+    for field in ("stale_drop_count", "total_drop_count"):
+        field_value = value.get(field)
+        if type(field_value) is not int or field_value < 0:
+            raise RuntimeIntelligenceLabHandoffError(
+                f"stale_drop_summary.{field} must be a non-negative integer: "
+                f"{regression_path}"
+            )
+    for field in ("stale_drop_reasons", "task_counts"):
+        field_value = value.get(field)
+        if field_value is not None and not isinstance(field_value, dict):
+            raise RuntimeIntelligenceLabHandoffError(
+                f"stale_drop_summary.{field} must be an object when present: "
+                f"{regression_path}"
+            )
+    tasks = value.get("tasks_with_stale_drop")
+    if tasks is not None and (
+        not isinstance(tasks, list)
+        or not all(isinstance(item, str) for item in tasks)
+    ):
+        raise RuntimeIntelligenceLabHandoffError(
+            "stale_drop_summary.tasks_with_stale_drop must be a string list "
+            f"when present: {regression_path}"
+        )
+
+
 def _lab_bundle_alignment(files: dict[str, str]) -> dict[str, Any]:
     produced_file_keys = tuple(sorted(files))
     required_file_keys = (
@@ -1141,6 +1264,9 @@ def _lab_bundle_alignment(files: dict[str, str]) -> dict[str, Any]:
         "producer_contracts": dict(LAB_BUNDLE_PRODUCER_CONTRACTS),
         "external_aiguard_required_evidence_types": list(
             LAB_BUNDLE_EXTERNAL_AIGUARD_REQUIRED_EVIDENCE_TYPES
+        ),
+        "optional_aiguard_evidence_types": list(
+            LAB_BUNDLE_OPTIONAL_AIGUARD_EVIDENCE_TYPES
         ),
         "expected_report_markers": list(LAB_BUNDLE_EXPECTED_REPORT_MARKERS),
         "external_aiguard_alignment_gate": {

@@ -503,6 +503,10 @@ def inspect_runtime_telemetry_history_command(
         "Producer-lineage guard alignment runs: "
         f"{len(replay.get('producer_lineage_guard_alignment_run_ids', []))}"
     )
+    console.print(
+        "Orchestrator stale-drop summary runs: "
+        f"{len(replay.get('stale_drop_summary_run_ids', []))}"
+    )
     console.print(f"Evidence gaps: {replay['evidence_gap_count']}")
     console.print(f"Missing run IDs: {', '.join(replay['missing_run_ids']) or '-'}")
     console.print(
@@ -901,6 +905,12 @@ def runtime_intelligence_handoff_manifest(
         console.print(
             "Orchestrator operation timeline summary: "
             f"{', '.join(operation_timeline_run_ids)}"
+        )
+    stale_drop_summary_run_ids = summary.get("orchestrator_stale_drop_summary_run_ids")
+    if stale_drop_summary_run_ids:
+        console.print(
+            "Orchestrator stale-drop summary: "
+            f"{', '.join(stale_drop_summary_run_ids)}"
         )
     external_evidence_types = payload.get("lab_bundle_alignment", {}).get(
         "external_aiguard_required_evidence_types",
