@@ -303,6 +303,19 @@ edgeenv report regression <baseline_run_id> <candidate_run_id> \
   --output-md /tmp/edgeenv-regression.md
 ```
 
+Reviewer smoke for the same path plus Runtime Intelligence Lab handoff:
+
+```bash
+bash scripts/smoke_runtime_intelligence_replay_regression_handoff.sh \
+  --output-dir reports/runtime_intelligence_replay_regression_handoff
+```
+
+This smoke uses public CLI commands to record local runs with runtime telemetry,
+export and inspect replay history, generate comparability-first regression
+evidence, and write the EdgeEnv-to-Lab handoff manifest. It validates
+`history_seed_run_config` traceability without promoting telemetry into a
+production monitoring stream.
+
 The regression report records telemetry coverage and evidence gaps for the
 baseline/candidate pair. It still calculates regression deltas only after the
 normal same-condition comparability gate passes.

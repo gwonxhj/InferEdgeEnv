@@ -469,6 +469,20 @@ metadata:
 and `python -m inferedge_aiguard.cli build-runtime-intelligence-optional-stale-drop`.
 This lets downstream reviewers connect the EdgeEnv handoff to the AIGuard
 source fixture without making EdgeEnv produce `guard_analysis`.
+Verify the EdgeEnv-owned replay/regression/handoff path locally with:
+
+```bash
+bash scripts/smoke_runtime_intelligence_replay_regression_handoff.sh \
+  --output-dir reports/runtime_intelligence_replay_regression_handoff
+```
+
+This smoke records two local runtime-telemetry runs, exports and inspects an
+`edgeenv.runtime-telemetry-history.v1` replay artifact, generates a
+comparability-first regression report with `--telemetry-history`, and writes
+the Runtime Intelligence Lab handoff manifest. It checks that
+`history_seed_run_config` markers reach the handoff summary, that regression
+deltas remain gated by `same-condition` comparability, and that EdgeEnv still
+does not produce AIGuard `guard_analysis`.
 Verify that producer-side source traceability path locally with:
 
 ```bash

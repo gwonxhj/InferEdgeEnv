@@ -187,6 +187,21 @@ mirror한다:
 `python -m inferedge_aiguard.cli build-runtime-intelligence-optional-stale-drop`.
 이는 EdgeEnv handoff와 AIGuard source fixture를 추적 가능하게 할 뿐,
 EdgeEnv가 `guard_analysis`를 생성한다는 의미가 아니다.
+아래 smoke는 EdgeEnv가 소유한 replay/regression/handoff 경로를 실제 CLI로
+검증한다.
+
+```bash
+bash scripts/smoke_runtime_intelligence_replay_regression_handoff.sh \
+  --output-dir reports/runtime_intelligence_replay_regression_handoff
+```
+
+이 smoke는 runtime telemetry가 있는 두 local run을 기록하고,
+`edgeenv.runtime-telemetry-history.v1` artifact를 export/inspect한 뒤,
+`report regression --telemetry-history`와
+`report runtime-intelligence-handoff`까지 실행한다. 통과 기준은
+`history_seed_run_config` marker가 handoff summary까지 보존되고,
+regression delta가 여전히 `same-condition` comparability gate 뒤에서만
+계산되며, EdgeEnv가 AIGuard `guard_analysis`를 생성하지 않는 것이다.
 아래 smoke는 이 producer-side source traceability 경로를 로컬에서 검증한다.
 sibling InferEdgeLab checkout이 있으면 생성된 EdgeEnv handoff manifest와
 AIGuard optional-present alignment fixture를 Lab source traceability gate로도
