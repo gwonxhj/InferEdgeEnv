@@ -61,7 +61,7 @@ Release candidates should additionally run the local release quality smoke:
 scripts/smoke_release_quality_gate.sh
 ```
 
-That script exercises generated run artifacts, resource lookup portability, export/import, compare, bundle-summary, and failed-run portability with a temporary `--edgeenv-root`. It is intentionally not part of mandatory PR CI yet because full artifact smoke is release-gate confidence, while CI readiness stays small and fast.
+That script exercises generated run artifacts, resource lookup portability, export/import, compare, bundle-summary, Runtime Intelligence replay/regression/handoff, and failed-run portability with a temporary `--edgeenv-root`. It is intentionally not part of mandatory PR CI yet because full artifact smoke is release-gate confidence, while CI readiness stays small and fast.
 
 ## 4. HOW NOT — 피해야 할 함정
 

@@ -13,6 +13,7 @@ Evidence Contract Conformance Suite, Real Command Adapter Templates, Schema Vers
 관련 파일:
 
 - `scripts/smoke_release_quality_gate.sh` — local-only release quality smoke
+- `scripts/smoke_runtime_intelligence_replay_regression_handoff.sh` — local Runtime Intelligence replay/regression/handoff smoke used by the release gate
 - `scripts/smoke_entrypoints.sh` — install/entrypoint/pytest smoke
 - `scripts/smoke_jetson_sampled_bundle_handoff.sh` — optional Jetson sampled bundle handoff smoke
 - `docs/release-maintenance-checklist.md` — tag/GitHub Release checklist source
@@ -57,6 +58,7 @@ The smoke validates:
 - resource metrics query before and after successful-run export/import
 - same-condition `report compare` with metric delta
 - read-only `report bundle-summary`
+- Runtime Intelligence replay/regression/handoff smoke through telemetry history export/inspect, comparability-first regression, and Lab handoff manifest generation
 - malformed resource metrics failed-run artifact
 - failed-run export/import without creating `runs.db`
 - no ranking tables, leaderboard sections, or composite score fields in bundle summary
@@ -114,7 +116,7 @@ This remains optional because the main release gate must not require Jetson hard
 
 The six-month quality roadmap ends with repeatability. A release gate should be short enough to run, strict enough to catch evidence contract drift, and scoped enough not to imply unsupported product features.
 
-`scripts/smoke_release_quality_gate.sh` freezes the local-first evidence loop as a release baseline: record evidence, reject corrupt evidence, compare honestly, move bundles safely, and summarize handoff output without ranking.
+`scripts/smoke_release_quality_gate.sh` freezes the local-first evidence loop as a release baseline: record evidence, reject corrupt evidence, compare honestly, move bundles safely, validate Runtime Intelligence replay/regression handoff metadata, and summarize handoff output without ranking.
 
 ## 7. ⚠️ LEARNED CAUTIONS — 학습된 주의사항
 
