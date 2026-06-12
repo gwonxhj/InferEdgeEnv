@@ -469,6 +469,16 @@ metadata:
 and `python -m inferedge_aiguard.cli build-runtime-intelligence-optional-stale-drop`.
 This lets downstream reviewers connect the EdgeEnv handoff to the AIGuard
 source fixture without making EdgeEnv produce `guard_analysis`.
+Verify that producer-side source traceability path locally with:
+
+```bash
+bash scripts/smoke_runtime_intelligence_source_traceability.sh \
+  --output-dir reports/runtime_intelligence_source_traceability
+```
+
+When a sibling InferEdgeLab checkout is available, this smoke also runs Lab's
+source traceability gate against the generated EdgeEnv handoff manifest and the
+AIGuard optional-present alignment fixture.
 The same `lab_bundle_alignment.expected_report_markers` list declares the
 Lab-owned report markers that downstream Lab gates must preserve:
 `Runtime Intelligence Risk Summary`, `Runtime replay duration scope`,

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -9,6 +10,8 @@ from typer.testing import CliRunner
 from inferedge_env.cli import app
 from inferedge_env.result.lab_handoff import (
     LAB_BUNDLE_EXPECTED_REPORT_MARKERS,
+    LAB_BUNDLE_OPTIONAL_AIGUARD_SOURCE_TRACEABILITY_CONTEXT_ROLE,
+    LAB_BUNDLE_OPTIONAL_AIGUARD_STALE_DROP_REPRODUCTION_COMMAND,
     RUNTIME_INTELLIGENCE_LAB_HANDOFF_SCHEMA_VERSION,
     RuntimeIntelligenceLabHandoffError,
     build_runtime_intelligence_lab_handoff_manifest,
@@ -22,6 +25,9 @@ from inferedge_env.result.telemetry_history import (
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+SOURCE_TRACEABILITY_SMOKE = (
+    REPO_ROOT / "scripts" / "smoke_runtime_intelligence_source_traceability.sh"
+)
 
 
 def test_runtime_intelligence_lab_handoff_manifest_records_producer_contracts(
@@ -264,6 +270,7 @@ def test_runtime_intelligence_docs_describe_lab_expected_report_markers():
     for doc in docs:
         assert "lab_bundle_alignment.expected_report_markers" in doc
         assert "optional_aiguard_source_traceability" in doc
+        assert "smoke_runtime_intelligence_source_traceability.sh" in doc
         assert "build-runtime-intelligence-optional-stale-drop" in doc
         assert (
             "aiguard_runtime_operation_guard_analysis_optional_stale_drop.json"
@@ -271,6 +278,96 @@ def test_runtime_intelligence_docs_describe_lab_expected_report_markers():
         )
         for marker in LAB_BUNDLE_EXPECTED_REPORT_MARKERS:
             assert marker in doc
+
+
+def test_runtime_intelligence_source_traceability_smoke_script_help():
+    result = subprocess.run(
+        ["bash", str(SOURCE_TRACEABILITY_SMOKE), "--help"],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0
+    assert "Runtime Intelligence source traceability smoke" in result.stdout
+    assert "read-only optional AIGuard source artifact" in result.stdout
+
+
+def test_runtime_intelligence_source_traceability_smoke_script_runs(tmp_path):
+    output_dir = tmp_path / "runtime_intelligence_source_traceability"
+
+    result = subprocess.run(
+        [
+            "bash",
+            str(SOURCE_TRACEABILITY_SMOKE),
+            "--output-dir",
+            str(output_dir),
+        ],
+        cwd=REPO_ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    assert (
+        "EdgeEnv Runtime Intelligence source traceability smoke passed."
+        in result.stdout
+    )
+    handoff = json.loads(
+        (
+            output_dir
+            / "edgeenv_runtime_intelligence_lab_handoff_source_traceability.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert handoff["schema_version"] == RUNTIME_INTELLIGENCE_LAB_HANDOFF_SCHEMA_VERSION
+    assert "guard_analysis" not in handoff
+    alignment = handoff["lab_bundle_alignment"]
+    assert "aiguard_guard_analysis" in alignment["external_file_keys"]
+    assert "aiguard_guard_analysis" not in alignment["edgeenv_produced_file_keys"]
+    traceability = alignment["optional_aiguard_source_traceability"]
+    assert traceability["context_role"] == (
+        LAB_BUNDLE_OPTIONAL_AIGUARD_SOURCE_TRACEABILITY_CONTEXT_ROLE
+    )
+    assert traceability["edgeenv_does_not_generate_guard_analysis"] is True
+    assert traceability["lab_is_final_decision_owner"] is True
+    source_artifact = traceability["optional_present_source_artifact"]
+    assert source_artifact["repository"] == "InferEdgeAIGuard"
+    assert source_artifact["path"] == (
+        "examples/runtime_intelligence/"
+        "aiguard_runtime_operation_guard_analysis_optional_stale_drop.json"
+    )
+    assert source_artifact["schema_version"] == "inferedge-aiguard-diagnosis-v1"
+    assert source_artifact["context_role"] == "read_only_cross_repo_traceability"
+    assert source_artifact["reproduction_command"] == list(
+        LAB_BUNDLE_OPTIONAL_AIGUARD_STALE_DROP_REPRODUCTION_COMMAND
+    )
+
+    summary = (
+        output_dir
+        / "edgeenv_runtime_intelligence_source_traceability_smoke_summary.md"
+    ).read_text(encoding="utf-8")
+    assert "- Status: passed" in summary
+    assert "optional_aiguard_source_traceability: preserved" in summary
+    assert (
+        "optional_present_source_artifact: "
+        "InferEdgeAIGuard/examples/runtime_intelligence/"
+        "aiguard_runtime_operation_guard_analysis_optional_stale_drop.json"
+    ) in summary
+    assert (
+        "optional_present_reproduction_command: "
+        "python -m inferedge_aiguard.cli build-runtime-intelligence-optional-stale-drop"
+    ) in summary
+    assert (
+        "lab_source_traceability_gate: passed" in summary
+        or "lab_source_traceability_gate: skipped" in summary
+    )
+
+    lab_summary = output_dir / "lab_source_traceability_summary.md"
+    if lab_summary.exists():
+        lab_summary_text = lab_summary.read_text(encoding="utf-8")
+        assert "- Status: passed" in lab_summary_text
+        assert "## Validated Source Traceability" in lab_summary_text
 
 
 def test_readmes_expose_edgeenv_role_boundaries():
