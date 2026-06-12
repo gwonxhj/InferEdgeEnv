@@ -62,6 +62,10 @@ It also mirrors AIGuard optional-present source traceability through
 `InferEdgeAIGuard/examples/runtime_intelligence/aiguard_runtime_operation_guard_analysis_optional_stale_drop.json`
 and `python -m inferedge_aiguard.cli build-runtime-intelligence-optional-stale-drop`,
 without making EdgeEnv produce the external `guard_analysis`.
+`scripts/smoke_runtime_intelligence_source_traceability.sh` regenerates a
+producer-side handoff manifest and, when a sibling InferEdgeLab checkout is
+available, runs Lab's source traceability gate against the AIGuard
+optional-present alignment fixture.
 This is traceability metadata for Lab's report gate, not an EdgeEnv deployment
 decision.
 
