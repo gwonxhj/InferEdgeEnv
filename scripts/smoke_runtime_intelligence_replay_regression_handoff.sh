@@ -9,7 +9,7 @@ usage() {
 InferEdgeEnv Runtime Intelligence replay/regression/handoff smoke
 
 Usage:
-  bash scripts/smoke_runtime_intelligence_replay_regression_handoff.sh [--output-dir <path>]
+  bash scripts/smoke_runtime_intelligence_replay_regression_handoff.sh [--python <path>] [--output-dir <path>]
   bash scripts/smoke_runtime_intelligence_replay_regression_handoff.sh --help
 
 This smoke exercises the local-first EdgeEnv Runtime Intelligence path through
@@ -26,11 +26,21 @@ same-condition comparability before Lab handoff metadata is produced.
 EOF
 }
 
+python_bin="python"
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --help|-h)
       usage
       exit 0
+      ;;
+    --python)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --python" >&2
+        exit 2
+      fi
+      python_bin="$2"
+      shift
       ;;
     --output-dir)
       if [[ $# -lt 2 ]]; then
@@ -52,7 +62,7 @@ done
 cd "$EDGEENV_DIR"
 mkdir -p "$OUTPUT_DIR"
 
-PYTHON_CMD=(python)
+PYTHON_CMD=("$python_bin")
 WORK_DIR="$OUTPUT_DIR/work"
 EDGEENV_ROOT="$OUTPUT_DIR/.edgeenv"
 EMITTER="$WORK_DIR/emit_runtime_intelligence_metrics.py"

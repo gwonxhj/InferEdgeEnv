@@ -76,7 +76,7 @@ Success criteria:
 - pytest passes.
 - whitespace diff check passes.
 - module entrypoint and console script both work.
-- release quality smoke passes fake/local/resource/export-import/compare/bundle-summary/failed-run portability flows.
+- release quality smoke passes fake/local/resource/export-import/compare/bundle-summary/Runtime Intelligence replay-regression-handoff/failed-run portability flows.
 - `git status --short --branch` is clean and aligned with `main...origin/main`.
 
 ### 3. README Quickstart Smoke

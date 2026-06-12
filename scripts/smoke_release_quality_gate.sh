@@ -16,7 +16,8 @@ Options:
 
 Runs the local release quality gate without requiring Jetson hardware:
 doctor, whitespace check, pytest, fake/local/resource/compare/export/import,
-bundle-summary, and failed-run portability smoke.
+bundle-summary, Runtime Intelligence replay/regression/handoff, and failed-run
+portability smoke.
 USAGE
 }
 
@@ -174,6 +175,13 @@ if grep -qiE '^#+[[:space:]]*(Ranking|Leaderboard)|composite_score|Composite Sco
   echo "bundle summary must not introduce ranking tables or composite score fields" >&2
   exit 1
 fi
+
+echo "[release-quality] runtime intelligence replay/regression/handoff"
+runtime_intelligence_dir="${work_root}/runtime-intelligence-replay-regression-handoff"
+bash scripts/smoke_runtime_intelligence_replay_regression_handoff.sh \
+  --python "$python_bin" \
+  --output-dir "$runtime_intelligence_dir"
+require_file "${runtime_intelligence_dir}/runtime_intelligence_replay_regression_handoff_summary.md"
 
 echo "[release-quality] failed-run portability"
 set +e

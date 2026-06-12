@@ -33,6 +33,9 @@ REPLAY_REGRESSION_HANDOFF_SMOKE = (
     / "scripts"
     / "smoke_runtime_intelligence_replay_regression_handoff.sh"
 )
+RELEASE_QUALITY_GATE_SMOKE = (
+    REPO_ROOT / "scripts" / "smoke_release_quality_gate.sh"
+)
 
 
 def test_runtime_intelligence_lab_handoff_manifest_records_producer_contracts(
@@ -387,7 +390,16 @@ def test_runtime_intelligence_replay_regression_handoff_smoke_script_help():
 
     assert result.returncode == 0
     assert "Runtime Intelligence replay/regression/handoff smoke" in result.stdout
+    assert "--python <path>" in result.stdout
     assert "same-condition comparability" in result.stdout
+
+
+def test_release_quality_gate_runs_runtime_intelligence_replay_smoke():
+    script = RELEASE_QUALITY_GATE_SMOKE.read_text(encoding="utf-8")
+    assert "runtime intelligence replay/regression/handoff" in script
+    assert "smoke_runtime_intelligence_replay_regression_handoff.sh" in script
+    assert "--python \"$python_bin\"" in script
+    assert "runtime_intelligence_replay_regression_handoff_summary.md" in script
 
 
 def test_runtime_intelligence_replay_regression_handoff_smoke_script_runs(
