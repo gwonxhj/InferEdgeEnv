@@ -86,6 +86,29 @@ LAB_BUNDLE_OPTIONAL_AIGUARD_EVIDENCE_TYPES = (
     "stale_frame_risk",
     "edgeenv_orchestrator_stale_drop_summary",
 )
+LAB_BUNDLE_OPTIONAL_AIGUARD_SOURCE_TRACEABILITY_CONTEXT_ROLE = (
+    "read_only_optional_source_traceability"
+)
+LAB_BUNDLE_OPTIONAL_AIGUARD_STALE_DROP_REPRODUCTION_COMMAND = (
+    "python",
+    "-m",
+    "inferedge_aiguard.cli",
+    "build-runtime-intelligence-optional-stale-drop",
+    "--edgeenv-regression",
+    (
+        "examples/runtime_intelligence/"
+        "edgeenv_runtime_regression_with_optional_stale_drop_context.json"
+    ),
+    "--remote-dispatch",
+    "examples/runtime_intelligence/remote_dispatch_fallback_recovered_result.json",
+    "--orchestration-summary",
+    "examples/runtime_intelligence/orchestrator_multi_workload_sustained_summary.json",
+    "--save-json",
+    (
+        "examples/runtime_intelligence/"
+        "aiguard_runtime_operation_guard_analysis_optional_stale_drop.json"
+    ),
+)
 LAB_BUNDLE_EXPECTED_REPORT_MARKERS = (
     "Runtime Intelligence Risk Summary",
     "Runtime replay duration scope",
@@ -1268,6 +1291,9 @@ def _lab_bundle_alignment(files: dict[str, str]) -> dict[str, Any]:
         "optional_aiguard_evidence_types": list(
             LAB_BUNDLE_OPTIONAL_AIGUARD_EVIDENCE_TYPES
         ),
+        "optional_aiguard_source_traceability": (
+            _optional_aiguard_source_traceability()
+        ),
         "expected_report_markers": list(LAB_BUNDLE_EXPECTED_REPORT_MARKERS),
         "external_aiguard_alignment_gate": {
             "declared_by": "edgeenv",
@@ -1287,5 +1313,26 @@ def _lab_bundle_alignment(files: dict[str, str]) -> dict[str, Any]:
             "edgeenv_does_not_generate_guard_analysis": True,
             "lab_is_final_decision_owner": True,
             "production_observability_platform": False,
+        },
+    }
+
+
+def _optional_aiguard_source_traceability() -> dict[str, Any]:
+    return {
+        "context_role": LAB_BUNDLE_OPTIONAL_AIGUARD_SOURCE_TRACEABILITY_CONTEXT_ROLE,
+        "edgeenv_does_not_generate_guard_analysis": True,
+        "lab_is_final_decision_owner": True,
+        "optional_present_source_artifact": {
+            "repository": "InferEdgeAIGuard",
+            "path": (
+                "examples/runtime_intelligence/"
+                "aiguard_runtime_operation_guard_analysis_optional_stale_drop.json"
+            ),
+            "schema_version": AIGUARD_DIAGNOSIS_SCHEMA_VERSION,
+            "role": "aiguard-optional-stale-drop-full-evidence-source",
+            "context_role": "read_only_cross_repo_traceability",
+            "reproduction_command": list(
+                LAB_BUNDLE_OPTIONAL_AIGUARD_STALE_DROP_REPRODUCTION_COMMAND
+            ),
         },
     }

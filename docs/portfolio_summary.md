@@ -57,6 +57,11 @@ name the Lab-owned report rows expected downstream: `Runtime Intelligence Risk S
 When available, the same handoff summary preserves `duration_source` and
 `duration_scope_label` values such as `source=entrypoint_requested_frames` as
 producer-side traceability for the Lab-owned replay duration row.
+It also mirrors AIGuard optional-present source traceability through
+`lab_bundle_alignment.optional_aiguard_source_traceability`, including
+`InferEdgeAIGuard/examples/runtime_intelligence/aiguard_runtime_operation_guard_analysis_optional_stale_drop.json`
+and `python -m inferedge_aiguard.cli build-runtime-intelligence-optional-stale-drop`,
+without making EdgeEnv produce the external `guard_analysis`.
 This is traceability metadata for Lab's report gate, not an EdgeEnv deployment
 decision.
 

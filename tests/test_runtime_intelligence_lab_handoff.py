@@ -108,6 +108,47 @@ def test_runtime_intelligence_lab_handoff_manifest_records_producer_contracts(
         "stale_frame_risk",
         "edgeenv_orchestrator_stale_drop_summary",
     ]
+    assert payload["lab_bundle_alignment"]["optional_aiguard_source_traceability"] == {
+        "context_role": "read_only_optional_source_traceability",
+        "edgeenv_does_not_generate_guard_analysis": True,
+        "lab_is_final_decision_owner": True,
+        "optional_present_source_artifact": {
+            "repository": "InferEdgeAIGuard",
+            "path": (
+                "examples/runtime_intelligence/"
+                "aiguard_runtime_operation_guard_analysis_optional_stale_drop.json"
+            ),
+            "schema_version": "inferedge-aiguard-diagnosis-v1",
+            "role": "aiguard-optional-stale-drop-full-evidence-source",
+            "context_role": "read_only_cross_repo_traceability",
+            "reproduction_command": [
+                "python",
+                "-m",
+                "inferedge_aiguard.cli",
+                "build-runtime-intelligence-optional-stale-drop",
+                "--edgeenv-regression",
+                (
+                    "examples/runtime_intelligence/"
+                    "edgeenv_runtime_regression_with_optional_stale_drop_context.json"
+                ),
+                "--remote-dispatch",
+                (
+                    "examples/runtime_intelligence/"
+                    "remote_dispatch_fallback_recovered_result.json"
+                ),
+                "--orchestration-summary",
+                (
+                    "examples/runtime_intelligence/"
+                    "orchestrator_multi_workload_sustained_summary.json"
+                ),
+                "--save-json",
+                (
+                    "examples/runtime_intelligence/"
+                    "aiguard_runtime_operation_guard_analysis_optional_stale_drop.json"
+                ),
+            ],
+        },
+    }
     assert payload["lab_bundle_alignment"]["expected_report_markers"] == list(
         LAB_BUNDLE_EXPECTED_REPORT_MARKERS
     )
@@ -222,6 +263,12 @@ def test_runtime_intelligence_docs_describe_lab_expected_report_markers():
 
     for doc in docs:
         assert "lab_bundle_alignment.expected_report_markers" in doc
+        assert "optional_aiguard_source_traceability" in doc
+        assert "build-runtime-intelligence-optional-stale-drop" in doc
+        assert (
+            "aiguard_runtime_operation_guard_analysis_optional_stale_drop.json"
+            in doc
+        )
         for marker in LAB_BUNDLE_EXPECTED_REPORT_MARKERS:
             assert marker in doc
 
