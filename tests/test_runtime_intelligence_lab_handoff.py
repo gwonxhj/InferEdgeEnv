@@ -28,6 +28,11 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 SOURCE_TRACEABILITY_SMOKE = (
     REPO_ROOT / "scripts" / "smoke_runtime_intelligence_source_traceability.sh"
 )
+REPLAY_REGRESSION_HANDOFF_SMOKE = (
+    REPO_ROOT
+    / "scripts"
+    / "smoke_runtime_intelligence_replay_regression_handoff.sh"
+)
 
 
 def test_runtime_intelligence_lab_handoff_manifest_records_producer_contracts(
@@ -271,6 +276,7 @@ def test_runtime_intelligence_docs_describe_lab_expected_report_markers():
         assert "lab_bundle_alignment.expected_report_markers" in doc
         assert "optional_aiguard_source_traceability" in doc
         assert "smoke_runtime_intelligence_source_traceability.sh" in doc
+        assert "smoke_runtime_intelligence_replay_regression_handoff.sh" in doc
         assert "build-runtime-intelligence-optional-stale-drop" in doc
         assert (
             "aiguard_runtime_operation_guard_analysis_optional_stale_drop.json"
@@ -368,6 +374,112 @@ def test_runtime_intelligence_source_traceability_smoke_script_runs(tmp_path):
         lab_summary_text = lab_summary.read_text(encoding="utf-8")
         assert "- Status: passed" in lab_summary_text
         assert "## Validated Source Traceability" in lab_summary_text
+
+
+def test_runtime_intelligence_replay_regression_handoff_smoke_script_help():
+    result = subprocess.run(
+        ["bash", str(REPLAY_REGRESSION_HANDOFF_SMOKE), "--help"],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0
+    assert "Runtime Intelligence replay/regression/handoff smoke" in result.stdout
+    assert "same-condition comparability" in result.stdout
+
+
+def test_runtime_intelligence_replay_regression_handoff_smoke_script_runs(
+    tmp_path,
+):
+    output_dir = tmp_path / "runtime_intelligence_replay_regression_handoff"
+
+    result = subprocess.run(
+        [
+            "bash",
+            str(REPLAY_REGRESSION_HANDOFF_SMOKE),
+            "--output-dir",
+            str(output_dir),
+        ],
+        cwd=REPO_ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    assert (
+        "EdgeEnv Runtime Intelligence replay/regression/handoff smoke passed."
+        in result.stdout
+    )
+    summary = (
+        output_dir
+        / "runtime_intelligence_replay_regression_handoff_summary.md"
+    ).read_text(encoding="utf-8")
+    assert "- Status: passed" in summary
+    assert "- telemetry_runs: 2" in summary
+    assert "- history_seed_runs: 2" in summary
+    assert "- history_seed_run_config_runs: 2" in summary
+    assert "- regression_mode: same-condition" in summary
+    assert "- triggered_threshold: p99_latency_high" in summary
+    assert "- edgeenv_does_not_generate_guard_analysis: true" in summary
+    assert "- lab_is_final_decision_owner: true" in summary
+
+    history = json.loads(
+        (output_dir / "runtime_telemetry_history.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert history["schema_version"] == "edgeenv.runtime-telemetry-history.v1"
+    assert history["summary"]["telemetry_runs"] == 2
+    assert history["summary"]["history_seed_runs"] == 2
+    assert history["summary"]["history_seed_run_config_runs"] == 2
+    assert history["summary"]["missing_telemetry_runs"] == 0
+
+    regression = json.loads(
+        (output_dir / "edgeenv_runtime_regression.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert regression["mode"] == "same-condition"
+    assert regression["regression_detected"] is True
+    assert "guard_analysis" not in regression
+    triggered = {
+        item["name"]
+        for item in regression["evidence"]["triggered_thresholds"]
+    }
+    assert "p99_latency_high" in triggered
+    context = regression["runtime_telemetry_context"]
+    assert context["role"] == "supplemental_runtime_telemetry_context"
+    assert context["history"]["summary"]["history_seed_run_config_runs"] == 2
+    assert (
+        "Regression deltas are still gated by same-condition comparability."
+        in context["notes"]
+    )
+
+    handoff = json.loads(
+        (
+            output_dir / "edgeenv_runtime_intelligence_lab_handoff.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert handoff["schema_version"] == RUNTIME_INTELLIGENCE_LAB_HANDOFF_SCHEMA_VERSION
+    assert "guard_analysis" not in handoff
+    assert "runtime_telemetry_history" in handoff["files"]
+    assert handoff["edgeenv_report_summary"]["history_seed_runs"] == 2
+    assert handoff["edgeenv_report_summary"][
+        "history_seed_run_config_runs"
+    ] == 2
+    assert handoff["edgeenv_report_summary"][
+        "history_seed_run_config_markers"
+    ]
+    alignment = handoff["lab_bundle_alignment"]
+    assert "aiguard_guard_analysis" in alignment["external_file_keys"]
+    assert "aiguard_guard_analysis" not in alignment["edgeenv_produced_file_keys"]
+    assert (
+        alignment["boundary_flags"]["edgeenv_does_not_generate_guard_analysis"]
+        is True
+    )
+    assert alignment["boundary_flags"]["lab_is_final_decision_owner"] is True
 
 
 def test_readmes_expose_edgeenv_role_boundaries():

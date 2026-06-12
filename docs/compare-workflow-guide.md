@@ -116,6 +116,17 @@ If a runtime telemetry history artifact is available, pass
 regression report. Telemetry context remains supplemental evidence; it never
 bypasses the same-condition comparability gate.
 
+To replay that path with local fixtures and a Lab handoff manifest, run:
+
+```bash
+bash scripts/smoke_runtime_intelligence_replay_regression_handoff.sh \
+  --output-dir reports/runtime_intelligence_replay_regression_handoff
+```
+
+The smoke exercises `runs telemetry export-history`, `runs telemetry
+inspect-history`, `report regression --telemetry-history`, and `report
+runtime-intelligence-handoff` without creating production monitoring state.
+
 Committed replay-context examples are available when downstream tools need a
 small EdgeEnv-owned fixture without running a benchmark:
 
