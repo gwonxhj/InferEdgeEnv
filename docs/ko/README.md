@@ -180,6 +180,13 @@ sustained Orchestrator stale-drop context에서 AIGuard가 만들 수 있는
 `stale_frame_risk`와 `edgeenv_orchestrator_stale_drop_summary`를 선언한다.
 이 둘은 optional이므로 기존 queue/thermal feed나 Lab required bundle set을
 깨뜨리지 않는다.
+`lab_bundle_alignment.optional_aiguard_source_traceability`는 AIGuard
+optional-present source artifact와 재생성 명령을 read-only metadata로
+mirror한다:
+`InferEdgeAIGuard/examples/runtime_intelligence/aiguard_runtime_operation_guard_analysis_optional_stale_drop.json`,
+`python -m inferedge_aiguard.cli build-runtime-intelligence-optional-stale-drop`.
+이는 EdgeEnv handoff와 AIGuard source fixture를 추적 가능하게 할 뿐,
+EdgeEnv가 `guard_analysis`를 생성한다는 의미가 아니다.
 같은 `lab_bundle_alignment.expected_report_markers`는 downstream Lab report가
 보존해야 하는 marker를 producer-side handoff에 명시한다:
 `Runtime Intelligence Risk Summary`, `Runtime replay duration scope`,

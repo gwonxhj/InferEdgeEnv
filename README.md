@@ -462,6 +462,13 @@ The alignment block separately declares optional AIGuard evidence types
 sustained Orchestrator stale-drop context. They are optional so EdgeEnv can
 preserve stale-drop evidence when present without rejecting older queue/thermal
 feeds or changing Lab's required Runtime Intelligence bundle set.
+`lab_bundle_alignment.optional_aiguard_source_traceability` mirrors the
+AIGuard optional-present source artifact and regeneration command as read-only
+metadata:
+`InferEdgeAIGuard/examples/runtime_intelligence/aiguard_runtime_operation_guard_analysis_optional_stale_drop.json`
+and `python -m inferedge_aiguard.cli build-runtime-intelligence-optional-stale-drop`.
+This lets downstream reviewers connect the EdgeEnv handoff to the AIGuard
+source fixture without making EdgeEnv produce `guard_analysis`.
 The same `lab_bundle_alignment.expected_report_markers` list declares the
 Lab-owned report markers that downstream Lab gates must preserve:
 `Runtime Intelligence Risk Summary`, `Runtime replay duration scope`,
