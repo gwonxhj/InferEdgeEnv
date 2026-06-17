@@ -457,6 +457,12 @@ artifact itself. The same block
 records that the declaration is validated downstream by AIGuard's
 `check-edgeenv-handoff-alignment` command and Lab's Runtime Intelligence bundle
 manifest gate.
+For reviewer navigation, this handoff also names the upstream Orchestrator
+curated samples that explain the path without making them EdgeEnv benchmark
+outputs or deployment inputs: `agent_scheduler_delay_sample.json` can map to
+AIGuard `scheduler_delay_pattern`, and `remote_fallback_recovery_sample.json`
+can map to `remote_execution_recovered_by_fallback` before Lab renders the
+corresponding report markers.
 The alignment block separately declares optional AIGuard evidence types
 `stale_frame_risk` and `edgeenv_orchestrator_stale_drop_summary` for newer
 sustained Orchestrator stale-drop context. They are optional so EdgeEnv can
