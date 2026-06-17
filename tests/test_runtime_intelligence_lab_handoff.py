@@ -285,6 +285,12 @@ def test_runtime_intelligence_docs_describe_lab_expected_report_markers():
             "aiguard_runtime_operation_guard_analysis_optional_stale_drop.json"
             in doc
         )
+        assert "agent_scheduler_delay_sample.json" in doc
+        assert "remote_fallback_recovery_sample.json" in doc
+        assert "scheduler_delay_pattern" in doc
+        assert "remote_execution_recovered_by_fallback" in doc
+        assert "EdgeEnv benchmark" in doc
+        assert "deployment input" in doc
         for marker in LAB_BUNDLE_EXPECTED_REPORT_MARKERS:
             assert marker in doc
 

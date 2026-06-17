@@ -187,6 +187,12 @@ mirror한다:
 `python -m inferedge_aiguard.cli build-runtime-intelligence-optional-stale-drop`.
 이는 EdgeEnv handoff와 AIGuard source fixture를 추적 가능하게 할 뿐,
 EdgeEnv가 `guard_analysis`를 생성한다는 의미가 아니다.
+reviewer navigation을 위해 이 handoff는 upstream Orchestrator curated sample
+이름도 보존한다. `agent_scheduler_delay_sample.json`은 AIGuard
+`scheduler_delay_pattern` 경로로, `remote_fallback_recovery_sample.json`은
+`remote_execution_recovered_by_fallback` 경로로 이어질 수 있다. 이 sample은
+EdgeEnv benchmark output이나 deployment input이 아니라 Lab report marker까지
+이어지는 cross-repo 추적 경로다.
 아래 smoke는 EdgeEnv가 소유한 replay/regression/handoff 경로를 실제 CLI로
 검증한다.
 

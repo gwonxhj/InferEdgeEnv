@@ -62,6 +62,11 @@ It also mirrors AIGuard optional-present source traceability through
 `InferEdgeAIGuard/examples/runtime_intelligence/aiguard_runtime_operation_guard_analysis_optional_stale_drop.json`
 and `python -m inferedge_aiguard.cli build-runtime-intelligence-optional-stale-drop`,
 without making EdgeEnv produce the external `guard_analysis`.
+For reviewer navigation, EdgeEnv also names the upstream Orchestrator curated
+sample handoff path: `agent_scheduler_delay_sample.json` -> AIGuard
+`scheduler_delay_pattern`, and `remote_fallback_recovery_sample.json` ->
+`remote_execution_recovered_by_fallback`. These names are cross-repo
+traceability hints, not EdgeEnv benchmark outputs or deployment inputs.
 `scripts/smoke_runtime_intelligence_replay_regression_handoff.sh` exercises the
 EdgeEnv-owned CLI path before source traceability handoff: local benchmark runs
 with runtime telemetry, telemetry history export/inspect, comparability-first
