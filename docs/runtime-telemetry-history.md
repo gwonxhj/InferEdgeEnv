@@ -149,6 +149,14 @@ timeline is accepted only with
 inspect summary reports matching runs as `operation_risk_rollup_run_ids` and
 `operation_timeline_summary_run_ids`, but those markers do not become EdgeEnv
 regression judgements, comparability gates, or deployment decisions.
+If the same operation context carries Orchestrator `policy_pressure_summary` or
+an operation timeline `policy_pressure` block, EdgeEnv validates
+`schema_version=inferedge-orchestrator-policy-pressure-summary-v1`,
+`role=supplemental`, `scheduler_owner=orchestrator`, `decision_owner=lab`, and
+`not_a_deployment_decision=true`. The inspect and handoff summaries report
+matching runs as `policy_pressure_summary_run_ids`; this is scheduler-pressure
+review context for Lab/AIGuard, not a comparability field or deployment
+decision.
 If the same operation context carries Orchestrator `stale_drop_summary` or an
 operation timeline `stale_drop` block, EdgeEnv validates
 `schema_version=inferedge-orchestrator-stale-drop-summary-v1`,

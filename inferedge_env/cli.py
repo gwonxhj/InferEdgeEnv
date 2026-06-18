@@ -507,6 +507,10 @@ def inspect_runtime_telemetry_history_command(
         "Orchestrator stale-drop summary runs: "
         f"{len(replay.get('stale_drop_summary_run_ids', []))}"
     )
+    console.print(
+        "Orchestrator policy-pressure summary runs: "
+        f"{len(replay.get('policy_pressure_summary_run_ids', []))}"
+    )
     console.print(f"Evidence gaps: {replay['evidence_gap_count']}")
     console.print(f"Missing run IDs: {', '.join(replay['missing_run_ids']) or '-'}")
     console.print(
@@ -905,6 +909,14 @@ def runtime_intelligence_handoff_manifest(
         console.print(
             "Orchestrator operation timeline summary: "
             f"{', '.join(operation_timeline_run_ids)}"
+        )
+    policy_pressure_run_ids = summary.get(
+        "orchestrator_policy_pressure_summary_run_ids"
+    )
+    if policy_pressure_run_ids:
+        console.print(
+            "Orchestrator policy-pressure summary: "
+            f"{', '.join(policy_pressure_run_ids)}"
         )
     stale_drop_summary_run_ids = summary.get("orchestrator_stale_drop_summary_run_ids")
     if stale_drop_summary_run_ids:

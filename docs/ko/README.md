@@ -163,11 +163,21 @@ comparability gate나 deployment decision이 아니다.
 `decision_owner=lab`, `not_a_deployment_decision=true` marker를 검증하고
 `orchestrator_stale_drop_summary_run_ids`로 traceability를 노출한다. 이는
 optional operation evidence이며 EdgeEnv regression gate가 아니다.
+보존된 operation context에 Orchestrator `policy_pressure_summary` 또는
+timeline `policy_pressure` block이 있으면 EdgeEnv는
+`schema_version=inferedge-orchestrator-policy-pressure-summary-v1`,
+`role=supplemental`, `scheduler_owner=orchestrator`, `decision_owner=lab`,
+`not_a_deployment_decision=true` marker를 검증하고
+`orchestrator_policy_pressure_summary_run_ids`로 traceability를 노출한다.
+이는 scheduler pressure review context이며 EdgeEnv regression gate가
+아니다.
 또한 `lab_bundle_alignment.external_aiguard_required_evidence_types`에
 `runtime_history_seed_run_config_traceability`와
 `edgeenv_orchestrator_operation_risk_rollup`,
 `edgeenv_orchestrator_task_event_rollup`,
 `edgeenv_orchestrator_operation_timeline_summary`,
+`edgeenv_orchestrator_scheduler_fairness_summary`,
+`edgeenv_orchestrator_policy_pressure_summary`,
 `runtime_queue_overload`, `runtime_thermal_instability`,
 `remote_execution_recovered_by_fallback`을
 포함해, AIGuard artifact는 외부 산출물로 유지하면서도 Lab Runtime
@@ -227,6 +237,8 @@ bash scripts/smoke_runtime_intelligence_source_traceability.sh \
 `AIGuard operation risk rollup evidence`,
 `AIGuard task event rollup evidence`,
 `AIGuard operation timeline evidence`,
+`AIGuard scheduler fairness evidence`,
+`AIGuard policy pressure evidence`,
 `AIGuard runtime operation anomalies`, `AIGuard remote dispatch event summary`,
 `AIGuard remote event summary consistency`,
 `Remote fallback starter evidence`,

@@ -113,6 +113,8 @@ def test_runtime_intelligence_lab_handoff_manifest_records_producer_contracts(
         "edgeenv_orchestrator_operation_risk_rollup",
         "edgeenv_orchestrator_task_event_rollup",
         "edgeenv_orchestrator_operation_timeline_summary",
+        "edgeenv_orchestrator_scheduler_fairness_summary",
+        "edgeenv_orchestrator_policy_pressure_summary",
         "runtime_history_seed_run_config_traceability",
         "runtime_queue_overload",
         "runtime_thermal_instability",
@@ -250,6 +252,8 @@ def test_runtime_intelligence_lab_handoff_manifest_records_producer_contracts(
         "orchestrator_task_event_rollup_run_ids": ["candidate"],
         "orchestrator_operation_timeline_summary_present": True,
         "orchestrator_operation_timeline_summary_run_ids": ["candidate"],
+        "orchestrator_policy_pressure_summary_present": True,
+        "orchestrator_policy_pressure_summary_run_ids": ["candidate"],
         "orchestrator_stale_drop_summary_present": True,
         "orchestrator_stale_drop_summary_run_ids": ["candidate"],
         "duration_traceability_present": True,
@@ -615,6 +619,7 @@ def test_runtime_intelligence_lab_handoff_cli_writes_manifest(tmp_path):
     assert "Producer-lineage guard alignment: candidate" in result.output
     assert "Orchestrator operation risk rollup: candidate" in result.output
     assert "Orchestrator operation timeline summary: candidate" in result.output
+    assert "Orchestrator policy-pressure summary: candidate" in result.output
     assert "Orchestrator stale-drop summary: candidate" in result.output
     assert (
         "External AIGuard evidence types: runtime_telemetry_context_coverage, "
@@ -622,6 +627,8 @@ def test_runtime_intelligence_lab_handoff_cli_writes_manifest(tmp_path):
         "edgeenv_orchestrator_operation_risk_rollup, "
         "edgeenv_orchestrator_task_event_rollup, "
         "edgeenv_orchestrator_operation_timeline_summary, "
+        "edgeenv_orchestrator_scheduler_fairness_summary, "
+        "edgeenv_orchestrator_policy_pressure_summary, "
         "runtime_history_seed_run_config_traceability, "
         "runtime_queue_overload, runtime_thermal_instability, "
         "remote_execution_recovered_by_fallback"
@@ -1095,6 +1102,32 @@ def test_runtime_intelligence_lab_handoff_rejects_stale_drop_summary_as_decision
         )
 
 
+def test_runtime_intelligence_lab_handoff_rejects_policy_pressure_as_decision(
+    tmp_path,
+):
+    baseline_path, candidate_path, regression_path, history_path = _write_handoff_files(
+        tmp_path
+    )
+    regression = json.loads(regression_path.read_text(encoding="utf-8"))
+    regression["runtime_telemetry_context"]["candidate"][
+        "orchestrator_operation_context"
+    ]["candidate_context"]["operation"]["policy_pressure_summary"][
+        "decision_owner"
+    ] = "aiguard"
+    regression_path.write_text(json.dumps(regression), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeIntelligenceLabHandoffError,
+        match="policy_pressure_summary.decision_owner must be lab",
+    ):
+        build_runtime_intelligence_lab_handoff_manifest(
+            baseline_result_path=baseline_path,
+            candidate_result_path=candidate_path,
+            edgeenv_regression_report_path=regression_path,
+            telemetry_history_path=history_path,
+        )
+
+
 def _write_handoff_files(tmp_path):
     baseline_path = tmp_path / "baseline-result.json"
     candidate_path = tmp_path / "candidate-result.json"
@@ -1278,6 +1311,7 @@ def _orchestrator_operation_context(run_id: str) -> dict:
                 "tasks_with_fallback": ["voice_command_agent"],
                 "tasks_with_scheduler_delay": ["vision_agent"],
                 "operation_risk_rollup": _operation_risk_rollup_payload(),
+                "policy_pressure_summary": _policy_pressure_summary_payload(),
                 "operation_timeline_summary": _operation_timeline_summary_payload(),
             },
             "resource": {"source": "tegrastats_timeline"},
@@ -1408,6 +1442,7 @@ def _operation_timeline_summary_payload() -> dict:
                 "decision_reason": "queue_backlog_threshold_exceeded",
             },
         },
+        "policy_pressure": _policy_pressure_summary_payload(),
         "stale_drop": _stale_drop_summary_payload(),
         "affected_tasks": {
             "deadline_missed": ["vision_agent"],
@@ -1416,6 +1451,7 @@ def _operation_timeline_summary_payload() -> dict:
             "degraded": ["vision_agent"],
             "constrained": [],
             "stale_drop": ["vision_agent"],
+            "policy_pressure": ["vision_agent", "voice_command_agent"],
         },
         "review_hints": [
             "review_queue_pressure",
@@ -1423,7 +1459,40 @@ def _operation_timeline_summary_payload() -> dict:
             "review_deadline_miss",
             "review_fallback_use",
             "review_stale_drop",
+            "review_policy_pressure",
         ],
+    }
+
+
+def _policy_pressure_summary_payload() -> dict:
+    return {
+        "schema_version": "inferedge-orchestrator-policy-pressure-summary-v1",
+        "role": "supplemental",
+        "scheduler_owner": "orchestrator",
+        "decision_owner": "lab",
+        "not_a_deployment_decision": True,
+        "first_read": "review_policy_pressure_context",
+        "decision_count": 2,
+        "decision_reason_counts": {
+            "queue_backlog_threshold_exceeded": 2,
+        },
+        "limited_tasks": ["vision_agent", "voice_command_agent"],
+        "protected_tasks": ["safety_monitor_agent"],
+        "fallback_tasks": ["voice_command_agent"],
+        "fallback_decision_count": 1,
+        "backlog_thresholds": [3],
+        "max_total_backlog_before": 7,
+        "max_backlog_over_threshold": 4,
+        "pressure_markers": [
+            "policy_decision_present",
+            "backlog_exceeded_threshold",
+            "fallback_policy_used",
+            "workload_limited_by_policy",
+            "scheduler_delay_present",
+        ],
+        "interpretation": (
+            "Scheduler policy pressure preserved as Lab review context only."
+        ),
     }
 
 
