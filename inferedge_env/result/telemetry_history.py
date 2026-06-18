@@ -1240,14 +1240,20 @@ def _validate_orchestrator_candidate_operation_context(
         operation.get("operation_risk_rollup"),
         source=source,
     )
-    _validate_orchestrator_operation_timeline_summary(
+    timeline_summary = _validate_orchestrator_operation_timeline_summary(
         operation.get("operation_timeline_summary"),
         source=source,
     )
-    _validate_orchestrator_policy_pressure_summary(
+    policy_pressure_summary = _validate_orchestrator_policy_pressure_summary(
         operation.get("policy_pressure_summary"),
         source=source,
     )
+    if timeline_summary and policy_pressure_summary:
+        _validate_policy_pressure_mirror_match(
+            policy_pressure_summary,
+            timeline_summary.get("policy_pressure"),
+            source=source,
+        )
 
 
 def _validate_orchestrator_operation_timeline_summary(
@@ -1379,6 +1385,22 @@ def _validate_orchestrator_policy_pressure_summary(
                 f"{field} must be a string list when present: {source}"
             )
     return summary
+
+
+def _validate_policy_pressure_mirror_match(
+    policy_pressure_summary: dict[str, Any],
+    timeline_policy_pressure: Any,
+    *,
+    source: Path,
+) -> None:
+    if timeline_policy_pressure is None:
+        return
+    if policy_pressure_summary != timeline_policy_pressure:
+        raise RuntimeTelemetryHistoryError(
+            "Orchestrator telemetry feed policy_pressure_summary must match "
+            "operation_timeline_summary.policy_pressure when both are present: "
+            f"{source}"
+        )
 
 
 def _validate_orchestrator_stale_drop_summary(

@@ -565,6 +565,35 @@ def test_runtime_telemetry_history_rejects_policy_pressure_as_decision(
         build_runtime_telemetry_history(edgeenv_root, orchestrator_feeds=[feed_path])
 
 
+def test_runtime_telemetry_history_rejects_policy_pressure_mirror_drift(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    edgeenv_root = tmp_path / ".edgeenv"
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="candidate",
+        runtime_telemetry=_runtime_telemetry_payload(sequence_id=2),
+    )
+    feed = _orchestrator_feed_payload("candidate")
+    feed["candidate_context"]["operation"]["operation_timeline_summary"][
+        "policy_pressure"
+    ]["decision_count"] = 3
+    feed_path = tmp_path / "orchestrator-feed.json"
+    feed_path.write_text(json.dumps(feed), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeTelemetryHistoryError,
+        match="policy_pressure_summary must match",
+    ):
+        build_runtime_telemetry_history(edgeenv_root, orchestrator_feeds=[feed_path])
+
+
 def test_runtime_telemetry_history_rejects_operation_risk_summary_as_decision(
     tmp_path,
     bench_config,

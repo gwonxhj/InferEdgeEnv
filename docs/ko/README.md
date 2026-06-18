@@ -170,7 +170,9 @@ timeline `policy_pressure` block이 있으면 EdgeEnv는
 `not_a_deployment_decision=true` marker를 검증하고
 `orchestrator_policy_pressure_summary_run_ids`로 traceability를 노출한다.
 이는 scheduler pressure review context이며 EdgeEnv regression gate가
-아니다.
+아니다. direct `policy_pressure_summary`와 timeline `policy_pressure`가 둘 다
+있으면 handoff 중 mirror drift가 생기지 않도록 두 block이 정확히 일치해야
+한다.
 또한 `lab_bundle_alignment.external_aiguard_required_evidence_types`에
 `runtime_history_seed_run_config_traceability`와
 `edgeenv_orchestrator_operation_risk_rollup`,

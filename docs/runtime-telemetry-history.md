@@ -156,7 +156,9 @@ an operation timeline `policy_pressure` block, EdgeEnv validates
 `not_a_deployment_decision=true`. The inspect and handoff summaries report
 matching runs as `policy_pressure_summary_run_ids`; this is scheduler-pressure
 review context for Lab/AIGuard, not a comparability field or deployment
-decision.
+decision. When both the direct `policy_pressure_summary` and timeline
+`policy_pressure` blocks are present, they must match exactly so the mirror
+cannot drift during handoff.
 If the same operation context carries Orchestrator `stale_drop_summary` or an
 operation timeline `stale_drop` block, EdgeEnv validates
 `schema_version=inferedge-orchestrator-stale-drop-summary-v1`,
