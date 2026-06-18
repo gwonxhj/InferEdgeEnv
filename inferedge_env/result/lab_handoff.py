@@ -1276,15 +1276,41 @@ def _validate_orchestrator_policy_pressure_context(
     regression_path: Path,
 ) -> None:
     operation = _candidate_operation_context(operation_context)
+    policy_pressure_summary = operation.get("policy_pressure_summary")
     _validate_orchestrator_policy_pressure_summary(
-        operation.get("policy_pressure_summary"),
+        policy_pressure_summary,
         regression_path=regression_path,
     )
     timeline = operation.get("operation_timeline_summary")
+    timeline_policy_pressure = None
     if isinstance(timeline, dict):
+        timeline_policy_pressure = timeline.get("policy_pressure")
         _validate_orchestrator_policy_pressure_summary(
-            timeline.get("policy_pressure"),
+            timeline_policy_pressure,
             regression_path=regression_path,
+        )
+    if (
+        isinstance(policy_pressure_summary, dict)
+        and timeline_policy_pressure is not None
+    ):
+        _validate_policy_pressure_mirror_match(
+            policy_pressure_summary,
+            timeline_policy_pressure,
+            regression_path=regression_path,
+        )
+
+
+def _validate_policy_pressure_mirror_match(
+    policy_pressure_summary: dict[str, Any],
+    timeline_policy_pressure: Any,
+    *,
+    regression_path: Path,
+) -> None:
+    if policy_pressure_summary != timeline_policy_pressure:
+        raise RuntimeIntelligenceLabHandoffError(
+            "policy_pressure_summary must match "
+            "operation_timeline_summary.policy_pressure when both are present: "
+            f"{regression_path}"
         )
 
 
