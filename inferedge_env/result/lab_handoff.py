@@ -11,6 +11,7 @@ from inferedge_env.result.telemetry_history import (
     ORCHESTRATOR_EDGEENV_HISTORY_COVERAGE_PATH,
     ORCHESTRATOR_EDGEENV_OPERATION_CONTEXT_ROLE,
     ORCHESTRATOR_EDGEENV_REQUIRED_CANDIDATE_FIELDS,
+    ORCHESTRATOR_POLICY_PRESSURE_SUMMARY_SCHEMA_VERSION,
     ORCHESTRATOR_PRODUCER_LINEAGE_AIGUARD_EVIDENCE_TYPE,
     ORCHESTRATOR_STALE_DROP_SUMMARY_SCHEMA_VERSION,
     ORCHESTRATOR_TELEMETRY_FEED_ARTIFACT_ROLE,
@@ -77,6 +78,8 @@ LAB_BUNDLE_EXTERNAL_AIGUARD_REQUIRED_EVIDENCE_TYPES = (
     "edgeenv_orchestrator_operation_risk_rollup",
     "edgeenv_orchestrator_task_event_rollup",
     "edgeenv_orchestrator_operation_timeline_summary",
+    "edgeenv_orchestrator_scheduler_fairness_summary",
+    "edgeenv_orchestrator_policy_pressure_summary",
     "runtime_history_seed_run_config_traceability",
     "runtime_queue_overload",
     "runtime_thermal_instability",
@@ -120,6 +123,8 @@ LAB_BUNDLE_EXPECTED_REPORT_MARKERS = (
     "AIGuard operation risk rollup evidence",
     "AIGuard task event rollup evidence",
     "AIGuard operation timeline evidence",
+    "AIGuard scheduler fairness evidence",
+    "AIGuard policy pressure evidence",
     "AIGuard runtime operation anomalies",
     "AIGuard remote dispatch event summary",
     "AIGuard remote event summary consistency",
@@ -403,6 +408,10 @@ def _validate_orchestrator_context(
         operation_context,
         regression_path=regression_path,
     )
+    _validate_orchestrator_policy_pressure_context(
+        operation_context,
+        regression_path=regression_path,
+    )
 
 
 def _validate_orchestrator_producer_markers(
@@ -673,6 +682,7 @@ def _edgeenv_report_summary(regression_report: dict[str, Any]) -> dict[str, Any]
     operation_timeline_summary_run_ids = _operation_timeline_summary_run_ids(
         context
     )
+    policy_pressure_summary_run_ids = _policy_pressure_summary_run_ids(context)
     stale_drop_summary_run_ids = _stale_drop_summary_run_ids(context)
     fixture_matrix_summary = _fixture_matrix_summary(
         regression_report.get("fixture_matrix_context")
@@ -723,6 +733,12 @@ def _edgeenv_report_summary(regression_report: dict[str, Any]) -> dict[str, Any]
         ),
         "orchestrator_operation_timeline_summary_run_ids": (
             operation_timeline_summary_run_ids
+        ),
+        "orchestrator_policy_pressure_summary_present": bool(
+            policy_pressure_summary_run_ids
+        ),
+        "orchestrator_policy_pressure_summary_run_ids": (
+            policy_pressure_summary_run_ids
         ),
         "orchestrator_stale_drop_summary_present": bool(
             stale_drop_summary_run_ids
@@ -1020,6 +1036,31 @@ def _stale_drop_summary_run_ids(context: Any) -> list[str]:
     return run_ids
 
 
+def _policy_pressure_summary_run_ids(context: Any) -> list[str]:
+    if not isinstance(context, dict):
+        return []
+    run_ids: list[str] = []
+
+    def append_if_present(run_context: Any) -> None:
+        if not isinstance(run_context, dict):
+            return
+        operation_context = run_context.get("orchestrator_operation_context")
+        if not _has_policy_pressure_summary(operation_context):
+            return
+        run_id = run_context.get("run_id")
+        if isinstance(run_id, str) and run_id and run_id not in run_ids:
+            run_ids.append(run_id)
+
+    append_if_present(context.get("baseline"))
+    append_if_present(context.get("candidate"))
+    history = context.get("history")
+    if isinstance(history, dict):
+        for section in ("runs", "missing_telemetry"):
+            for entry in history.get(section, []):
+                append_if_present(entry)
+    return run_ids
+
+
 def _has_task_event_rollup(operation_context: Any) -> bool:
     if not isinstance(operation_context, dict):
         return False
@@ -1047,6 +1088,19 @@ def _has_operation_timeline_summary(operation_context: Any) -> bool:
         return False
     operation = _candidate_operation_context(operation_context)
     return isinstance(operation.get("operation_timeline_summary"), dict)
+
+
+def _has_policy_pressure_summary(operation_context: Any) -> bool:
+    if not isinstance(operation_context, dict):
+        return False
+    operation = _candidate_operation_context(operation_context)
+    if isinstance(operation.get("policy_pressure_summary"), dict):
+        return True
+    timeline = operation.get("operation_timeline_summary")
+    return (
+        isinstance(timeline, dict)
+        and isinstance(timeline.get("policy_pressure"), dict)
+    )
 
 
 def _has_stale_drop_summary(operation_context: Any) -> bool:
@@ -1214,6 +1268,82 @@ def _validate_orchestrator_stale_drop_context(
             timeline.get("stale_drop"),
             regression_path=regression_path,
         )
+
+
+def _validate_orchestrator_policy_pressure_context(
+    operation_context: dict[str, Any],
+    *,
+    regression_path: Path,
+) -> None:
+    operation = _candidate_operation_context(operation_context)
+    _validate_orchestrator_policy_pressure_summary(
+        operation.get("policy_pressure_summary"),
+        regression_path=regression_path,
+    )
+    timeline = operation.get("operation_timeline_summary")
+    if isinstance(timeline, dict):
+        _validate_orchestrator_policy_pressure_summary(
+            timeline.get("policy_pressure"),
+            regression_path=regression_path,
+        )
+
+
+def _validate_orchestrator_policy_pressure_summary(
+    value: Any,
+    *,
+    regression_path: Path,
+) -> None:
+    if value is None:
+        return
+    if not isinstance(value, dict):
+        raise RuntimeIntelligenceLabHandoffError(
+            f"policy_pressure_summary must be an object: {regression_path}"
+        )
+    expected_pairs = {
+        "schema_version": ORCHESTRATOR_POLICY_PRESSURE_SUMMARY_SCHEMA_VERSION,
+        "role": ORCHESTRATOR_EDGEENV_OPERATION_CONTEXT_ROLE,
+        "scheduler_owner": "orchestrator",
+        "decision_owner": "lab",
+    }
+    for key, expected in expected_pairs.items():
+        if value.get(key) != expected:
+            raise RuntimeIntelligenceLabHandoffError(
+                f"policy_pressure_summary.{key} must be {expected}: "
+                f"{regression_path}"
+            )
+    if value.get("not_a_deployment_decision") is not True:
+        raise RuntimeIntelligenceLabHandoffError(
+            f"policy_pressure_summary.not_a_deployment_decision must be true: "
+            f"{regression_path}"
+        )
+    decision_count = value.get("decision_count")
+    if type(decision_count) is not int or decision_count < 0:
+        raise RuntimeIntelligenceLabHandoffError(
+            f"policy_pressure_summary.decision_count must be a non-negative "
+            f"integer: {regression_path}"
+        )
+    for field in ("decision_reason_counts",):
+        field_value = value.get(field)
+        if field_value is not None and not isinstance(field_value, dict):
+            raise RuntimeIntelligenceLabHandoffError(
+                f"policy_pressure_summary.{field} must be an object when "
+                f"present: {regression_path}"
+            )
+    for field in (
+        "limited_tasks",
+        "protected_tasks",
+        "fallback_tasks",
+        "pressure_markers",
+    ):
+        field_value = value.get(field)
+        if field_value is not None and (
+            not isinstance(field_value, list)
+            or not all(isinstance(item, str) for item in field_value)
+        ):
+            raise RuntimeIntelligenceLabHandoffError(
+                f"policy_pressure_summary.{field} must be a string list when "
+                f"present: {regression_path}"
+            )
 
 
 def _validate_orchestrator_stale_drop_summary(

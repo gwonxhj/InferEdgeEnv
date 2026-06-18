@@ -450,6 +450,8 @@ Lab's Runtime Intelligence gate, including
 `edgeenv_orchestrator_operation_risk_rollup`,
 `edgeenv_orchestrator_task_event_rollup`,
 `edgeenv_orchestrator_operation_timeline_summary`,
+`edgeenv_orchestrator_scheduler_fairness_summary`,
+`edgeenv_orchestrator_policy_pressure_summary`,
 `runtime_queue_overload`, `runtime_thermal_instability`, and
 `remote_execution_recovered_by_fallback` when the downstream bundle uses that
 path. EdgeEnv can declare the handoff contract without producing the Guard
@@ -508,6 +510,8 @@ Lab-owned report markers that downstream Lab gates must preserve:
 `AIGuard operation risk rollup evidence`,
 `AIGuard task event rollup evidence`,
 `AIGuard operation timeline evidence`,
+`AIGuard scheduler fairness evidence`,
+`AIGuard policy pressure evidence`,
 `AIGuard runtime operation anomalies`, `AIGuard remote dispatch event summary`,
 `AIGuard remote event summary consistency`, `Remote fallback starter evidence`,
 `lab=Remote fallback starter evidence; evidence=remote_execution_recovered_by_fallback`,

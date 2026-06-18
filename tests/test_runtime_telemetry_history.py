@@ -286,6 +286,9 @@ def test_build_runtime_telemetry_history_attaches_orchestrator_feed_context(
     assert strict_summary["replay"][
         "producer_lineage_guard_alignment_run_ids"
     ] == ["candidate"]
+    assert strict_summary["replay"]["policy_pressure_summary_run_ids"] == [
+        "candidate"
+    ]
     assert strict_summary["replay"]["stale_drop_summary_run_ids"] == ["candidate"]
 
 
@@ -397,6 +400,7 @@ def test_runtime_telemetry_history_preserves_operation_risk_summary(
     assert summary["replay"]["operation_risk_summary_run_ids"] == ["candidate"]
     assert summary["replay"]["operation_risk_rollup_run_ids"] == ["candidate"]
     assert summary["replay"]["operation_timeline_summary_run_ids"] == ["candidate"]
+    assert summary["replay"]["policy_pressure_summary_run_ids"] == ["candidate"]
     assert summary["replay"]["stale_drop_summary_run_ids"] == ["candidate"]
     assert summary["replay"]["orchestrator_context_run_ids"] == ["candidate"]
 
@@ -441,6 +445,7 @@ def test_runtime_telemetry_history_preserves_operation_risk_rollup(
     )
     assert summary["replay"]["operation_risk_rollup_run_ids"] == ["candidate"]
     assert summary["replay"]["operation_timeline_summary_run_ids"] == ["candidate"]
+    assert summary["replay"]["policy_pressure_summary_run_ids"] == ["candidate"]
     assert summary["replay"]["stale_drop_summary_run_ids"] == ["candidate"]
 
 
@@ -527,6 +532,35 @@ def test_runtime_telemetry_history_rejects_bad_operation_timeline_schema(
     with pytest.raises(
         RuntimeTelemetryHistoryError,
         match="operation_timeline_summary.schema_version must be",
+    ):
+        build_runtime_telemetry_history(edgeenv_root, orchestrator_feeds=[feed_path])
+
+
+def test_runtime_telemetry_history_rejects_policy_pressure_as_decision(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    edgeenv_root = tmp_path / ".edgeenv"
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="candidate",
+        runtime_telemetry=_runtime_telemetry_payload(sequence_id=2),
+    )
+    feed = _orchestrator_feed_payload("candidate")
+    feed["candidate_context"]["operation"]["policy_pressure_summary"][
+        "decision_owner"
+    ] = "aiguard"
+    feed_path = tmp_path / "orchestrator-feed.json"
+    feed_path.write_text(json.dumps(feed), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeTelemetryHistoryError,
+        match="policy_pressure_summary.decision_owner must be lab",
     ):
         build_runtime_telemetry_history(edgeenv_root, orchestrator_feeds=[feed_path])
 
@@ -1052,6 +1086,7 @@ def test_cli_runs_telemetry_export_history_attaches_orchestrator_feed(
     assert "Device-local producer context runs: 1" in inspect_result.output
     assert "Producer-lineage guard alignment runs: 1" in inspect_result.output
     assert "Orchestrator stale-drop summary runs: 1" in inspect_result.output
+    assert "Orchestrator policy-pressure summary runs: 1" in inspect_result.output
     payload = json.loads(output_path.read_text(encoding="utf-8"))
     assert payload["runs"][0]["orchestrator_operation_context"]["run_id"] == (
         "candidate"
@@ -1658,6 +1693,7 @@ def _operation_timeline_summary_payload() -> dict:
                 "decision_reason": "queue_backlog_threshold_exceeded",
             },
         },
+        "policy_pressure": _policy_pressure_summary_payload(),
         "stale_drop": _stale_drop_summary_payload(),
         "affected_tasks": {
             "deadline_missed": ["vision_agent"],
@@ -1666,6 +1702,7 @@ def _operation_timeline_summary_payload() -> dict:
             "degraded": ["vision_agent"],
             "constrained": [],
             "stale_drop": ["vision_agent"],
+            "policy_pressure": ["vision_agent", "voice_command_agent"],
         },
         "review_hints": [
             "review_queue_pressure",
@@ -1673,7 +1710,40 @@ def _operation_timeline_summary_payload() -> dict:
             "review_deadline_miss",
             "review_fallback_use",
             "review_stale_drop",
+            "review_policy_pressure",
         ],
+    }
+
+
+def _policy_pressure_summary_payload() -> dict:
+    return {
+        "schema_version": "inferedge-orchestrator-policy-pressure-summary-v1",
+        "role": "supplemental",
+        "scheduler_owner": "orchestrator",
+        "decision_owner": "lab",
+        "not_a_deployment_decision": True,
+        "first_read": "review_policy_pressure_context",
+        "decision_count": 2,
+        "decision_reason_counts": {
+            "queue_backlog_threshold_exceeded": 2,
+        },
+        "limited_tasks": ["vision_agent", "voice_command_agent"],
+        "protected_tasks": ["safety_monitor_agent"],
+        "fallback_tasks": ["voice_command_agent"],
+        "fallback_decision_count": 1,
+        "backlog_thresholds": [3],
+        "max_total_backlog_before": 7,
+        "max_backlog_over_threshold": 4,
+        "pressure_markers": [
+            "policy_decision_present",
+            "backlog_exceeded_threshold",
+            "fallback_policy_used",
+            "workload_limited_by_policy",
+            "scheduler_delay_present",
+        ],
+        "interpretation": (
+            "Scheduler policy pressure preserved as Lab review context only."
+        ),
     }
 
 
@@ -1727,6 +1797,7 @@ def _orchestrator_feed_payload(run_id: str) -> dict:
                 "deadline_missed_count": 2,
                 "fallback_count": 1,
                 "stale_drop_summary": _stale_drop_summary_payload(),
+                "policy_pressure_summary": _policy_pressure_summary_payload(),
                 "operation_risk_rollup": _operation_risk_rollup_payload(),
                 "operation_timeline_summary": _operation_timeline_summary_payload(),
             },

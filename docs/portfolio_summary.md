@@ -50,6 +50,7 @@ name the Lab-owned report rows expected downstream: `Runtime Intelligence Risk S
 `Orchestrator task event rollup`, `Lab EdgeEnv preservation context`,
 `AIGuard operation risk rollup evidence`, `AIGuard task event rollup evidence`,
 `AIGuard operation timeline evidence`,
+`AIGuard scheduler fairness evidence`, `AIGuard policy pressure evidence`,
 `AIGuard runtime operation anomalies`, `AIGuard remote dispatch event summary`,
 `AIGuard remote event summary consistency`, `Remote fallback starter evidence`,
 `lab=Remote fallback starter evidence; evidence=remote_execution_recovered_by_fallback`,
