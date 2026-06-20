@@ -65,6 +65,9 @@ ORCHESTRATOR_POLICY_PRESSURE_SUMMARY_SCHEMA_VERSION = (
 ORCHESTRATOR_STALE_DROP_SUMMARY_SCHEMA_VERSION = (
     "inferedge-orchestrator-stale-drop-summary-v1"
 )
+ORCHESTRATOR_WORKER_HEALTH_TREND_SCHEMA_VERSION = (
+    "inferedge-orchestrator-worker-health-trend-v1"
+)
 
 
 class RuntimeTelemetryHistoryError(ValueError):
@@ -325,6 +328,7 @@ def inspect_runtime_telemetry_history(
     )
     policy_pressure_summary_run_ids = _policy_pressure_summary_run_ids(payload)
     stale_drop_summary_run_ids = _stale_drop_summary_run_ids(payload)
+    worker_health_trend_run_ids = _worker_health_trend_run_ids(payload)
     timestamps = [
         entry.get("telemetry_timestamp")
         for entry in runs
@@ -378,6 +382,7 @@ def inspect_runtime_telemetry_history(
             ),
             "policy_pressure_summary_run_ids": policy_pressure_summary_run_ids,
             "stale_drop_summary_run_ids": stale_drop_summary_run_ids,
+            "worker_health_trend_run_ids": worker_health_trend_run_ids,
             "first_telemetry_timestamp": min(timestamps) if timestamps else None,
             "last_telemetry_timestamp": max(timestamps) if timestamps else None,
             "execution_sequence_ids": sequence_ids,
@@ -569,6 +574,27 @@ def _policy_pressure_summary_run_ids(payload: dict[str, Any]) -> list[str]:
     return run_ids
 
 
+def _worker_health_trend_run_ids(payload: dict[str, Any]) -> list[str]:
+    run_ids: list[str] = []
+    for entry in payload.get("runs", []):
+        if not isinstance(entry, dict):
+            continue
+        context = entry.get("orchestrator_operation_context")
+        if _has_worker_health_trend(context):
+            run_id = entry.get("run_id")
+            if isinstance(run_id, str):
+                run_ids.append(run_id)
+    for item in payload.get("missing_telemetry", []):
+        if not isinstance(item, dict):
+            continue
+        context = item.get("orchestrator_operation_context")
+        if _has_worker_health_trend(context):
+            run_id = item.get("run_id")
+            if isinstance(run_id, str):
+                run_ids.append(run_id)
+    return run_ids
+
+
 def _has_operation_risk_rollup(value: Any) -> bool:
     if not isinstance(value, dict):
         return False
@@ -608,6 +634,17 @@ def _has_stale_drop_summary(value: Any) -> bool:
     return (
         isinstance(timeline, dict)
         and isinstance(timeline.get("stale_drop"), dict)
+    )
+
+
+def _has_worker_health_trend(value: Any) -> bool:
+    if not isinstance(value, dict):
+        return False
+    operation = _candidate_operation_context(value)
+    timeline = operation.get("operation_timeline_summary")
+    return (
+        isinstance(timeline, dict)
+        and isinstance(timeline.get("worker_health_trend"), dict)
     )
 
 
@@ -1323,6 +1360,77 @@ def _validate_orchestrator_operation_timeline_summary(
         summary.get("policy_pressure"),
         source=source,
     )
+    _validate_orchestrator_worker_health_trend(
+        summary.get("worker_health_trend"),
+        source=source,
+    )
+    return summary
+
+
+def _validate_orchestrator_worker_health_trend(
+    value: Any,
+    *,
+    source: Path,
+) -> dict[str, Any] | None:
+    if value is None:
+        return None
+    if not isinstance(value, dict):
+        raise RuntimeTelemetryHistoryError(
+            "Orchestrator telemetry feed worker_health_trend must be "
+            f"an object: {source}"
+        )
+    summary = deepcopy(value)
+    expected_pairs = {
+        "schema_version": ORCHESTRATOR_WORKER_HEALTH_TREND_SCHEMA_VERSION,
+        "operation_context_role": ORCHESTRATOR_EDGEENV_OPERATION_CONTEXT_ROLE,
+        "scheduler_owner": "orchestrator",
+        "decision_owner": "lab",
+    }
+    for key, expected in expected_pairs.items():
+        if summary.get(key) != expected:
+            raise RuntimeTelemetryHistoryError(
+                "Orchestrator telemetry feed worker_health_trend."
+                f"{key} must be {expected}: {source}"
+            )
+    if summary.get("not_a_deployment_decision") is not True:
+        raise RuntimeTelemetryHistoryError(
+            "Orchestrator telemetry feed worker_health_trend."
+            f"not_a_deployment_decision must be true: {source}"
+        )
+    for field in (
+        "health_state_counts",
+        "tasks_by_health_state",
+        "task_health_context",
+    ):
+        field_value = summary.get(field)
+        if field_value is not None and not isinstance(field_value, dict):
+            raise RuntimeTelemetryHistoryError(
+                "Orchestrator telemetry feed worker_health_trend."
+                f"{field} must be an object when present: {source}"
+            )
+    for field in ("degraded_workers", "constrained_workers", "review_hints"):
+        field_value = summary.get(field)
+        if field_value is not None and (
+            not isinstance(field_value, list)
+            or not all(isinstance(item, str) for item in field_value)
+        ):
+            raise RuntimeTelemetryHistoryError(
+                "Orchestrator telemetry feed worker_health_trend."
+                f"{field} must be a string list when present: {source}"
+            )
+    task_health_context = summary.get("task_health_context")
+    if isinstance(task_health_context, dict):
+        for task_id, context in task_health_context.items():
+            if not isinstance(task_id, str):
+                raise RuntimeTelemetryHistoryError(
+                    "Orchestrator telemetry feed worker_health_trend."
+                    f"task_health_context keys must be strings: {source}"
+                )
+            if not isinstance(context, dict):
+                raise RuntimeTelemetryHistoryError(
+                    "Orchestrator telemetry feed worker_health_trend."
+                    f"task_health_context.{task_id} must be an object: {source}"
+                )
     return summary
 
 

@@ -23,6 +23,7 @@ from inferedge_env.result.telemetry_history import (
     ORCHESTRATOR_TELEMETRY_FEED_PRODUCER_CONTRACT,
     ORCHESTRATOR_TELEMETRY_FEED_SCHEMA_VERSION,
     ORCHESTRATOR_TELEMETRY_FEED_SOURCE_REPOSITORY,
+    ORCHESTRATOR_WORKER_HEALTH_TREND_SCHEMA_VERSION,
     RUNTIME_TELEMETRY_HISTORY_SCHEMA_VERSION,
     RuntimeTelemetryHistoryError,
     build_runtime_telemetry_history,
@@ -402,6 +403,7 @@ def test_runtime_telemetry_history_preserves_operation_risk_summary(
     assert summary["replay"]["operation_timeline_summary_run_ids"] == ["candidate"]
     assert summary["replay"]["policy_pressure_summary_run_ids"] == ["candidate"]
     assert summary["replay"]["stale_drop_summary_run_ids"] == ["candidate"]
+    assert summary["replay"]["worker_health_trend_run_ids"] == ["candidate"]
     assert summary["replay"]["orchestrator_context_run_ids"] == ["candidate"]
 
 
@@ -447,6 +449,7 @@ def test_runtime_telemetry_history_preserves_operation_risk_rollup(
     assert summary["replay"]["operation_timeline_summary_run_ids"] == ["candidate"]
     assert summary["replay"]["policy_pressure_summary_run_ids"] == ["candidate"]
     assert summary["replay"]["stale_drop_summary_run_ids"] == ["candidate"]
+    assert summary["replay"]["worker_health_trend_run_ids"] == ["candidate"]
 
 
 def test_runtime_telemetry_history_rejects_operation_risk_rollup_as_decision(
@@ -561,6 +564,35 @@ def test_runtime_telemetry_history_rejects_policy_pressure_as_decision(
     with pytest.raises(
         RuntimeTelemetryHistoryError,
         match="policy_pressure_summary.decision_owner must be lab",
+    ):
+        build_runtime_telemetry_history(edgeenv_root, orchestrator_feeds=[feed_path])
+
+
+def test_runtime_telemetry_history_rejects_worker_health_trend_as_decision(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    edgeenv_root = tmp_path / ".edgeenv"
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="candidate",
+        runtime_telemetry=_runtime_telemetry_payload(sequence_id=2),
+    )
+    feed = _orchestrator_feed_payload("candidate")
+    feed["candidate_context"]["operation"]["operation_timeline_summary"][
+        "worker_health_trend"
+    ]["decision_owner"] = "orchestrator"
+    feed_path = tmp_path / "orchestrator-feed.json"
+    feed_path.write_text(json.dumps(feed), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeTelemetryHistoryError,
+        match="worker_health_trend.decision_owner must be lab",
     ):
         build_runtime_telemetry_history(edgeenv_root, orchestrator_feeds=[feed_path])
 
@@ -1724,6 +1756,7 @@ def _operation_timeline_summary_payload() -> dict:
         },
         "policy_pressure": _policy_pressure_summary_payload(),
         "stale_drop": _stale_drop_summary_payload(),
+        "worker_health_trend": _worker_health_trend_payload(),
         "affected_tasks": {
             "deadline_missed": ["vision_agent"],
             "fallback": ["voice_command_agent"],
@@ -1740,7 +1773,54 @@ def _operation_timeline_summary_payload() -> dict:
             "review_fallback_use",
             "review_stale_drop",
             "review_policy_pressure",
+            "review_worker_health_trend",
         ],
+    }
+
+
+def _worker_health_trend_payload() -> dict:
+    return {
+        "schema_version": ORCHESTRATOR_WORKER_HEALTH_TREND_SCHEMA_VERSION,
+        "operation_context_role": "supplemental",
+        "scheduler_owner": "orchestrator",
+        "decision_owner": "lab",
+        "not_a_deployment_decision": True,
+        "source": "worker_health_snapshot+runtime_event_summary",
+        "health_state_counts": {
+            "healthy": 1,
+            "degraded": 1,
+            "constrained": 1,
+        },
+        "tasks_by_health_state": {
+            "healthy": ["safety_monitor_agent"],
+            "degraded": ["vision_agent"],
+            "constrained": ["voice_command_agent"],
+        },
+        "task_health_context": {
+            "vision_agent": {
+                "health_state": "degraded",
+                "primary_health_reason": "deadline_miss_rate_high",
+                "health_reasons": ["deadline_miss_rate_high"],
+                "executed_count": 5,
+                "deadline_missed_count": 2,
+                "fallback_count": 0,
+                "drop_count": 0,
+                "deadline_miss_rate": 0.4,
+                "fallback_rate": 0.0,
+                "drop_rate": 0.0,
+                "scheduler_delay_event_count": 1,
+                "resource_degraded_event_count": 1,
+            }
+        },
+        "degraded_workers": ["vision_agent"],
+        "constrained_workers": ["voice_command_agent"],
+        "review_hints": [
+            "review_worker_health_degradation",
+            "review_worker_health_constraints",
+        ],
+        "interpretation": (
+            "Worker health trend preserved as Lab review context only."
+        ),
     }
 
 

@@ -18,6 +18,7 @@ from inferedge_env.result.telemetry_history import (
     ORCHESTRATOR_TELEMETRY_FEED_PRODUCER_CONTRACT,
     ORCHESTRATOR_TELEMETRY_FEED_SCHEMA_VERSION,
     ORCHESTRATOR_TELEMETRY_FEED_SOURCE_REPOSITORY,
+    ORCHESTRATOR_WORKER_HEALTH_TREND_SCHEMA_VERSION,
     RuntimeTelemetryHistoryError,
     RUNTIME_TELEMETRY_HISTORY_SCHEMA_VERSION,
     RUNTIME_TELEMETRY_HISTORY_SEED_SCHEMA_VERSION,
@@ -412,6 +413,10 @@ def _validate_orchestrator_context(
         operation_context,
         regression_path=regression_path,
     )
+    _validate_orchestrator_worker_health_trend_context(
+        operation_context,
+        regression_path=regression_path,
+    )
 
 
 def _validate_orchestrator_producer_markers(
@@ -685,6 +690,7 @@ def _edgeenv_report_summary(regression_report: dict[str, Any]) -> dict[str, Any]
     )
     policy_pressure_summary_run_ids = _policy_pressure_summary_run_ids(context)
     stale_drop_summary_run_ids = _stale_drop_summary_run_ids(context)
+    worker_health_trend_run_ids = _worker_health_trend_run_ids(context)
     fixture_matrix_summary = _fixture_matrix_summary(
         regression_report.get("fixture_matrix_context")
     )
@@ -748,6 +754,10 @@ def _edgeenv_report_summary(regression_report: dict[str, Any]) -> dict[str, Any]
             stale_drop_summary_run_ids
         ),
         "orchestrator_stale_drop_summary_run_ids": stale_drop_summary_run_ids,
+        "orchestrator_worker_health_trend_present": bool(
+            worker_health_trend_run_ids
+        ),
+        "orchestrator_worker_health_trend_run_ids": worker_health_trend_run_ids,
         "duration_traceability_present": bool(
             duration_traceability["run_ids"]
         ),
@@ -1097,6 +1107,31 @@ def _policy_pressure_summary_run_ids(context: Any) -> list[str]:
     return run_ids
 
 
+def _worker_health_trend_run_ids(context: Any) -> list[str]:
+    if not isinstance(context, dict):
+        return []
+    run_ids: list[str] = []
+
+    def append_if_present(run_context: Any) -> None:
+        if not isinstance(run_context, dict):
+            return
+        operation_context = run_context.get("orchestrator_operation_context")
+        if not _has_worker_health_trend(operation_context):
+            return
+        run_id = run_context.get("run_id")
+        if isinstance(run_id, str) and run_id and run_id not in run_ids:
+            run_ids.append(run_id)
+
+    append_if_present(context.get("baseline"))
+    append_if_present(context.get("candidate"))
+    history = context.get("history")
+    if isinstance(history, dict):
+        for section in ("runs", "missing_telemetry"):
+            for entry in history.get(section, []):
+                append_if_present(entry)
+    return run_ids
+
+
 def _has_task_event_rollup(operation_context: Any) -> bool:
     if not isinstance(operation_context, dict):
         return False
@@ -1155,6 +1190,17 @@ def _has_stale_drop_summary(operation_context: Any) -> bool:
     return (
         isinstance(timeline, dict)
         and isinstance(timeline.get("stale_drop"), dict)
+    )
+
+
+def _has_worker_health_trend(operation_context: Any) -> bool:
+    if not isinstance(operation_context, dict):
+        return False
+    operation = _candidate_operation_context(operation_context)
+    timeline = operation.get("operation_timeline_summary")
+    return (
+        isinstance(timeline, dict)
+        and isinstance(timeline.get("worker_health_trend"), dict)
     )
 
 
@@ -1342,6 +1388,20 @@ def _validate_orchestrator_policy_pressure_context(
         )
 
 
+def _validate_orchestrator_worker_health_trend_context(
+    operation_context: dict[str, Any],
+    *,
+    regression_path: Path,
+) -> None:
+    operation = _candidate_operation_context(operation_context)
+    timeline = operation.get("operation_timeline_summary")
+    if isinstance(timeline, dict):
+        _validate_orchestrator_worker_health_trend(
+            timeline.get("worker_health_trend"),
+            regression_path=regression_path,
+        )
+
+
 def _validate_policy_pressure_mirror_match(
     policy_pressure_summary: dict[str, Any],
     timeline_policy_pressure: Any,
@@ -1465,6 +1525,57 @@ def _validate_orchestrator_stale_drop_summary(
             "stale_drop_summary.tasks_with_stale_drop must be a string list "
             f"when present: {regression_path}"
         )
+
+
+def _validate_orchestrator_worker_health_trend(
+    value: Any,
+    *,
+    regression_path: Path,
+) -> None:
+    if value is None:
+        return
+    if not isinstance(value, dict):
+        raise RuntimeIntelligenceLabHandoffError(
+            f"worker_health_trend must be an object: {regression_path}"
+        )
+    expected_pairs = {
+        "schema_version": ORCHESTRATOR_WORKER_HEALTH_TREND_SCHEMA_VERSION,
+        "operation_context_role": ORCHESTRATOR_EDGEENV_OPERATION_CONTEXT_ROLE,
+        "scheduler_owner": "orchestrator",
+        "decision_owner": "lab",
+    }
+    for key, expected in expected_pairs.items():
+        if value.get(key) != expected:
+            raise RuntimeIntelligenceLabHandoffError(
+                f"worker_health_trend.{key} must be {expected}: "
+                f"{regression_path}"
+            )
+    if value.get("not_a_deployment_decision") is not True:
+        raise RuntimeIntelligenceLabHandoffError(
+            f"worker_health_trend.not_a_deployment_decision must be true: "
+            f"{regression_path}"
+        )
+    for field in (
+        "health_state_counts",
+        "tasks_by_health_state",
+        "task_health_context",
+    ):
+        field_value = value.get(field)
+        if field_value is not None and not isinstance(field_value, dict):
+            raise RuntimeIntelligenceLabHandoffError(
+                f"worker_health_trend.{field} must be an object when present: "
+                f"{regression_path}"
+            )
+    for field in ("degraded_workers", "constrained_workers", "review_hints"):
+        field_value = value.get(field)
+        if field_value is not None and (
+            not isinstance(field_value, list)
+            or not all(isinstance(item, str) for item in field_value)
+        ):
+            raise RuntimeIntelligenceLabHandoffError(
+                f"worker_health_trend.{field} must be a string list when "
+                f"present: {regression_path}"
+            )
 
 
 def _lab_bundle_alignment(files: dict[str, str]) -> dict[str, Any]:
