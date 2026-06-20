@@ -678,6 +678,7 @@ def _edgeenv_report_summary(regression_report: dict[str, Any]) -> dict[str, Any]
     device_local_context_run_ids = _device_local_producer_context_run_ids(context)
     guard_alignment_run_ids = _producer_lineage_guard_alignment_run_ids(context)
     operation_risk_rollup_run_ids = _operation_risk_rollup_run_ids(context)
+    operation_risk_rollup_first_reads = _operation_risk_rollup_first_reads(context)
     task_event_rollup_run_ids = _task_event_rollup_run_ids(context)
     operation_timeline_summary_run_ids = _operation_timeline_summary_run_ids(
         context
@@ -725,6 +726,9 @@ def _edgeenv_report_summary(regression_report: dict[str, Any]) -> dict[str, Any]
         ),
         "orchestrator_operation_risk_rollup_run_ids": (
             operation_risk_rollup_run_ids
+        ),
+        "orchestrator_operation_risk_rollup_first_reads": (
+            operation_risk_rollup_first_reads
         ),
         "orchestrator_task_event_rollup_present": bool(task_event_rollup_run_ids),
         "orchestrator_task_event_rollup_run_ids": task_event_rollup_run_ids,
@@ -986,6 +990,38 @@ def _operation_risk_rollup_run_ids(context: Any) -> list[str]:
     return run_ids
 
 
+def _operation_risk_rollup_first_reads(context: Any) -> list[str]:
+    if not isinstance(context, dict):
+        return []
+    first_reads: list[str] = []
+
+    def append_if_present(run_context: Any) -> None:
+        if not isinstance(run_context, dict):
+            return
+        operation_context = run_context.get("orchestrator_operation_context")
+        rollup = _operation_risk_rollup_context(operation_context)
+        if not rollup:
+            return
+        run_id = run_context.get("run_id")
+        first_read = rollup.get("first_read")
+        if not isinstance(run_id, str) or not run_id:
+            return
+        if not isinstance(first_read, str) or not first_read:
+            return
+        label = f"{run_id}:{first_read}"
+        if label not in first_reads:
+            first_reads.append(label)
+
+    append_if_present(context.get("baseline"))
+    append_if_present(context.get("candidate"))
+    history = context.get("history")
+    if isinstance(history, dict):
+        for section in ("runs", "missing_telemetry"):
+            for entry in history.get(section, []):
+                append_if_present(entry)
+    return first_reads
+
+
 def _operation_timeline_summary_run_ids(context: Any) -> list[str]:
     if not isinstance(context, dict):
         return []
@@ -1075,12 +1111,18 @@ def _has_task_event_rollup(operation_context: Any) -> bool:
 
 
 def _has_operation_risk_rollup(operation_context: Any) -> bool:
+    return bool(_operation_risk_rollup_context(operation_context))
+
+
+def _operation_risk_rollup_context(operation_context: Any) -> dict[str, Any]:
     if not isinstance(operation_context, dict):
-        return False
-    if isinstance(operation_context.get("operation_risk_rollup"), dict):
-        return True
+        return {}
+    rollup = operation_context.get("operation_risk_rollup")
+    if isinstance(rollup, dict):
+        return rollup
     operation = _candidate_operation_context(operation_context)
-    return isinstance(operation.get("operation_risk_rollup"), dict)
+    rollup = operation.get("operation_risk_rollup")
+    return rollup if isinstance(rollup, dict) else {}
 
 
 def _has_operation_timeline_summary(operation_context: Any) -> bool:

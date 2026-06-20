@@ -248,6 +248,9 @@ def test_runtime_intelligence_lab_handoff_manifest_records_producer_contracts(
         "producer_lineage_guard_alignment_run_ids": ["candidate"],
         "orchestrator_operation_risk_rollup_present": True,
         "orchestrator_operation_risk_rollup_run_ids": ["candidate"],
+        "orchestrator_operation_risk_rollup_first_reads": [
+            "candidate:review_operation_risk_context",
+        ],
         "orchestrator_task_event_rollup_present": True,
         "orchestrator_task_event_rollup_run_ids": ["candidate"],
         "orchestrator_operation_timeline_summary_present": True,
@@ -618,6 +621,10 @@ def test_runtime_intelligence_lab_handoff_cli_writes_manifest(tmp_path):
     assert "Device-local producer contexts: candidate" in result.output
     assert "Producer-lineage guard alignment: candidate" in result.output
     assert "Orchestrator operation risk rollup: candidate" in result.output
+    assert (
+        "Orchestrator operation risk first-read: "
+        "candidate:review_operation_risk_context"
+    ) in result.output
     assert "Orchestrator operation timeline summary: candidate" in result.output
     assert "Orchestrator policy-pressure summary: candidate" in result.output
     assert "Orchestrator stale-drop summary: candidate" in result.output
