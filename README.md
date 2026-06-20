@@ -368,6 +368,15 @@ validates the compact stale-drop boundary markers
 `decision_owner=lab`, and `not_a_deployment_decision=true`. The inspect and
 handoff summaries expose matching run IDs as stale-drop traceability metadata;
 this remains optional operation evidence, not an EdgeEnv regression gate.
+If the operation timeline also carries `worker_health_trend`, EdgeEnv validates
+`schema_version=inferedge-orchestrator-worker-health-trend-v1`,
+`operation_context_role=supplemental`, `scheduler_owner=orchestrator`,
+`decision_owner=lab`, and `not_a_deployment_decision=true`, then reports
+matching runs as `worker_health_trend_run_ids` in inspect output and
+`orchestrator_worker_health_trend_run_ids` in the Lab handoff summary. Worker
+health trend is preserved as scheduler-owned operation context for Lab/AIGuard
+review; it is not a comparability field, regression threshold, or deployment
+decision.
 Use `edgeenv runs telemetry inspect-history <path>` to validate and summarize
 that replay artifact before attaching it to a regression report. Add
 `--require-device-local-producer` when the handoff must prove that preserved

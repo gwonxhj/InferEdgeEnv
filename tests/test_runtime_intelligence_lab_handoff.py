@@ -22,6 +22,7 @@ from inferedge_env.result.telemetry_history import (
     ORCHESTRATOR_TELEMETRY_FEED_ARTIFACT_ROLE,
     ORCHESTRATOR_TELEMETRY_FEED_PRODUCER_CONTRACT,
     ORCHESTRATOR_TELEMETRY_FEED_SOURCE_REPOSITORY,
+    ORCHESTRATOR_WORKER_HEALTH_TREND_SCHEMA_VERSION,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -259,6 +260,8 @@ def test_runtime_intelligence_lab_handoff_manifest_records_producer_contracts(
         "orchestrator_policy_pressure_summary_run_ids": ["candidate"],
         "orchestrator_stale_drop_summary_present": True,
         "orchestrator_stale_drop_summary_run_ids": ["candidate"],
+        "orchestrator_worker_health_trend_present": True,
+        "orchestrator_worker_health_trend_run_ids": ["candidate"],
         "duration_traceability_present": True,
         "duration_traceability_run_ids": ["candidate"],
         "duration_sources": ["entrypoint_requested_frames"],
@@ -1135,6 +1138,32 @@ def test_runtime_intelligence_lab_handoff_rejects_policy_pressure_as_decision(
         )
 
 
+def test_runtime_intelligence_lab_handoff_rejects_worker_health_trend_as_decision(
+    tmp_path,
+):
+    baseline_path, candidate_path, regression_path, history_path = _write_handoff_files(
+        tmp_path
+    )
+    regression = json.loads(regression_path.read_text(encoding="utf-8"))
+    regression["runtime_telemetry_context"]["candidate"][
+        "orchestrator_operation_context"
+    ]["candidate_context"]["operation"]["operation_timeline_summary"][
+        "worker_health_trend"
+    ]["decision_owner"] = "orchestrator"
+    regression_path.write_text(json.dumps(regression), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeIntelligenceLabHandoffError,
+        match="worker_health_trend.decision_owner must be lab",
+    ):
+        build_runtime_intelligence_lab_handoff_manifest(
+            baseline_result_path=baseline_path,
+            candidate_result_path=candidate_path,
+            edgeenv_regression_report_path=regression_path,
+            telemetry_history_path=history_path,
+        )
+
+
 def test_runtime_intelligence_lab_handoff_rejects_policy_pressure_mirror_drift(
     tmp_path,
 ):
@@ -1477,6 +1506,7 @@ def _operation_timeline_summary_payload() -> dict:
         },
         "policy_pressure": _policy_pressure_summary_payload(),
         "stale_drop": _stale_drop_summary_payload(),
+        "worker_health_trend": _worker_health_trend_payload(),
         "affected_tasks": {
             "deadline_missed": ["vision_agent"],
             "fallback": ["voice_command_agent"],
@@ -1493,7 +1523,54 @@ def _operation_timeline_summary_payload() -> dict:
             "review_fallback_use",
             "review_stale_drop",
             "review_policy_pressure",
+            "review_worker_health_trend",
         ],
+    }
+
+
+def _worker_health_trend_payload() -> dict:
+    return {
+        "schema_version": ORCHESTRATOR_WORKER_HEALTH_TREND_SCHEMA_VERSION,
+        "operation_context_role": "supplemental",
+        "scheduler_owner": "orchestrator",
+        "decision_owner": "lab",
+        "not_a_deployment_decision": True,
+        "source": "worker_health_snapshot+runtime_event_summary",
+        "health_state_counts": {
+            "healthy": 1,
+            "degraded": 1,
+            "constrained": 1,
+        },
+        "tasks_by_health_state": {
+            "healthy": ["safety_monitor_agent"],
+            "degraded": ["vision_agent"],
+            "constrained": ["voice_command_agent"],
+        },
+        "task_health_context": {
+            "vision_agent": {
+                "health_state": "degraded",
+                "primary_health_reason": "deadline_miss_rate_high",
+                "health_reasons": ["deadline_miss_rate_high"],
+                "executed_count": 5,
+                "deadline_missed_count": 2,
+                "fallback_count": 0,
+                "drop_count": 0,
+                "deadline_miss_rate": 0.4,
+                "fallback_rate": 0.0,
+                "drop_rate": 0.0,
+                "scheduler_delay_event_count": 1,
+                "resource_degraded_event_count": 1,
+            }
+        },
+        "degraded_workers": ["vision_agent"],
+        "constrained_workers": ["voice_command_agent"],
+        "review_hints": [
+            "review_worker_health_degradation",
+            "review_worker_health_constraints",
+        ],
+        "interpretation": (
+            "Worker health trend preserved as Lab review context only."
+        ),
     }
 
 
