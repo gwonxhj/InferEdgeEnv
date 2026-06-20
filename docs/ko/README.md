@@ -148,7 +148,10 @@ operation evidence traceability다.
 보존된 Orchestrator context에 `operation_risk_rollup` 또는
 `operation_timeline_summary`가 있으면 EdgeEnv는 각각
 `orchestrator_operation_risk_rollup_run_ids`와
-`orchestrator_operation_timeline_summary_run_ids`도 노출한다. rollup은
+`orchestrator_operation_timeline_summary_run_ids`도 노출한다. Lab handoff는
+`operation_risk_rollup_first_reads`도 함께 출력해 reviewer가 raw feed를 다시
+열지 않고 Orchestrator `first_read` marker를 Lab으로 따라갈 수 있게 한다.
+rollup은
 `schema_version=inferedge-orchestrator-operation-risk-rollup-v1`,
 `operation_context_role=supplemental`, `decision_owner=lab`,
 `scheduler_owner=orchestrator`, `not_a_deployment_decision=true` marker를

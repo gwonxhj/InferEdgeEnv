@@ -902,6 +902,14 @@ def runtime_intelligence_handoff_manifest(
             "Orchestrator operation risk rollup: "
             f"{', '.join(operation_risk_rollup_run_ids)}"
         )
+    operation_risk_rollup_first_reads = summary.get(
+        "orchestrator_operation_risk_rollup_first_reads"
+    )
+    if operation_risk_rollup_first_reads:
+        console.print(
+            "Orchestrator operation risk first-read: "
+            f"{', '.join(operation_risk_rollup_first_reads)}"
+        )
     operation_timeline_run_ids = summary.get(
         "orchestrator_operation_timeline_summary_run_ids"
     )

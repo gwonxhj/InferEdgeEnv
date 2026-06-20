@@ -147,8 +147,11 @@ The rollup is accepted only with
 timeline is accepted only with
 `schema_version=inferedge-orchestrator-operation-timeline-summary-v1`. The
 inspect summary reports matching runs as `operation_risk_rollup_run_ids` and
-`operation_timeline_summary_run_ids`, but those markers do not become EdgeEnv
-regression judgements, comparability gates, or deployment decisions.
+`operation_timeline_summary_run_ids`. Lab handoff also reports
+`operation_risk_rollup_first_reads` so reviewers can follow the Orchestrator
+`first_read` marker into Lab without reopening the raw feed. These markers do
+not become EdgeEnv regression judgements, comparability gates, or deployment
+decisions.
 If the same operation context carries Orchestrator `policy_pressure_summary` or
 an operation timeline `policy_pressure` block, EdgeEnv validates
 `schema_version=inferedge-orchestrator-policy-pressure-summary-v1`,
