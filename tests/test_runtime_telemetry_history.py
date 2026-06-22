@@ -17,6 +17,7 @@ from inferedge_env.result.telemetry_history import (
     ORCHESTRATOR_EDGEENV_OPERATION_CONTEXT_ROLE,
     ORCHESTRATOR_EDGEENV_REQUIRED_CANDIDATE_FIELDS,
     ORCHESTRATOR_PRODUCER_LINEAGE_AIGUARD_EVIDENCE_TYPE,
+    ORCHESTRATOR_PRESSURE_WINDOW_SUMMARY_SCHEMA_VERSION,
     ORCHESTRATOR_REMOTE_OPERATION_BOUNDARY,
     ORCHESTRATOR_REMOTE_RUNTIME_EVENT_SUMMARY_ROLE,
     ORCHESTRATOR_TELEMETRY_FEED_ARTIFACT_ROLE,
@@ -404,6 +405,7 @@ def test_runtime_telemetry_history_preserves_operation_risk_summary(
     assert summary["replay"]["policy_pressure_summary_run_ids"] == ["candidate"]
     assert summary["replay"]["stale_drop_summary_run_ids"] == ["candidate"]
     assert summary["replay"]["worker_health_trend_run_ids"] == ["candidate"]
+    assert summary["replay"]["pressure_window_summary_run_ids"] == ["candidate"]
     assert summary["replay"]["orchestrator_context_run_ids"] == ["candidate"]
 
 
@@ -450,6 +452,7 @@ def test_runtime_telemetry_history_preserves_operation_risk_rollup(
     assert summary["replay"]["policy_pressure_summary_run_ids"] == ["candidate"]
     assert summary["replay"]["stale_drop_summary_run_ids"] == ["candidate"]
     assert summary["replay"]["worker_health_trend_run_ids"] == ["candidate"]
+    assert summary["replay"]["pressure_window_summary_run_ids"] == ["candidate"]
 
 
 def test_runtime_telemetry_history_rejects_operation_risk_rollup_as_decision(
@@ -593,6 +596,35 @@ def test_runtime_telemetry_history_rejects_worker_health_trend_as_decision(
     with pytest.raises(
         RuntimeTelemetryHistoryError,
         match="worker_health_trend.decision_owner must be lab",
+    ):
+        build_runtime_telemetry_history(edgeenv_root, orchestrator_feeds=[feed_path])
+
+
+def test_runtime_telemetry_history_rejects_pressure_window_as_decision(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    edgeenv_root = tmp_path / ".edgeenv"
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="candidate",
+        runtime_telemetry=_runtime_telemetry_payload(sequence_id=2),
+    )
+    feed = _orchestrator_feed_payload("candidate")
+    feed["candidate_context"]["operation"]["operation_timeline_summary"][
+        "pressure_window"
+    ]["decision_owner"] = "orchestrator"
+    feed_path = tmp_path / "orchestrator-feed.json"
+    feed_path.write_text(json.dumps(feed), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeTelemetryHistoryError,
+        match="pressure_window.decision_owner must be lab",
     ):
         build_runtime_telemetry_history(edgeenv_root, orchestrator_feeds=[feed_path])
 
@@ -1757,6 +1789,7 @@ def _operation_timeline_summary_payload() -> dict:
         "policy_pressure": _policy_pressure_summary_payload(),
         "stale_drop": _stale_drop_summary_payload(),
         "worker_health_trend": _worker_health_trend_payload(),
+        "pressure_window": _pressure_window_payload(),
         "affected_tasks": {
             "deadline_missed": ["vision_agent"],
             "fallback": ["voice_command_agent"],
@@ -1765,6 +1798,7 @@ def _operation_timeline_summary_payload() -> dict:
             "constrained": [],
             "stale_drop": ["vision_agent"],
             "policy_pressure": ["vision_agent", "voice_command_agent"],
+            "pressure_window": ["vision_agent", "voice_command_agent"],
         },
         "review_hints": [
             "review_queue_pressure",
@@ -1774,7 +1808,50 @@ def _operation_timeline_summary_payload() -> dict:
             "review_stale_drop",
             "review_policy_pressure",
             "review_worker_health_trend",
+            "review_sustained_pressure_window",
         ],
+    }
+
+
+def _pressure_window_payload() -> dict:
+    return {
+        "schema_version": ORCHESTRATOR_PRESSURE_WINDOW_SUMMARY_SCHEMA_VERSION,
+        "operation_context_role": "supplemental",
+        "scheduler_owner": "orchestrator",
+        "decision_owner": "lab",
+        "not_a_deployment_decision": True,
+        "source": "queue_depth_timeline+policy_decision_log",
+        "first_read": "review_sustained_pressure_window",
+        "overload_backlog_threshold": 5,
+        "window_count": 1,
+        "longest_window_cycles": 2,
+        "peak_total_queue_depth": 7,
+        "peak_window": {
+            "start_cycle": 3,
+            "end_cycle": 4,
+            "peak_total_queue_depth": 7,
+        },
+        "longest_window": {
+            "start_cycle": 3,
+            "end_cycle": 4,
+            "duration_cycles": 2,
+        },
+        "windows": [
+            {
+                "start_cycle": 3,
+                "end_cycle": 4,
+                "duration_cycles": 2,
+                "peak_total_queue_depth": 7,
+            }
+        ],
+        "limited_tasks": ["vision_agent", "voice_command_agent"],
+        "protected_tasks": ["safety_monitor_agent"],
+        "fallback_tasks": ["voice_command_agent"],
+        "pressure_reasons": ["queue_backlog_threshold_exceeded"],
+        "policy_decision_count": 2,
+        "interpretation": (
+            "Pressure window preserved as Lab review context only."
+        ),
     }
 
 

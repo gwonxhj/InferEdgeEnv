@@ -12,6 +12,7 @@ from inferedge_env.result.telemetry_history import (
     ORCHESTRATOR_EDGEENV_OPERATION_CONTEXT_ROLE,
     ORCHESTRATOR_EDGEENV_REQUIRED_CANDIDATE_FIELDS,
     ORCHESTRATOR_POLICY_PRESSURE_SUMMARY_SCHEMA_VERSION,
+    ORCHESTRATOR_PRESSURE_WINDOW_SUMMARY_SCHEMA_VERSION,
     ORCHESTRATOR_PRODUCER_LINEAGE_AIGUARD_EVIDENCE_TYPE,
     ORCHESTRATOR_STALE_DROP_SUMMARY_SCHEMA_VERSION,
     ORCHESTRATOR_TELEMETRY_FEED_ARTIFACT_ROLE,
@@ -89,6 +90,7 @@ LAB_BUNDLE_EXTERNAL_AIGUARD_REQUIRED_EVIDENCE_TYPES = (
 LAB_BUNDLE_OPTIONAL_AIGUARD_EVIDENCE_TYPES = (
     "stale_frame_risk",
     "edgeenv_orchestrator_stale_drop_summary",
+    "edgeenv_orchestrator_pressure_window_summary",
 )
 LAB_BUNDLE_OPTIONAL_AIGUARD_SOURCE_TRACEABILITY_CONTEXT_ROLE = (
     "read_only_optional_source_traceability"
@@ -417,6 +419,10 @@ def _validate_orchestrator_context(
         operation_context,
         regression_path=regression_path,
     )
+    _validate_orchestrator_pressure_window_context(
+        operation_context,
+        regression_path=regression_path,
+    )
 
 
 def _validate_orchestrator_producer_markers(
@@ -691,6 +697,7 @@ def _edgeenv_report_summary(regression_report: dict[str, Any]) -> dict[str, Any]
     policy_pressure_summary_run_ids = _policy_pressure_summary_run_ids(context)
     stale_drop_summary_run_ids = _stale_drop_summary_run_ids(context)
     worker_health_trend_run_ids = _worker_health_trend_run_ids(context)
+    pressure_window_summary_run_ids = _pressure_window_summary_run_ids(context)
     fixture_matrix_summary = _fixture_matrix_summary(
         regression_report.get("fixture_matrix_context")
     )
@@ -758,6 +765,12 @@ def _edgeenv_report_summary(regression_report: dict[str, Any]) -> dict[str, Any]
             worker_health_trend_run_ids
         ),
         "orchestrator_worker_health_trend_run_ids": worker_health_trend_run_ids,
+        "orchestrator_pressure_window_summary_present": bool(
+            pressure_window_summary_run_ids
+        ),
+        "orchestrator_pressure_window_summary_run_ids": (
+            pressure_window_summary_run_ids
+        ),
         "duration_traceability_present": bool(
             duration_traceability["run_ids"]
         ),
@@ -1132,6 +1145,31 @@ def _worker_health_trend_run_ids(context: Any) -> list[str]:
     return run_ids
 
 
+def _pressure_window_summary_run_ids(context: Any) -> list[str]:
+    if not isinstance(context, dict):
+        return []
+    run_ids: list[str] = []
+
+    def append_if_present(run_context: Any) -> None:
+        if not isinstance(run_context, dict):
+            return
+        operation_context = run_context.get("orchestrator_operation_context")
+        if not _has_pressure_window_summary(operation_context):
+            return
+        run_id = run_context.get("run_id")
+        if isinstance(run_id, str) and run_id and run_id not in run_ids:
+            run_ids.append(run_id)
+
+    append_if_present(context.get("baseline"))
+    append_if_present(context.get("candidate"))
+    history = context.get("history")
+    if isinstance(history, dict):
+        for section in ("runs", "missing_telemetry"):
+            for entry in history.get(section, []):
+                append_if_present(entry)
+    return run_ids
+
+
 def _has_task_event_rollup(operation_context: Any) -> bool:
     if not isinstance(operation_context, dict):
         return False
@@ -1201,6 +1239,17 @@ def _has_worker_health_trend(operation_context: Any) -> bool:
     return (
         isinstance(timeline, dict)
         and isinstance(timeline.get("worker_health_trend"), dict)
+    )
+
+
+def _has_pressure_window_summary(operation_context: Any) -> bool:
+    if not isinstance(operation_context, dict):
+        return False
+    operation = _candidate_operation_context(operation_context)
+    timeline = operation.get("operation_timeline_summary")
+    return (
+        isinstance(timeline, dict)
+        and isinstance(timeline.get("pressure_window"), dict)
     )
 
 
@@ -1402,6 +1451,20 @@ def _validate_orchestrator_worker_health_trend_context(
         )
 
 
+def _validate_orchestrator_pressure_window_context(
+    operation_context: dict[str, Any],
+    *,
+    regression_path: Path,
+) -> None:
+    operation = _candidate_operation_context(operation_context)
+    timeline = operation.get("operation_timeline_summary")
+    if isinstance(timeline, dict):
+        _validate_orchestrator_pressure_window_summary(
+            timeline.get("pressure_window"),
+            regression_path=regression_path,
+        )
+
+
 def _validate_policy_pressure_mirror_match(
     policy_pressure_summary: dict[str, Any],
     timeline_policy_pressure: Any,
@@ -1575,6 +1638,81 @@ def _validate_orchestrator_worker_health_trend(
             raise RuntimeIntelligenceLabHandoffError(
                 f"worker_health_trend.{field} must be a string list when "
                 f"present: {regression_path}"
+            )
+
+
+def _validate_orchestrator_pressure_window_summary(
+    value: Any,
+    *,
+    regression_path: Path,
+) -> None:
+    if value is None:
+        return
+    if not isinstance(value, dict):
+        raise RuntimeIntelligenceLabHandoffError(
+            f"pressure_window must be an object: {regression_path}"
+        )
+    expected_pairs = {
+        "schema_version": ORCHESTRATOR_PRESSURE_WINDOW_SUMMARY_SCHEMA_VERSION,
+        "operation_context_role": ORCHESTRATOR_EDGEENV_OPERATION_CONTEXT_ROLE,
+        "scheduler_owner": "orchestrator",
+        "decision_owner": "lab",
+    }
+    for key, expected in expected_pairs.items():
+        if value.get(key) != expected:
+            raise RuntimeIntelligenceLabHandoffError(
+                f"pressure_window.{key} must be {expected}: {regression_path}"
+            )
+    if value.get("not_a_deployment_decision") is not True:
+        raise RuntimeIntelligenceLabHandoffError(
+            f"pressure_window.not_a_deployment_decision must be true: "
+            f"{regression_path}"
+        )
+    for field in (
+        "overload_backlog_threshold",
+        "window_count",
+        "longest_window_cycles",
+        "peak_total_queue_depth",
+        "policy_decision_count",
+    ):
+        field_value = value.get(field)
+        if field_value is not None and (
+            type(field_value) is not int or field_value < 0
+        ):
+            raise RuntimeIntelligenceLabHandoffError(
+                f"pressure_window.{field} must be a non-negative integer "
+                f"when present: {regression_path}"
+            )
+    for field in ("peak_window", "longest_window"):
+        field_value = value.get(field)
+        if field_value is not None and not isinstance(field_value, dict):
+            raise RuntimeIntelligenceLabHandoffError(
+                f"pressure_window.{field} must be an object when present: "
+                f"{regression_path}"
+            )
+    windows = value.get("windows")
+    if windows is not None and (
+        not isinstance(windows, list)
+        or not all(isinstance(item, dict) for item in windows)
+    ):
+        raise RuntimeIntelligenceLabHandoffError(
+            f"pressure_window.windows must be an object list when present: "
+            f"{regression_path}"
+        )
+    for field in (
+        "limited_tasks",
+        "protected_tasks",
+        "fallback_tasks",
+        "pressure_reasons",
+    ):
+        field_value = value.get(field)
+        if field_value is not None and (
+            not isinstance(field_value, list)
+            or not all(isinstance(item, str) for item in field_value)
+        ):
+            raise RuntimeIntelligenceLabHandoffError(
+                f"pressure_window.{field} must be a string list when present: "
+                f"{regression_path}"
             )
 
 
