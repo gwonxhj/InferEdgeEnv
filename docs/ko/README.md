@@ -176,6 +176,15 @@ timeline `policy_pressure` block이 있으면 EdgeEnv는
 아니다. direct `policy_pressure_summary`와 timeline `policy_pressure`가 둘 다
 있으면 handoff 중 mirror drift가 생기지 않도록 두 block이 정확히 일치해야
 한다.
+보존된 operation timeline에 Orchestrator `pressure_window` block이 있으면
+EdgeEnv는
+`schema_version=inferedge-orchestrator-pressure-window-summary-v1`,
+`operation_context_role=supplemental`, `scheduler_owner=orchestrator`,
+`decision_owner=lab`, `not_a_deployment_decision=true` marker를 검증하고
+inspect에서는 `pressure_window_summary_run_ids`, Lab handoff에서는
+`orchestrator_pressure_window_summary_run_ids`로 traceability를 노출한다.
+이는 sustained overload window를 reviewer가 빠르게 찾기 위한 navigation
+context이며 EdgeEnv regression gate나 deployment decision이 아니다.
 또한 `lab_bundle_alignment.external_aiguard_required_evidence_types`에
 `runtime_history_seed_run_config_traceability`와
 `edgeenv_orchestrator_operation_risk_rollup`,
@@ -192,9 +201,10 @@ block은 이 선언이 AIGuard `check-edgeenv-handoff-alignment`와 Lab Runtime
 Intelligence bundle manifest gate에서 검증된다는 점도 기록한다.
 별도의 `lab_bundle_alignment.optional_aiguard_evidence_types`는 최신
 sustained Orchestrator stale-drop context에서 AIGuard가 만들 수 있는
-`stale_frame_risk`와 `edgeenv_orchestrator_stale_drop_summary`를 선언한다.
-이 둘은 optional이므로 기존 queue/thermal feed나 Lab required bundle set을
-깨뜨리지 않는다.
+`stale_frame_risk`, `edgeenv_orchestrator_stale_drop_summary`,
+`edgeenv_orchestrator_pressure_window_summary`를 선언한다. 이 항목들은
+optional이므로 기존 queue/thermal feed나 Lab required bundle set을 깨뜨리지
+않는다.
 `lab_bundle_alignment.optional_aiguard_source_traceability`는 AIGuard
 optional-present source artifact와 재생성 명령을 read-only metadata로
 mirror한다:

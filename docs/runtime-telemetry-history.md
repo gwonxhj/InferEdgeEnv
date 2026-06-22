@@ -179,6 +179,16 @@ them as `orchestrator_worker_health_trend_run_ids`. This preserves
 worker-health state counts, per-task health context, degraded/constrained
 workers, and review hints as supplemental operation evidence only; EdgeEnv does
 not turn worker health into a regression threshold or deployment decision.
+If the same operation timeline carries Orchestrator `pressure_window`, EdgeEnv
+validates
+`schema_version=inferedge-orchestrator-pressure-window-summary-v1`,
+`operation_context_role=supplemental`, `scheduler_owner=orchestrator`,
+`decision_owner=lab`, and `not_a_deployment_decision=true`. The inspect summary
+reports matching runs as `pressure_window_summary_run_ids`, and Lab handoff
+mirrors them as `orchestrator_pressure_window_summary_run_ids`. This preserves
+the overload-threshold window count, longest window, peak queue depth,
+limited/protected/fallback tasks, and `review_sustained_pressure_window`
+first-read marker as reviewer navigation context only.
 For device-local handoff smokes, `inspect-history` can enforce that lineage with
 `--require-device-local-producer`. The stricter check fails when the preserved
 history artifact has no Orchestrator context, or when preserved

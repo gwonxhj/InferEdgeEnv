@@ -377,6 +377,15 @@ matching runs as `worker_health_trend_run_ids` in inspect output and
 health trend is preserved as scheduler-owned operation context for Lab/AIGuard
 review; it is not a comparability field, regression threshold, or deployment
 decision.
+If the operation timeline carries `pressure_window`, EdgeEnv validates
+`schema_version=inferedge-orchestrator-pressure-window-summary-v1`,
+`operation_context_role=supplemental`, `scheduler_owner=orchestrator`,
+`decision_owner=lab`, and `not_a_deployment_decision=true`, then reports
+matching runs as `pressure_window_summary_run_ids` in inspect output and
+`orchestrator_pressure_window_summary_run_ids` in the Lab handoff summary. The
+pressure-window block is preserved as reviewer navigation for sustained
+overload intervals; it does not become an EdgeEnv regression gate or a
+deployment decision.
 Use `edgeenv runs telemetry inspect-history <path>` to validate and summarize
 that replay artifact before attaching it to a regression report. Add
 `--require-device-local-producer` when the handoff must prove that preserved
@@ -475,9 +484,10 @@ AIGuard `scheduler_delay_pattern`, and `remote_fallback_recovery_sample.json`
 can map to `remote_execution_recovered_by_fallback` before Lab renders the
 corresponding report markers.
 The alignment block separately declares optional AIGuard evidence types
-`stale_frame_risk` and `edgeenv_orchestrator_stale_drop_summary` for newer
-sustained Orchestrator stale-drop context. They are optional so EdgeEnv can
-preserve stale-drop evidence when present without rejecting older queue/thermal
+`stale_frame_risk`, `edgeenv_orchestrator_stale_drop_summary`, and
+`edgeenv_orchestrator_pressure_window_summary` for newer sustained
+Orchestrator context. They are optional so EdgeEnv can preserve stale-drop or
+pressure-window evidence when present without rejecting older queue/thermal
 feeds or changing Lab's required Runtime Intelligence bundle set.
 `lab_bundle_alignment.optional_aiguard_source_traceability` mirrors the
 AIGuard optional-present source artifact and regeneration command as read-only
