@@ -14,6 +14,7 @@ from inferedge_env.result.telemetry_history import (
     ORCHESTRATOR_POLICY_PRESSURE_SUMMARY_SCHEMA_VERSION,
     ORCHESTRATOR_PRESSURE_WINDOW_SUMMARY_SCHEMA_VERSION,
     ORCHESTRATOR_PRODUCER_LINEAGE_AIGUARD_EVIDENCE_TYPE,
+    ORCHESTRATOR_SCENARIO_COVERAGE_SUMMARY_SCHEMA_VERSION,
     ORCHESTRATOR_STALE_DROP_SUMMARY_SCHEMA_VERSION,
     ORCHESTRATOR_TELEMETRY_FEED_ARTIFACT_ROLE,
     ORCHESTRATOR_TELEMETRY_FEED_PRODUCER_CONTRACT,
@@ -423,6 +424,10 @@ def _validate_orchestrator_context(
         operation_context,
         regression_path=regression_path,
     )
+    _validate_orchestrator_scenario_coverage_context(
+        operation_context,
+        regression_path=regression_path,
+    )
 
 
 def _validate_orchestrator_producer_markers(
@@ -699,6 +704,7 @@ def _edgeenv_report_summary(regression_report: dict[str, Any]) -> dict[str, Any]
     stale_drop_summary_run_ids = _stale_drop_summary_run_ids(context)
     worker_health_trend_run_ids = _worker_health_trend_run_ids(context)
     pressure_window_summary_run_ids = _pressure_window_summary_run_ids(context)
+    scenario_coverage_run_ids = _scenario_coverage_run_ids(context)
     fixture_matrix_summary = _fixture_matrix_summary(
         regression_report.get("fixture_matrix_context")
     )
@@ -775,6 +781,10 @@ def _edgeenv_report_summary(regression_report: dict[str, Any]) -> dict[str, Any]
         "orchestrator_pressure_window_summary_run_ids": (
             pressure_window_summary_run_ids
         ),
+        "orchestrator_scenario_coverage_present": bool(
+            scenario_coverage_run_ids
+        ),
+        "orchestrator_scenario_coverage_run_ids": scenario_coverage_run_ids,
         "duration_traceability_present": bool(
             duration_traceability["run_ids"]
         ),
@@ -1208,6 +1218,31 @@ def _pressure_window_summary_run_ids(context: Any) -> list[str]:
     return run_ids
 
 
+def _scenario_coverage_run_ids(context: Any) -> list[str]:
+    if not isinstance(context, dict):
+        return []
+    run_ids: list[str] = []
+
+    def append_if_present(run_context: Any) -> None:
+        if not isinstance(run_context, dict):
+            return
+        operation_context = run_context.get("orchestrator_operation_context")
+        if not _has_scenario_coverage(operation_context):
+            return
+        run_id = run_context.get("run_id")
+        if isinstance(run_id, str) and run_id and run_id not in run_ids:
+            run_ids.append(run_id)
+
+    append_if_present(context.get("baseline"))
+    append_if_present(context.get("candidate"))
+    history = context.get("history")
+    if isinstance(history, dict):
+        for section in ("runs", "missing_telemetry"):
+            for entry in history.get(section, []):
+                append_if_present(entry)
+    return run_ids
+
+
 def _has_task_event_rollup(operation_context: Any) -> bool:
     if not isinstance(operation_context, dict):
         return False
@@ -1298,6 +1333,17 @@ def _has_pressure_window_summary(operation_context: Any) -> bool:
     return (
         isinstance(timeline, dict)
         and isinstance(timeline.get("pressure_window"), dict)
+    )
+
+
+def _has_scenario_coverage(operation_context: Any) -> bool:
+    if not isinstance(operation_context, dict):
+        return False
+    operation = _candidate_operation_context(operation_context)
+    timeline = operation.get("operation_timeline_summary")
+    return (
+        isinstance(timeline, dict)
+        and isinstance(timeline.get("scenario_coverage"), dict)
     )
 
 
@@ -1513,6 +1559,20 @@ def _validate_orchestrator_pressure_window_context(
         )
 
 
+def _validate_orchestrator_scenario_coverage_context(
+    operation_context: dict[str, Any],
+    *,
+    regression_path: Path,
+) -> None:
+    operation = _candidate_operation_context(operation_context)
+    timeline = operation.get("operation_timeline_summary")
+    if isinstance(timeline, dict):
+        _validate_orchestrator_scenario_coverage(
+            timeline.get("scenario_coverage"),
+            regression_path=regression_path,
+        )
+
+
 def _validate_policy_pressure_mirror_match(
     policy_pressure_summary: dict[str, Any],
     timeline_policy_pressure: Any,
@@ -1525,6 +1585,77 @@ def _validate_policy_pressure_mirror_match(
             "operation_timeline_summary.policy_pressure when both are present: "
             f"{regression_path}"
         )
+
+
+def _validate_orchestrator_scenario_coverage(
+    value: Any,
+    *,
+    regression_path: Path,
+) -> None:
+    if value is None:
+        return
+    if not isinstance(value, dict):
+        raise RuntimeIntelligenceLabHandoffError(
+            f"scenario_coverage must be an object: {regression_path}"
+        )
+    expected_pairs = {
+        "schema_version": ORCHESTRATOR_SCENARIO_COVERAGE_SUMMARY_SCHEMA_VERSION,
+        "operation_context_role": ORCHESTRATOR_EDGEENV_OPERATION_CONTEXT_ROLE,
+        "scheduler_owner": "orchestrator",
+        "decision_owner": "lab",
+    }
+    for key, expected in expected_pairs.items():
+        if value.get(key) != expected:
+            raise RuntimeIntelligenceLabHandoffError(
+                f"scenario_coverage.{key} must be {expected}: "
+                f"{regression_path}"
+            )
+    if value.get("not_a_deployment_decision") is not True:
+        raise RuntimeIntelligenceLabHandoffError(
+            f"scenario_coverage.not_a_deployment_decision must be true: "
+            f"{regression_path}"
+        )
+    if value.get("first_read") != "review_sustained_scenario_coverage":
+        raise RuntimeIntelligenceLabHandoffError(
+            "scenario_coverage.first_read must be "
+            f"review_sustained_scenario_coverage: {regression_path}"
+        )
+    for field in (
+        "observed_cycle_count",
+        "max_observed_cycle",
+        "task_count",
+        "queue_depth_sample_count",
+        "latency_sample_count",
+        "runtime_event_count",
+        "policy_decision_count",
+        "producer_source_count",
+        "device_local_producer_count",
+    ):
+        field_value = value.get(field)
+        if field_value is not None and (
+            type(field_value) is not int or field_value < 0
+        ):
+            raise RuntimeIntelligenceLabHandoffError(
+                f"scenario_coverage.{field} must be a non-negative integer "
+                f"when present: {regression_path}"
+            )
+    for field in ("producer_sources", "coverage_markers"):
+        field_value = value.get(field)
+        if field_value is not None and (
+            not isinstance(field_value, list)
+            or not all(isinstance(item, str) for item in field_value)
+        ):
+            raise RuntimeIntelligenceLabHandoffError(
+                f"scenario_coverage.{field} must be a string list when "
+                f"present: {regression_path}"
+            )
+    for field in ("producer_sources_by_task", "producer_stage_by_task"):
+        field_value = value.get(field)
+        if field_value is not None and not isinstance(field_value, dict):
+            raise RuntimeIntelligenceLabHandoffError(
+                f"scenario_coverage.{field} must be an object when present: "
+                f"{regression_path}"
+            )
 
 
 def _validate_orchestrator_policy_pressure_summary(

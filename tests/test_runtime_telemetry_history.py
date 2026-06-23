@@ -20,6 +20,7 @@ from inferedge_env.result.telemetry_history import (
     ORCHESTRATOR_PRESSURE_WINDOW_SUMMARY_SCHEMA_VERSION,
     ORCHESTRATOR_REMOTE_OPERATION_BOUNDARY,
     ORCHESTRATOR_REMOTE_RUNTIME_EVENT_SUMMARY_ROLE,
+    ORCHESTRATOR_SCENARIO_COVERAGE_SUMMARY_SCHEMA_VERSION,
     ORCHESTRATOR_TELEMETRY_FEED_ARTIFACT_ROLE,
     ORCHESTRATOR_TELEMETRY_FEED_PRODUCER_CONTRACT,
     ORCHESTRATOR_TELEMETRY_FEED_SCHEMA_VERSION,
@@ -412,6 +413,7 @@ def test_runtime_telemetry_history_preserves_operation_risk_summary(
     assert summary["replay"]["stale_drop_summary_run_ids"] == ["candidate"]
     assert summary["replay"]["worker_health_trend_run_ids"] == ["candidate"]
     assert summary["replay"]["pressure_window_summary_run_ids"] == ["candidate"]
+    assert summary["replay"]["scenario_coverage_run_ids"] == ["candidate"]
     assert summary["replay"]["orchestrator_context_run_ids"] == ["candidate"]
 
 
@@ -459,6 +461,7 @@ def test_runtime_telemetry_history_preserves_operation_risk_rollup(
     assert summary["replay"]["stale_drop_summary_run_ids"] == ["candidate"]
     assert summary["replay"]["worker_health_trend_run_ids"] == ["candidate"]
     assert summary["replay"]["pressure_window_summary_run_ids"] == ["candidate"]
+    assert summary["replay"]["scenario_coverage_run_ids"] == ["candidate"]
 
 
 def test_runtime_telemetry_history_rejects_operation_risk_rollup_as_decision(
@@ -631,6 +634,35 @@ def test_runtime_telemetry_history_rejects_pressure_window_as_decision(
     with pytest.raises(
         RuntimeTelemetryHistoryError,
         match="pressure_window.decision_owner must be lab",
+    ):
+        build_runtime_telemetry_history(edgeenv_root, orchestrator_feeds=[feed_path])
+
+
+def test_runtime_telemetry_history_rejects_scenario_coverage_as_decision(
+    tmp_path,
+    bench_config,
+    target_profile,
+    config_files,
+):
+    edgeenv_root = tmp_path / ".edgeenv"
+    _write_registered_run(
+        edgeenv_root,
+        bench_config,
+        target_profile,
+        config_files,
+        run_id="candidate",
+        runtime_telemetry=_runtime_telemetry_payload(sequence_id=2),
+    )
+    feed = _orchestrator_feed_payload("candidate")
+    feed["candidate_context"]["operation"]["operation_timeline_summary"][
+        "scenario_coverage"
+    ]["decision_owner"] = "orchestrator"
+    feed_path = tmp_path / "orchestrator-feed.json"
+    feed_path.write_text(json.dumps(feed), encoding="utf-8")
+
+    with pytest.raises(
+        RuntimeTelemetryHistoryError,
+        match="scenario_coverage.decision_owner must be lab",
     ):
         build_runtime_telemetry_history(edgeenv_root, orchestrator_feeds=[feed_path])
 
@@ -1186,6 +1218,7 @@ def test_cli_runs_telemetry_export_history_attaches_orchestrator_feed(
     assert "Producer-lineage guard alignment runs: 1" in inspect_result.output
     assert "Orchestrator stale-drop summary runs: 1" in inspect_result.output
     assert "Orchestrator policy-pressure summary runs: 1" in inspect_result.output
+    assert "Orchestrator scenario-coverage summary runs: 1" in inspect_result.output
     assert (
         "Orchestrator policy-pressure reason counts: "
         "queue_backlog_threshold_exceeded:2"
@@ -1800,6 +1833,7 @@ def _operation_timeline_summary_payload() -> dict:
         "stale_drop": _stale_drop_summary_payload(),
         "worker_health_trend": _worker_health_trend_payload(),
         "pressure_window": _pressure_window_payload(),
+        "scenario_coverage": _scenario_coverage_payload(),
         "affected_tasks": {
             "deadline_missed": ["vision_agent"],
             "fallback": ["voice_command_agent"],
@@ -1809,6 +1843,11 @@ def _operation_timeline_summary_payload() -> dict:
             "stale_drop": ["vision_agent"],
             "policy_pressure": ["vision_agent", "voice_command_agent"],
             "pressure_window": ["vision_agent", "voice_command_agent"],
+            "scenario_coverage": [
+                "vision_agent",
+                "voice_command_agent",
+                "safety_monitor_agent",
+            ],
         },
         "review_hints": [
             "review_queue_pressure",
@@ -1819,6 +1858,46 @@ def _operation_timeline_summary_payload() -> dict:
             "review_policy_pressure",
             "review_worker_health_trend",
             "review_sustained_pressure_window",
+            "review_sustained_scenario_coverage",
+        ],
+    }
+
+
+def _scenario_coverage_payload() -> dict:
+    return {
+        "schema_version": ORCHESTRATOR_SCENARIO_COVERAGE_SUMMARY_SCHEMA_VERSION,
+        "operation_context_role": "supplemental",
+        "scheduler_owner": "orchestrator",
+        "decision_owner": "lab",
+        "not_a_deployment_decision": True,
+        "source": (
+            "queue_depth_timeline+latency_timeline+policy_decision_log+"
+            "runtime_event_summary"
+        ),
+        "first_read": "review_sustained_scenario_coverage",
+        "observed_cycle_count": 5,
+        "max_observed_cycle": 4,
+        "task_count": 3,
+        "queue_depth_sample_count": 2,
+        "latency_sample_count": 2,
+        "runtime_event_count": 3,
+        "policy_decision_count": 2,
+        "producer_source_count": 2,
+        "device_local_producer_count": 2,
+        "producer_sources": ["device_local", "entrypoint"],
+        "producer_sources_by_task": {
+            "vision_agent": ["device_local"],
+            "voice_command_agent": ["entrypoint"],
+        },
+        "producer_stage_by_task": {
+            "vision_agent": "runtime",
+            "voice_command_agent": "scheduler",
+        },
+        "coverage_markers": [
+            "queue_depth_timeline",
+            "latency_timeline",
+            "policy_decision_log",
+            "runtime_event_summary",
         ],
     }
 

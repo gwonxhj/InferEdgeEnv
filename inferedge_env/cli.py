@@ -511,6 +511,10 @@ def inspect_runtime_telemetry_history_command(
         "Orchestrator policy-pressure summary runs: "
         f"{len(replay.get('policy_pressure_summary_run_ids', []))}"
     )
+    console.print(
+        "Orchestrator scenario-coverage summary runs: "
+        f"{len(replay.get('scenario_coverage_run_ids', []))}"
+    )
     policy_pressure_reason_counts = replay.get("policy_pressure_reason_counts", {})
     if policy_pressure_reason_counts:
         console.print(
@@ -942,6 +946,14 @@ def runtime_intelligence_handoff_manifest(
             "Orchestrator policy-pressure reason counts: "
             f"{_format_count_map(policy_pressure_reason_counts)}",
             soft_wrap=True,
+        )
+    scenario_coverage_run_ids = summary.get(
+        "orchestrator_scenario_coverage_run_ids"
+    )
+    if scenario_coverage_run_ids:
+        console.print(
+            "Orchestrator scenario coverage: "
+            f"{', '.join(scenario_coverage_run_ids)}"
         )
     stale_drop_summary_run_ids = summary.get("orchestrator_stale_drop_summary_run_ids")
     if stale_drop_summary_run_ids:

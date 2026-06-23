@@ -393,6 +393,14 @@ matching runs as `pressure_window_summary_run_ids` in inspect output and
 pressure-window block is preserved as reviewer navigation for sustained
 overload intervals; it does not become an EdgeEnv regression gate or a
 deployment decision.
+If the same operation timeline carries `scenario_coverage`, EdgeEnv validates
+`schema_version=inferedge-orchestrator-scenario-coverage-summary-v1`, the same
+supplemental/scheduler/Lab owner boundary markers, and
+`first_read=review_sustained_scenario_coverage`, then reports matching runs as
+`scenario_coverage_run_ids` in inspect output and
+`orchestrator_scenario_coverage_run_ids` in the Lab handoff summary. This keeps
+observed cycle/task/sample coverage visible for reviewer navigation without
+turning scenario coverage into a regression gate or deployment decision.
 Use `edgeenv runs telemetry inspect-history <path>` to validate and summarize
 that replay artifact before attaching it to a regression report. Add
 `--require-device-local-producer` when the handoff must prove that preserved
@@ -493,9 +501,12 @@ corresponding report markers.
 The alignment block separately declares optional AIGuard evidence types
 `stale_frame_risk`, `edgeenv_orchestrator_stale_drop_summary`, and
 `edgeenv_orchestrator_pressure_window_summary` for newer sustained
-Orchestrator context. They are optional so EdgeEnv can preserve stale-drop or
-pressure-window evidence when present without rejecting older queue/thermal
-feeds or changing Lab's required Runtime Intelligence bundle set.
+Orchestrator context. EdgeEnv also preserves Orchestrator scenario coverage in
+the report summary when present, while keeping it as Lab reviewer navigation
+rather than an AIGuard required evidence type. These items are optional so
+EdgeEnv can preserve newer sustained evidence when present without rejecting
+older queue/thermal feeds or changing Lab's required Runtime Intelligence
+bundle set.
 `lab_bundle_alignment.optional_aiguard_source_traceability` mirrors the
 AIGuard optional-present source artifact and regeneration command as read-only
 metadata:
