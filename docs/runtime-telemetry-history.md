@@ -192,6 +192,17 @@ mirrors them as `orchestrator_pressure_window_summary_run_ids`. This preserves
 the overload-threshold window count, longest window, peak queue depth,
 limited/protected/fallback tasks, and `review_sustained_pressure_window`
 first-read marker as reviewer navigation context only.
+If that operation timeline also carries Orchestrator `scenario_coverage`,
+EdgeEnv validates
+`schema_version=inferedge-orchestrator-scenario-coverage-summary-v1`,
+the same supplemental/scheduler/Lab owner boundary markers,
+`not_a_deployment_decision=true`, and
+`first_read=review_sustained_scenario_coverage`. The inspect summary reports
+matching runs as `scenario_coverage_run_ids`, and Lab handoff mirrors them as
+`orchestrator_scenario_coverage_run_ids`. This preserves observed cycles,
+task counts, sample counts, producer-source coverage, and coverage markers for
+reviewer navigation without making scenario coverage a regression threshold or
+deployment decision.
 For device-local handoff smokes, `inspect-history` can enforce that lineage with
 `--require-device-local-producer`. The stricter check fails when the preserved
 history artifact has no Orchestrator context, or when preserved

@@ -71,6 +71,9 @@ ORCHESTRATOR_WORKER_HEALTH_TREND_SCHEMA_VERSION = (
 ORCHESTRATOR_PRESSURE_WINDOW_SUMMARY_SCHEMA_VERSION = (
     "inferedge-orchestrator-pressure-window-summary-v1"
 )
+ORCHESTRATOR_SCENARIO_COVERAGE_SUMMARY_SCHEMA_VERSION = (
+    "inferedge-orchestrator-scenario-coverage-summary-v1"
+)
 
 
 class RuntimeTelemetryHistoryError(ValueError):
@@ -334,6 +337,7 @@ def inspect_runtime_telemetry_history(
     stale_drop_summary_run_ids = _stale_drop_summary_run_ids(payload)
     worker_health_trend_run_ids = _worker_health_trend_run_ids(payload)
     pressure_window_summary_run_ids = _pressure_window_summary_run_ids(payload)
+    scenario_coverage_run_ids = _scenario_coverage_run_ids(payload)
     timestamps = [
         entry.get("telemetry_timestamp")
         for entry in runs
@@ -390,6 +394,7 @@ def inspect_runtime_telemetry_history(
             "stale_drop_summary_run_ids": stale_drop_summary_run_ids,
             "worker_health_trend_run_ids": worker_health_trend_run_ids,
             "pressure_window_summary_run_ids": pressure_window_summary_run_ids,
+            "scenario_coverage_run_ids": scenario_coverage_run_ids,
             "first_telemetry_timestamp": min(timestamps) if timestamps else None,
             "last_telemetry_timestamp": max(timestamps) if timestamps else None,
             "execution_sequence_ids": sequence_ids,
@@ -645,6 +650,27 @@ def _pressure_window_summary_run_ids(payload: dict[str, Any]) -> list[str]:
     return run_ids
 
 
+def _scenario_coverage_run_ids(payload: dict[str, Any]) -> list[str]:
+    run_ids: list[str] = []
+    for entry in payload.get("runs", []):
+        if not isinstance(entry, dict):
+            continue
+        context = entry.get("orchestrator_operation_context")
+        if _has_scenario_coverage(context):
+            run_id = entry.get("run_id")
+            if isinstance(run_id, str):
+                run_ids.append(run_id)
+    for item in payload.get("missing_telemetry", []):
+        if not isinstance(item, dict):
+            continue
+        context = item.get("orchestrator_operation_context")
+        if _has_scenario_coverage(context):
+            run_id = item.get("run_id")
+            if isinstance(run_id, str):
+                run_ids.append(run_id)
+    return run_ids
+
+
 def _has_operation_risk_rollup(value: Any) -> bool:
     if not isinstance(value, dict):
         return False
@@ -714,6 +740,17 @@ def _has_pressure_window_summary(value: Any) -> bool:
     return (
         isinstance(timeline, dict)
         and isinstance(timeline.get("pressure_window"), dict)
+    )
+
+
+def _has_scenario_coverage(value: Any) -> bool:
+    if not isinstance(value, dict):
+        return False
+    operation = _candidate_operation_context(value)
+    timeline = operation.get("operation_timeline_summary")
+    return (
+        isinstance(timeline, dict)
+        and isinstance(timeline.get("scenario_coverage"), dict)
     )
 
 
@@ -1437,6 +1474,83 @@ def _validate_orchestrator_operation_timeline_summary(
         summary.get("pressure_window"),
         source=source,
     )
+    _validate_orchestrator_scenario_coverage(
+        summary.get("scenario_coverage"),
+        source=source,
+    )
+    return summary
+
+
+def _validate_orchestrator_scenario_coverage(
+    value: Any,
+    *,
+    source: Path,
+) -> dict[str, Any] | None:
+    if value is None:
+        return None
+    if not isinstance(value, dict):
+        raise RuntimeTelemetryHistoryError(
+            "Orchestrator telemetry feed scenario_coverage must be "
+            f"an object: {source}"
+        )
+    summary = deepcopy(value)
+    expected_pairs = {
+        "schema_version": ORCHESTRATOR_SCENARIO_COVERAGE_SUMMARY_SCHEMA_VERSION,
+        "operation_context_role": ORCHESTRATOR_EDGEENV_OPERATION_CONTEXT_ROLE,
+        "scheduler_owner": "orchestrator",
+        "decision_owner": "lab",
+    }
+    for key, expected in expected_pairs.items():
+        if summary.get(key) != expected:
+            raise RuntimeTelemetryHistoryError(
+                "Orchestrator telemetry feed scenario_coverage."
+                f"{key} must be {expected}: {source}"
+            )
+    if summary.get("not_a_deployment_decision") is not True:
+        raise RuntimeTelemetryHistoryError(
+            "Orchestrator telemetry feed scenario_coverage."
+            f"not_a_deployment_decision must be true: {source}"
+        )
+    if summary.get("first_read") != "review_sustained_scenario_coverage":
+        raise RuntimeTelemetryHistoryError(
+            "Orchestrator telemetry feed scenario_coverage."
+            "first_read must be review_sustained_scenario_coverage: "
+            f"{source}"
+        )
+    for field in (
+        "observed_cycle_count",
+        "max_observed_cycle",
+        "task_count",
+        "queue_depth_sample_count",
+        "latency_sample_count",
+        "runtime_event_count",
+        "policy_decision_count",
+        "producer_source_count",
+        "device_local_producer_count",
+    ):
+        value = summary.get(field)
+        if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+            raise RuntimeTelemetryHistoryError(
+                "Orchestrator telemetry feed scenario_coverage."
+                f"{field} must be a non-negative integer when present: {source}"
+            )
+    for field in ("producer_sources", "coverage_markers"):
+        value = summary.get(field)
+        if value is not None and (
+            not isinstance(value, list)
+            or not all(isinstance(item, str) for item in value)
+        ):
+            raise RuntimeTelemetryHistoryError(
+                "Orchestrator telemetry feed scenario_coverage."
+                f"{field} must be a string list when present: {source}"
+            )
+    for field in ("producer_sources_by_task", "producer_stage_by_task"):
+        value = summary.get(field)
+        if value is not None and not isinstance(value, dict):
+            raise RuntimeTelemetryHistoryError(
+                "Orchestrator telemetry feed scenario_coverage."
+                f"{field} must be an object when present: {source}"
+            )
     return summary
 
 

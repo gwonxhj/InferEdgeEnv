@@ -187,6 +187,17 @@ inspect에서는 `pressure_window_summary_run_ids`, Lab handoff에서는
 `orchestrator_pressure_window_summary_run_ids`로 traceability를 노출한다.
 이는 sustained overload window를 reviewer가 빠르게 찾기 위한 navigation
 context이며 EdgeEnv regression gate나 deployment decision이 아니다.
+같은 operation timeline에 Orchestrator `scenario_coverage` block이 있으면
+EdgeEnv는
+`schema_version=inferedge-orchestrator-scenario-coverage-summary-v1`, 동일한
+supplemental/scheduler/Lab owner boundary marker,
+`not_a_deployment_decision=true`,
+`first_read=review_sustained_scenario_coverage`를 검증하고 inspect에서는
+`scenario_coverage_run_ids`, Lab handoff에서는
+`orchestrator_scenario_coverage_run_ids`로 traceability를 노출한다. 이는
+observed cycle/task/sample coverage와 producer-source coverage를 reviewer가
+빠르게 확인하기 위한 context이며 EdgeEnv regression gate나 deployment
+decision이 아니다.
 또한 `lab_bundle_alignment.external_aiguard_required_evidence_types`에
 `runtime_history_seed_run_config_traceability`와
 `edgeenv_orchestrator_operation_risk_rollup`,
@@ -206,7 +217,9 @@ sustained Orchestrator stale-drop context에서 AIGuard가 만들 수 있는
 `stale_frame_risk`, `edgeenv_orchestrator_stale_drop_summary`,
 `edgeenv_orchestrator_pressure_window_summary`를 선언한다. 이 항목들은
 optional이므로 기존 queue/thermal feed나 Lab required bundle set을 깨뜨리지
-않는다.
+않는다. Orchestrator scenario coverage도 report summary에 보존되지만,
+AIGuard required evidence가 아니라 Lab reviewer navigation metadata로
+남긴다.
 `lab_bundle_alignment.optional_aiguard_source_traceability`는 AIGuard
 optional-present source artifact와 재생성 명령을 read-only metadata로
 mirror한다:
