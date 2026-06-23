@@ -330,6 +330,7 @@ def inspect_runtime_telemetry_history(
         payload
     )
     policy_pressure_summary_run_ids = _policy_pressure_summary_run_ids(payload)
+    policy_pressure_reason_counts = _policy_pressure_reason_counts(payload)
     stale_drop_summary_run_ids = _stale_drop_summary_run_ids(payload)
     worker_health_trend_run_ids = _worker_health_trend_run_ids(payload)
     pressure_window_summary_run_ids = _pressure_window_summary_run_ids(payload)
@@ -385,6 +386,7 @@ def inspect_runtime_telemetry_history(
                 operation_timeline_summary_run_ids
             ),
             "policy_pressure_summary_run_ids": policy_pressure_summary_run_ids,
+            "policy_pressure_reason_counts": policy_pressure_reason_counts,
             "stale_drop_summary_run_ids": stale_drop_summary_run_ids,
             "worker_health_trend_run_ids": worker_health_trend_run_ids,
             "pressure_window_summary_run_ids": pressure_window_summary_run_ids,
@@ -579,6 +581,28 @@ def _policy_pressure_summary_run_ids(payload: dict[str, Any]) -> list[str]:
     return run_ids
 
 
+def _policy_pressure_reason_counts(payload: dict[str, Any]) -> dict[str, int | float]:
+    reason_counts: dict[str, int | float] = {}
+
+    def merge_context(context: Any) -> None:
+        summary = _orchestrator_policy_pressure_summary(context)
+        counts = summary.get("decision_reason_counts")
+        if not isinstance(counts, dict):
+            return
+        for reason, count in counts.items():
+            if isinstance(reason, str) and reason and type(count) in (int, float):
+                reason_counts[reason] = reason_counts.get(reason, 0) + count
+
+    for entry in payload.get("runs", []):
+        if isinstance(entry, dict):
+            merge_context(entry.get("orchestrator_operation_context"))
+    for item in payload.get("missing_telemetry", []):
+        if isinstance(item, dict):
+            merge_context(item.get("orchestrator_operation_context"))
+
+    return {reason: reason_counts[reason] for reason in sorted(reason_counts)}
+
+
 def _worker_health_trend_run_ids(payload: dict[str, Any]) -> list[str]:
     run_ids: list[str] = []
     for entry in payload.get("runs", []):
@@ -640,14 +664,22 @@ def _has_operation_timeline_summary(value: Any) -> bool:
 def _has_policy_pressure_summary(value: Any) -> bool:
     if not isinstance(value, dict):
         return False
-    operation = _candidate_operation_context(value)
-    if isinstance(operation.get("policy_pressure_summary"), dict):
+    if _orchestrator_policy_pressure_summary(value):
         return True
+    return False
+
+
+def _orchestrator_policy_pressure_summary(value: Any) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        return {}
+    operation = _candidate_operation_context(value)
+    policy_pressure = operation.get("policy_pressure_summary")
+    if isinstance(policy_pressure, dict):
+        return policy_pressure
     timeline = operation.get("operation_timeline_summary")
-    return (
-        isinstance(timeline, dict)
-        and isinstance(timeline.get("policy_pressure"), dict)
-    )
+    if isinstance(timeline, dict) and isinstance(timeline.get("policy_pressure"), dict):
+        return timeline["policy_pressure"]
+    return {}
 
 
 def _has_stale_drop_summary(value: Any) -> bool:

@@ -695,6 +695,7 @@ def _edgeenv_report_summary(regression_report: dict[str, Any]) -> dict[str, Any]
         context
     )
     policy_pressure_summary_run_ids = _policy_pressure_summary_run_ids(context)
+    policy_pressure_reason_counts = _policy_pressure_reason_counts(context)
     stale_drop_summary_run_ids = _stale_drop_summary_run_ids(context)
     worker_health_trend_run_ids = _worker_health_trend_run_ids(context)
     pressure_window_summary_run_ids = _pressure_window_summary_run_ids(context)
@@ -756,6 +757,9 @@ def _edgeenv_report_summary(regression_report: dict[str, Any]) -> dict[str, Any]
         ),
         "orchestrator_policy_pressure_summary_run_ids": (
             policy_pressure_summary_run_ids
+        ),
+        "orchestrator_policy_pressure_reason_counts": (
+            policy_pressure_reason_counts
         ),
         "orchestrator_stale_drop_summary_present": bool(
             stale_drop_summary_run_ids
@@ -1120,6 +1124,40 @@ def _policy_pressure_summary_run_ids(context: Any) -> list[str]:
     return run_ids
 
 
+def _policy_pressure_reason_counts(context: Any) -> dict[str, int | float]:
+    if not isinstance(context, dict):
+        return {}
+    reason_counts: dict[str, int | float] = {}
+    seen_run_ids: set[str] = set()
+
+    def merge_if_present(run_context: Any) -> None:
+        if not isinstance(run_context, dict):
+            return
+        run_id = run_context.get("run_id")
+        if isinstance(run_id, str) and run_id:
+            if run_id in seen_run_ids:
+                return
+            seen_run_ids.add(run_id)
+        operation_context = run_context.get("orchestrator_operation_context")
+        summary = _orchestrator_policy_pressure_summary(operation_context)
+        counts = summary.get("decision_reason_counts")
+        if not isinstance(counts, dict):
+            return
+        for reason, count in counts.items():
+            if isinstance(reason, str) and reason and type(count) in (int, float):
+                reason_counts[reason] = reason_counts.get(reason, 0) + count
+
+    merge_if_present(context.get("baseline"))
+    merge_if_present(context.get("candidate"))
+    history = context.get("history")
+    if isinstance(history, dict):
+        for section in ("runs", "missing_telemetry"):
+            for entry in history.get(section, []):
+                merge_if_present(entry)
+
+    return {reason: reason_counts[reason] for reason in sorted(reason_counts)}
+
+
 def _worker_health_trend_run_ids(context: Any) -> list[str]:
     if not isinstance(context, dict):
         return []
@@ -1208,14 +1246,24 @@ def _has_operation_timeline_summary(operation_context: Any) -> bool:
 def _has_policy_pressure_summary(operation_context: Any) -> bool:
     if not isinstance(operation_context, dict):
         return False
-    operation = _candidate_operation_context(operation_context)
-    if isinstance(operation.get("policy_pressure_summary"), dict):
+    if _orchestrator_policy_pressure_summary(operation_context):
         return True
+    return False
+
+
+def _orchestrator_policy_pressure_summary(
+    operation_context: Any,
+) -> dict[str, Any]:
+    if not isinstance(operation_context, dict):
+        return {}
+    operation = _candidate_operation_context(operation_context)
+    policy_pressure = operation.get("policy_pressure_summary")
+    if isinstance(policy_pressure, dict):
+        return policy_pressure
     timeline = operation.get("operation_timeline_summary")
-    return (
-        isinstance(timeline, dict)
-        and isinstance(timeline.get("policy_pressure"), dict)
-    )
+    if isinstance(timeline, dict) and isinstance(timeline.get("policy_pressure"), dict):
+        return timeline["policy_pressure"]
+    return {}
 
 
 def _has_stale_drop_summary(operation_context: Any) -> bool:
