@@ -291,6 +291,9 @@ def test_build_runtime_telemetry_history_attaches_orchestrator_feed_context(
     assert strict_summary["replay"]["policy_pressure_summary_run_ids"] == [
         "candidate"
     ]
+    assert strict_summary["replay"]["policy_pressure_reason_counts"] == {
+        "queue_backlog_threshold_exceeded": 2,
+    }
     assert strict_summary["replay"]["stale_drop_summary_run_ids"] == ["candidate"]
 
 
@@ -403,6 +406,9 @@ def test_runtime_telemetry_history_preserves_operation_risk_summary(
     assert summary["replay"]["operation_risk_rollup_run_ids"] == ["candidate"]
     assert summary["replay"]["operation_timeline_summary_run_ids"] == ["candidate"]
     assert summary["replay"]["policy_pressure_summary_run_ids"] == ["candidate"]
+    assert summary["replay"]["policy_pressure_reason_counts"] == {
+        "queue_backlog_threshold_exceeded": 2,
+    }
     assert summary["replay"]["stale_drop_summary_run_ids"] == ["candidate"]
     assert summary["replay"]["worker_health_trend_run_ids"] == ["candidate"]
     assert summary["replay"]["pressure_window_summary_run_ids"] == ["candidate"]
@@ -1180,6 +1186,10 @@ def test_cli_runs_telemetry_export_history_attaches_orchestrator_feed(
     assert "Producer-lineage guard alignment runs: 1" in inspect_result.output
     assert "Orchestrator stale-drop summary runs: 1" in inspect_result.output
     assert "Orchestrator policy-pressure summary runs: 1" in inspect_result.output
+    assert (
+        "Orchestrator policy-pressure reason counts: "
+        "queue_backlog_threshold_exceeded:2"
+    ) in inspect_result.output
     payload = json.loads(output_path.read_text(encoding="utf-8"))
     assert payload["runs"][0]["orchestrator_operation_context"]["run_id"] == (
         "candidate"

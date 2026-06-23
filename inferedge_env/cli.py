@@ -511,6 +511,13 @@ def inspect_runtime_telemetry_history_command(
         "Orchestrator policy-pressure summary runs: "
         f"{len(replay.get('policy_pressure_summary_run_ids', []))}"
     )
+    policy_pressure_reason_counts = replay.get("policy_pressure_reason_counts", {})
+    if policy_pressure_reason_counts:
+        console.print(
+            "Orchestrator policy-pressure reason counts: "
+            f"{_format_count_map(policy_pressure_reason_counts)}",
+            soft_wrap=True,
+        )
     console.print(f"Evidence gaps: {replay['evidence_gap_count']}")
     console.print(f"Missing run IDs: {', '.join(replay['missing_run_ids']) or '-'}")
     console.print(
@@ -925,6 +932,16 @@ def runtime_intelligence_handoff_manifest(
         console.print(
             "Orchestrator policy-pressure summary: "
             f"{', '.join(policy_pressure_run_ids)}"
+        )
+    policy_pressure_reason_counts = summary.get(
+        "orchestrator_policy_pressure_reason_counts",
+        {},
+    )
+    if policy_pressure_reason_counts:
+        console.print(
+            "Orchestrator policy-pressure reason counts: "
+            f"{_format_count_map(policy_pressure_reason_counts)}",
+            soft_wrap=True,
         )
     stale_drop_summary_run_ids = summary.get("orchestrator_stale_drop_summary_run_ids")
     if stale_drop_summary_run_ids:
@@ -1484,6 +1501,17 @@ def _telemetry_history_error_hint(message: str) -> str:
         "Telemetry history export reads local result artifacts and optional "
         "runtime_telemetry evidence; missing telemetry is recorded as an evidence gap."
     )
+
+
+def _format_count_map(value: object) -> str:
+    if not isinstance(value, dict):
+        return "none"
+    items = [
+        f"{key}:{count}"
+        for key, count in sorted(value.items())
+        if isinstance(key, str) and key and type(count) in (int, float)
+    ]
+    return ", ".join(items) if items else "none"
 
 
 def _telemetry_history_input_error_hint(message: str) -> str:

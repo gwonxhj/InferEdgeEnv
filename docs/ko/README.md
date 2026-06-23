@@ -173,9 +173,11 @@ timeline `policy_pressure` block이 있으면 EdgeEnv는
 `not_a_deployment_decision=true` marker를 검증하고
 `orchestrator_policy_pressure_summary_run_ids`로 traceability를 노출한다.
 이는 scheduler pressure review context이며 EdgeEnv regression gate가
-아니다. direct `policy_pressure_summary`와 timeline `policy_pressure`가 둘 다
-있으면 handoff 중 mirror drift가 생기지 않도록 두 block이 정확히 일치해야
-한다.
+아니다. 같은 summary는 aggregate policy-pressure reason count도 노출하므로
+reviewer가 raw operation timeline을 열기 전에 scheduler reason distribution을
+확인할 수 있다. direct `policy_pressure_summary`와 timeline `policy_pressure`가
+둘 다 있으면 handoff 중 mirror drift가 생기지 않도록 두 block이 정확히
+일치해야 한다.
 보존된 operation timeline에 Orchestrator `pressure_window` block이 있으면
 EdgeEnv는
 `schema_version=inferedge-orchestrator-pressure-window-summary-v1`,

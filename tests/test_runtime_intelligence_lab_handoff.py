@@ -260,6 +260,9 @@ def test_runtime_intelligence_lab_handoff_manifest_records_producer_contracts(
         "orchestrator_operation_timeline_summary_run_ids": ["candidate"],
         "orchestrator_policy_pressure_summary_present": True,
         "orchestrator_policy_pressure_summary_run_ids": ["candidate"],
+        "orchestrator_policy_pressure_reason_counts": {
+            "queue_backlog_threshold_exceeded": 2,
+        },
         "orchestrator_stale_drop_summary_present": True,
         "orchestrator_stale_drop_summary_run_ids": ["candidate"],
         "orchestrator_worker_health_trend_present": True,
@@ -634,6 +637,10 @@ def test_runtime_intelligence_lab_handoff_cli_writes_manifest(tmp_path):
     ) in result.output
     assert "Orchestrator operation timeline summary: candidate" in result.output
     assert "Orchestrator policy-pressure summary: candidate" in result.output
+    assert (
+        "Orchestrator policy-pressure reason counts: "
+        "queue_backlog_threshold_exceeded:2"
+    ) in result.output
     assert "Orchestrator stale-drop summary: candidate" in result.output
     assert (
         "External AIGuard evidence types: runtime_telemetry_context_coverage, "

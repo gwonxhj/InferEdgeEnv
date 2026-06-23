@@ -368,6 +368,13 @@ validates the compact stale-drop boundary markers
 `decision_owner=lab`, and `not_a_deployment_decision=true`. The inspect and
 handoff summaries expose matching run IDs as stale-drop traceability metadata;
 this remains optional operation evidence, not an EdgeEnv regression gate.
+If the preserved operation context carries Orchestrator `policy_pressure_summary`
+or an operation timeline `policy_pressure` block, EdgeEnv validates the same
+Lab-owned boundary markers and exposes matching run IDs as
+`policy_pressure_summary_run_ids` / `orchestrator_policy_pressure_summary_run_ids`.
+The inspect and handoff summaries also expose aggregate policy-pressure reason
+counts so reviewers can see scheduler reason distribution before opening the
+raw operation timeline.
 If the operation timeline also carries `worker_health_trend`, EdgeEnv validates
 `schema_version=inferedge-orchestrator-worker-health-trend-v1`,
 `operation_context_role=supplemental`, `scheduler_owner=orchestrator`,
